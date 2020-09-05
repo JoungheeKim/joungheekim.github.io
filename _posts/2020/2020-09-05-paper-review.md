@@ -1,3 +1,12 @@
+---
+layout:     post
+title:      "Paper Review"
+subtitle:   "Deep Learning for Event-Driven Stock Prediction"
+tags:
+  - NLP(Natural Language Process)
+  - Sentence Representation
+---
+
 # 논문리뷰 - Deep Learning for Event-Driven Stock Prediction
 Xiao Ding, [Deep Learning for Event-Driven Stock Prediction](http://ijcai.org/Proceedings/15/Papers/329.pdf), IJCAI2015
 
@@ -67,7 +76,7 @@ Xiao Ding, [Deep Learning for Event-Driven Stock Prediction](http://ijcai.org/Pr
     + 일별 뉴스생산량을 일정치 않다. 따라서 때대로 적거나 많은 Event를 추출할수 있을 것이다. 하지만 모델의 Input크기는 고정되어있다. 따라서 Event 일부를 선별해야 하는 Process가 필요하다. '좋은' Evnet가 정의하는 것은 또다른 Task이다. 
 
 
-### 참고자료
+### Reference
 1. Richard Socher, [Reasoning with neural tensor networks for knowledge base completion](https://cs.stanford.edu/~danqi/papers/nips2013.pdf
 ),  NIPS  pages 926–934, 2013
 2. Xiao Ding, [Using structured events to predict stock price movement an empirical investigation](https://www.emnlp2014.org/papers/pdf/EMNLP2014148.pdf), EMNLP, pages 1415–1425
@@ -77,7 +86,7 @@ Xiao Ding, [Deep Learning for Event-Driven Stock Prediction](http://ijcai.org/Pr
 6. [Paper Summary](https://www.hardikp.com/2017/08/18/deep-rnn-summary/), Hardik Patel, 
 
 
-### Repo available online
+### Repo Available Online
 1. Neural Tensor network
     - [Reimplementing Neural Tensor Networks for Knowledge Base Completion (KBC) in the TensorFlow framework](https://github.com/dddoss/tensorflow-socher-ntn)
 2. Stock Prediction with Deep Learning
