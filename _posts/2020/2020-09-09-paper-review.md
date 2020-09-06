@@ -27,15 +27,16 @@ tags:
 전체구조는 동일하나 **해석이 가능한 구성요소**를 포함시키는지 여부에 따라 Generic Architecture 와 Interpretable architecture 로 나뉩니다.
 
 ### Input & Output
-관측된 시점을 $t$ 시점이라고 가정하면 모델로부터 나오는 Output은 길이 H의 예측값 $[t+1, t+2, ... t+H]$ 이고, Input은 길이가 nH(n은 hyper-parameter) 관측값 $[t-nH, ..., t-1, t]$ 입니다.
-본 논문에서는 $n$을 2~7로 설정하여 Input의 길이를 2H~9H로 활용합니다. 
+관측된 시점을 $t$ 시점이라고 가정하면 모델로부터 나오는 Output은 길이 $H$의 예측값 $[t+1, t+2, ... t+H]$ 이고, Input은 길이가 $nH$($n$은 hyper-parameter) 관측값 $[t-nH, ..., t-1, t]$ 입니다.
+본 논문에서는 $n$을 2~7로 설정하여 Input의 길이를 $2H~9H$로 활용합니다. 
 
 ### 모델 구성요소
 Basic Block과 Stack Block이 단계별로 구성되어 있습니다.
 
 #### Basic Block
-Basic Block은 Input으로 길이 $ 
-총 4개의 FC layer와 
+$l$번째 Basic Block의 Input은 $x_l$ 이고, 2개의 Output Backcast($hat{y_l}$) 와 Forecast($hat{x_l}$) 를 생성합니다.
+Basic Block 은 두가지 Part로 구성됩니다. 
+첫번째 Part는 Fully Connected Layer 형태로 각 forward_vector($\theta^f_l$)와 backward_vector(($\theta^f_l$))를 생성합니다.   
 
 
 
