@@ -8,10 +8,10 @@ tags:
   - multiple step prediction 
 ---
 
-# 논문리뷰 - [NEURAL BASIS EXPANSION ANALYSIS FOR INTERPRETABLE TIME SERIES FORECASTING](https://arxiv.org/abs/1905.10437), ICLR 2020
+# [논문리뷰] - [NEURAL BASIS EXPANSION ANALYSIS FOR INTERPRETABLE TIME SERIES FORECASTING](https://arxiv.org/abs/1905.10437), ICLR 2020
 
-2018년 세계적인 시계열(Time-Series) 경진대회인 [M4 Competition](https://www.sciencedirect.com/science/article/abs/pii/S0169207018300785) 가 개최하였습니다.
-지금까지 대회에서 1등을 하던 모델은 항상 통계기반 모델이었지만 그 대회에서 1등을 차지한 모델은 [ES-RNN(Exponential Smoothing Long Short Term Memory networks)](https://arxiv.org/abs/1907.03329) 입니다.
+2018년 세계적인 시계열(Time-Series) 경진대회인 [M4 Competition](https://www.sciencedirect.com/science/article/abs/pii/S0169207018300785) 가 개최되었습니다.
+지금까지 대회에서 1등을 하던 모델은 항상 통계기반 모델이었지만 그 대회에서 1등을 차지한 모델은 [ES-RNN(Exponential Smoothing Long Short Term Memory networks)](https://arxiv.org/abs/1907.03329) 으로 통계적 방법론과 머신러닝 방법론을 잘 섞은 구조의 모델입니다.
 그런데 그 ES-RNN보다 더 좋은 예측 성능을 보이는 순수 머신러닝 방법론이 등장하였습니다.
 그것이 바로 오늘 포스팅할 모델인 `N-BEATS`이라고 불리는 단변량 예측 모델입니다.
 
@@ -23,10 +23,13 @@ tags:
 ## 모델 구조
 ![](/img/in-post/2020/2020-09-09/model_architect.png)
 
-전체구조는 동일하나 해석이 가능한 구성요소를 포함시키는지 여부에 따라 Generic Architecture 와 Interpretable architecture 로 나뉩니다.
+전체구조는 동일하나 **해석이 가능한 구성요소**를 포함시키는지 여부에 따라 Generic Architecture 와 Interpretable architecture 로 나뉩니다.
 
 ### Input & Output
-모델로부터 나오는 Output은 길이 H의 예측값이고, Input은 길이 
+관측된 시점을 $$t$$ 시점이라고 가정하면 모델로부터 나오는 Output은 길이 H의 예측값 $$[t+1, t+2, ... t+H]$$ 이고, Input은 길이가 nH(n은 hyper-parameter) 관측값 $$[t-nH, ..., t-1, t]$$ 입니다.
+
+### 모델 구성요소
+Basic block과 Stack block 
 
 
 
