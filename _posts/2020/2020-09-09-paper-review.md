@@ -2,6 +2,7 @@
 layout:     post
 title:      "작업중"
 subtitle:   "N-BEATS"
+mathjax: true
 tags:
   - time-series
   - univariate
@@ -33,7 +34,8 @@ tags:
 Basic Block과 Stack Block이 단계별로 구성되어 있습니다.
 
 #### Basic Block
-Basic Block은 총 4개의 FC layer와 
+Basic Block은 Input으로 길이 $ 
+총 4개의 FC layer와 
 
 
 
