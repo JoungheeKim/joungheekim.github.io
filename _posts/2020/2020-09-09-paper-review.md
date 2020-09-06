@@ -26,14 +26,23 @@ tags:
 전체구조는 동일하나 **해석이 가능한 구성요소**를 포함시키는지 여부에 따라 Generic Architecture 와 Interpretable architecture 로 나뉩니다.
 
 ### Input & Output
-관측된 시점을 $$t$$ 시점이라고 가정하면 모델로부터 나오는 Output은 길이 H의 예측값 $$[t+1, t+2, ... t+H]$$ 이고, Input은 길이가 nH(n은 hyper-parameter) 관측값 $$[t-nH, ..., t-1, t]$$ 입니다.
+관측된 시점을 $t$ 시점이라고 가정하면 모델로부터 나오는 Output은 길이 H의 예측값 $[t+1, t+2, ... t+H]$ 이고, Input은 길이가 nH(n은 hyper-parameter) 관측값 $[t-nH, ..., t-1, t]$ 입니다.
+본 논문에서는 $n$을 2~7로 설정하여 Input의 길이를 2H~9H로 활용합니다. 
 
 ### 모델 구성요소
-Basic block과 Stack block 
+Basic Block과 Stack Block이 단계별로 구성되어 있습니다.
+
+#### Basic Block
+Basic Block은 총 4개의 FC layer와 
+
+
+
+
 
 
 
 
 
 ## Reference
- - [BLOG, N-BEATS — Beating Statistical Models with Pure Neural Nets, Neo Yi Peng](https://towardsdatascience.com/n-beats-beating-statistical-models-with-neural-nets-28a4ba4a4de8)
+ - [[BLOG] N-BEATS — Beating Statistical Models with Pure Neural Nets, Neo Yi Peng](https://towardsdatascience.com/n-beats-beating-statistical-models-with-neural-nets-28a4ba4a4de8)
+ - [[REPO] N-Beats Pytorch, Keras Implemntation](https://github.com/philipperemy/n-beats) 
