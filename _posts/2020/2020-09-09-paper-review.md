@@ -63,10 +63,14 @@ Stack은 여러개의 Block으로 구성되어 있습니다.
 각 Block으로부터 생성된 Backcast와 Forecast는 산술적 연산을 통해 Stack의 Output을 구성하거나 다음 Block Input으로 활용되는데 이 구조가 Residual Connection과 닮아 있어 두개이므로 Double Residual Stacking이라고 부릅니다.
 자세한 산술식은 아래와 같습니다.
 
-$$x_l = x_{l-1} = \hat{x_{l-1}},   \hat{y} = \sum_{l}\hat{y_l} $$
+$$
+x_l = x_{l-1} = \hat{x_{l-1}},   \hat{y} = \sum_{l}\hat{y_l}
+$$
  - Stack 안에 있는 $block_l$ 의 input $x_l$은 이전 $block_{l-1}$의 input인 $x_{l-1}$ 에서 $block_{l-1}$ 에서 생성된 Backcast 벡터 $\hat{x_{l-1}}$를 뺀 것과 같습니다.
  - Stack 안에 있는 $l$개의 Block으로부터 생성된 Forecast 벡터를 모두 더한 것이 Stack의 Output입니다.
  
+Forcast와 Backcast에 적용된 Residaul Connection 구조는 Gradient의 흐름을 더 투명하게 하는 효과가 있습니다.
+
  
 
    
