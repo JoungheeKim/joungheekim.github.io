@@ -38,21 +38,23 @@ tags:
 Stack은 여러개의 Basic Block으로 이루어져 있으며 Doubly Residual Stacking이란 변형된 [Residual Connection](https://ganghee-lee.tistory.com/41) 으로 Stack 내에 있는 Block 끼리 연결되어 있습니다.
 
 #### Basic Block
-![](/img/in-post/2020/2020-09-09/basic_block.png)
-<center>Figure 3</center>
+![](/img/in-post/2020/2020-09-09/generic_basic_block.png)
+<center>Figure 3 : Generic Basic Block</center>
 
-![](/img/in-post/2020/2020-09-09/basic_block_explain.png)
-<center>Figure 4</center>
+Basic Block은 마지막 backcast, Forecast Function이 어떤 것이냐에 따라 Generic Basic Block, Seasonal Basic Block, Trend Basic Block으로 나뉩니다.
+기본적인 구조는 동일하므로 Generic Basic Block을 통해 Basick Block이 어떻게 구성되어 있는지 설명드리겠습니다. 
+논문에서 표기한 Basick Block의 그림을 상세하게 이해하기 위하여 내부 상세내역을 포함하여 다시 재구성한 그림이 Figure 3과 같습니다. 
+[코드](https://github.com/ElementAI/N-BEATS/blob/master/experiments/model.py) 및 [블로그](https://medium.com/@kshavgupta47/n-beats-neural-basis-expansion-analysis-for-interpretable-time-series-forecasting-91e94c830393) 를 참고하였습니다.
 
-Basic Block에 해당하는 부분은 Figure 3과 같습니다. 
-Figure 4는 Figure3을 잘 이해할 수 있도록 구조적으로 쉽게 정리해 놓은 [블로그](https://medium.com/@kshavgupta47/n-beats-neural-basis-expansion-analysis-for-interpretable-time-series-forecasting-91e94c830393) 그림이 입니다.
-  
+Input으로 15개의 관측시점, Output으로 5개의 예측시점, Hidden size는 256, Theta size는 20이라고 가정하여 재구성한 그림을 보면서 상세하게 설명드리겠습니다.   
 
-$l$번째 Basic Block의 Input은 $x_l$ 이고, 2개의 Output Backcast($\hat{y_l}$) 와 Forecast($\hat{x_l}$) 를 생성합니다.
-Basic Block 은 두가지 Part로 구성됩니다. 
-첫번째 Part는 여러개의 FC와 형태로 각 forward_vector($\theta^f_l$)와 backward_vector(($\theta^f_l$))를 생성합니다.
-Fully Connected Layer는 일반적인 Linear Layer와 LELU
-두번째 Part는 forward_vector($\theta^f_l$) 에 
+Input으로 15개의 시점이 Stack1로 들어와 Stack1의 내부 Generic Basic Block$l$에 들어오면 우선 [FC+Relu]로 구성된 4개의 Layer를 통과하여 결과물로 256 차원 벡터가 생성됩니다.
+이 벡터는 각각 Backcast 경로와 Forecast 경로로 다시 분기되고, 분기된 백터는 한번더 FC layer를 거친뒤 경로에 맞는 함수 $g^b$ or $g^f$ 를 거쳐 Backcast 벡터(15차원==Input 크기)와 Forecast 벡터(5차원==Output 크기)가 생성됩니다.
+Generic Basic Block의  $g^b$, $g^f$는 FC layer이므로 Figure 4 에서는 FC layer로 표기되어 있습니다. 
+Forecast 벡터의 의미는 해당 Block에서 생성한 예측값(5개)을 의미하고, Backcast 벡터의 의미는 해당 Block에서 생성한 회귀관측값(15개)을 의미합니다.
+
+
+
  
 
 
