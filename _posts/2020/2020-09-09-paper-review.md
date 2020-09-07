@@ -24,22 +24,22 @@ tags:
 
 ## 모델 구조
 ![](/img/in-post/2020/2020-09-09/model_architect.png)
-<center>*Figure 1 : Model Architecture*</center>
+<center>Figure 1 : Model Architecture</center>
 전체구조는 동일하나 **해석이 가능한 구성요소**를 포함시키는지 여부에 따라 Generic Architecture 와 Interpretable architecture 로 나뉩니다.
 
-### Input & Output
+### 1) Input & Output
 ![](/img/in-post/2020/2020-09-09/input_output.png)
-<center>*Figure 2 : Input & Output*</center>
+<center>Figure 2 : Input & Output</center>
 관측된 시점을 $t$ 시점이라고 가정하면 모델로부터 나오는 Output은 길이 $H$의 예측값 $[t+1, t+2, ... t+H]$ 이고, Input은 길이가 $nH$($n$은 hyper-parameter) 관측값 $[t-nH, ..., t-1, t]$ 입니다.
 본 논문에서는 $n$을 2~7로 설정하여 Input의 길이를 $2H~7H$로 활용합니다. 
 
-### 모델 구성요소
+### 2) 모델 구성요소
 모델은 Basic Block과 Stack Block이 단계별로 구성되어 있습니다.
 Stack은 여러개의 Basic Block으로 이루어져 있으며 Doubly Residual Stacking이란 변형된 [Residual Connection](https://ganghee-lee.tistory.com/41) 으로 Stack 내에 있는 Block 끼리 연결되어 있습니다.
 
-#### Basic Block
+#### [1] Basic Block
 ![](/img/in-post/2020/2020-09-09/generic_basic_block.png)
-<center>*Figure 3 : Generic Basic Block*</center>
+<center>Figure 3 : Generic Basic Block</center>
 
 Basic Block은 마지막 Backcast 함수, Forecast 함수가 어떤 것이냐에 따라 Generic Basic Block, Seasonal Basic Block, Trend Basic Block으로 나뉩니다.
 기본적인 구조는 동일하므로 Generic Basic Block을 통해 Basic Block이 어떻게 구성되어 있는지 설명드리겠습니다. 
@@ -53,9 +53,17 @@ Input으로 15개의 시점이 Stack1로 들어와 Stack1의 내부 Generic Basi
 Generic Basic Block의  $g^b$, $g^f$는 FC layer이므로 Figure 4 에서는 FC layer로 표기되어 있습니다. 
 Forecast 벡터의 의미는 해당 Block에서 생성한 예측값(5개)을 의미하고, Backcast 벡터의 의미는 해당 Block에서 생성한 회귀관측값(15개)을 의미합니다.
  * 참고사항 : FC는 Fully Connected Layer를 의미합니다.
-> hidden size, input size와 관련된 hyper-parameter는 논문에 기술되어 있는데 이상하게 $theta$의 차원은 기술이 되어 있지 않아 임으로 $theta$ size = input size + output size 로 지정하였습니다.
+> hidden size, input size와 관련된 hyper-parameter는 논문에 기술되어 있는데 이상하게 $\theta$의 차원은 기술이 되어 있지 않아 Figure3 그림은 임으로 $\theta$ size = input size + output size 로 지정하였습니다.
 
-#### Doubly Residual Stacking of Blocks
+#### [2] Doubly Residual Stacking of Blocks
+![](/img/in-post/2020/2020-09-09/stack_block.png)
+<center>Figure 3 : Generic Basic Block</center>
+
+Stack은 여러개의 Block으로 구성되어 있습니다. 각 Block으로부터 생성된 Backcast와 Forecast는 산술적 연산을 통해 Stack의 Output을 구성하거나 다음 Block Input으로 활용되는데 이 구조가 Residual Connection과 닮아 있어 두개이므로 Double Residual Stacking이라고 부릅니다.
+
+Stack 안에 있는 $block_l$ 의 input $x_l$은 이전 $block_l-1$의 input인 $x_{l-1}$와 $block_l-1$ 에서 생성된 Backcast 벡터 $\hat{x_{l-1}}$  
+
+   
 
 
 
