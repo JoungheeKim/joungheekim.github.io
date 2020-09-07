@@ -35,11 +35,11 @@ tags:
 
 ### 2) 모델 구성요소
 모델은 Basic Block과 Stack Block이 단계별로 구성되어 있습니다.
-Stack은 여러개의 Basic Block으로 이루어져 있으며 Doubly Residual Stacking이란 변형된 [Residual Connection](https://ganghee-lee.tistory.com/41) 으로 Stack 내에 있는 Block 끼리 연결되어 있습니다.
+Stack은 여러개의 Basic Block으로 이루어져 있으며, Doubly Residual Stacking으로 불리는 변형 [Residual Connection](https://ganghee-lee.tistory.com/41) 으로 Stack 내에 있는 Block 끼리 연결되어 있습니다.
 
-#### [1] Basic Block
+#### [1] Basic Block 구조
 ![](/img/in-post/2020/2020-09-09/generic_basic_block.png)
-<center>Figure 3 : Generic Basic Block</center>
+<center>Figure 3 : Generic Basic Block 내부 구조</center>
 
 Basic Block은 마지막 Backcast 함수, Forecast 함수가 어떤 것이냐에 따라 Generic Basic Block, Seasonal Basic Block, Trend Basic Block으로 나뉩니다.
 기본적인 구조는 동일하므로 Generic Basic Block을 통해 Basic Block이 어떻게 구성되어 있는지 설명드리겠습니다. 
@@ -55,21 +55,40 @@ Forecast 벡터의 의미는 해당 Block에서 생성한 예측값(5개)을 의
  * 참고사항 : FC는 Fully Connected Layer를 의미합니다.
 > hidden size, input size와 관련된 hyper-parameter는 논문에 기술되어 있는데 이상하게 $\theta$의 차원은 기술이 되어 있지 않아 Figure3 그림은 임으로 $\theta$ size = input size + output size 로 지정하였습니다.
 
-#### [2] Doubly Residual Stacking of Blocks
+#### [2] Stack 구조
 ![](/img/in-post/2020/2020-09-09/stack_block.png)
-<center>Figure 4 : Stack Block</center>
+<center>Figure 4 : Stack 내부 구조</center>
 
 Stack은 여러개의 Block으로 구성되어 있습니다. 
 각 Block으로부터 생성된 Backcast와 Forecast는 산술적 연산을 통해 Stack의 Output을 구성하거나 다음 Block Input으로 활용되는데 이 구조가 Residual Connection과 닮아 있어 두개이므로 Double Residual Stacking이라고 부릅니다.
 자세한 산술식은 아래와 같습니다.
 
-$$
-x_l = x_{l-1} = \hat{x_{l-1}},   \hat{y} = \sum_{l}\hat{y_l}
-$$
- - Stack 안에 있는 $block_l$ 의 input $x_l$은 이전 $block_{l-1}$의 input인 $x_{l-1}$ 에서 $block_{l-1}$ 에서 생성된 Backcast 벡터 $\hat{x_{l-1}}$를 뺀 것과 같습니다.
+$x_l = x_{l-1} = \hat{x_{l-1}},   \hat{y} = \sum_{l}\hat{y_l}$
+ - Stack 안에 있는 $block_l$ 의 input $x_l$은 이전 $block_{l-1}$의 input인 $x_{l-1}$ 에서 $block_{l-1}$ 을 통과하면서 생성된 Backcast 벡터 $\hat{x_{l-1}}$를 뺀 것과 같습니다.
  - Stack 안에 있는 $l$개의 Block으로부터 생성된 Forecast 벡터를 모두 더한 것이 Stack의 Output입니다.
  
-Forcast와 Backcast에 적용된 Residaul Connection 구조는 Gradient의 흐름을 더 투명하게 하는 효과가 있습니다.
+이와 같은 구조는 아래와 같은 효과를 갖고 있습니다.
+ 1. Forcast와 Backcast에 적용된 Residaul Connection 구조는 Gradient의 흐름을 더 투명하게 하는 효과가 있습니다.
+ 2. Backcast의 Residual Connection 구조는 이전 Block이 Input의 일부 신호(signal)을 제거 함으로써 다음 Block의 예측작업을 쉽게 만드는 효과가 있습니다.
+ 3. Forcast의 Summation Connection 구조는 Input을 계층적으로 분해하는 효과를 갖고 있습니다.(Generic Basic Block에서는 큰 의미가 없을 수 있지만 뒤에 설명할 해석이 가능한 구조에서 큰 효과를 갖고 있음)  
+
+#### [3] 모델 구조
+![](/img/in-post/2020/2020-09-09/model_structure.png)
+<center>Figure 5 : Model 내부 구조</center>
+
+Model은 앞서 설명한 여러개의 Stack으로 구성되어 있습니다.
+Stack에서 설명한 것과 비슷하게 각 Stack에서 생성된 Backcast Output은 다음 Stack의 Input으로 활용됩니다.
+그리고 모든 Stack에서 생성된 Forecast Output을 더한 값이 모델의 Output, 즉 길이 $H$ 예측값 입니다.
+이 예측값과 실제값 사이 MSE(mean squared error)을 이용하여 Loss를 계산하고 Gradient Update하여 모델을 학습합니다.
+> 논문에서 Loss를 구성하는 방식에 대해 다루고 있지는 않습니다. 하지만 관련 코드와 블로그에서는 MSE를 이용하여 Loss를 계산하고 Update한다고 기술하고 있습니다.
+
+
+### 3) 해석이 가능한 모델 구조
+해석이 가능한 모델구조는 전반적으로 앞서 설명한 모델 구성요소를 모두 포함하고 있습니다.
+다만 Basic Block의 구조에서 함수 $g^b$, $g^f$ 가 Generic Block가 다른 형태를 갖으며, 
+앞서 설명드린 Generic Basic Block은 함수 $g^b$, $g^f$ 가 FC layer로 학습이 가능한 Fucntion 입니다. 반면 해석이 가능한 
+ 
+ 
 
  
 
