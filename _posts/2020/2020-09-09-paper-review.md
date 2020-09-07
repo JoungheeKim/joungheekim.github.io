@@ -73,7 +73,7 @@ $x_l = x_{l-1} = \hat{x_{l-1}},   \hat{y} = \sum_{l}\hat{y_l}$
  3. Forcast의 Summation Connection 구조는 Input을 계층적으로 분해하는 효과를 갖고 있습니다.(Generic Basic Block에서는 큰 의미가 없을 수 있지만 뒤에 설명할 해석이 가능한 구조에서 큰 효과를 갖고 있음)  
 
 #### [3] 모델 구조
-![](/img/in-post/2020/2020-09-09/model_structure.png)
+![](/img/in-post/2020/2020-09-09/model_structure.png){ width=50% }
 <center>Figure 5 : Model 내부 구조</center>
 
 Model은 앞서 설명한 여러개의 Stack으로 구성되어 있습니다.
