@@ -24,14 +24,14 @@ tags:
 
 ## 모델 구조
 ![](/img/in-post/2020/2020-09-09/model_architect.png)
-<center>Figure 1</center>
+<center>*Figure 1 : Model Architecture*</center>
 전체구조는 동일하나 **해석이 가능한 구성요소**를 포함시키는지 여부에 따라 Generic Architecture 와 Interpretable architecture 로 나뉩니다.
 
 ### Input & Output
 ![](/img/in-post/2020/2020-09-09/input_output.png)
-<center>Figure 2</center>
+<center>*Figure 2 : Input & Output*</center>
 관측된 시점을 $t$ 시점이라고 가정하면 모델로부터 나오는 Output은 길이 $H$의 예측값 $[t+1, t+2, ... t+H]$ 이고, Input은 길이가 $nH$($n$은 hyper-parameter) 관측값 $[t-nH, ..., t-1, t]$ 입니다.
-본 논문에서는 $n$을 2~7로 설정하여 Input의 길이를 $2H~9H$로 활용합니다. 
+본 논문에서는 $n$을 2~7로 설정하여 Input의 길이를 $2H~7H$로 활용합니다. 
 
 ### 모델 구성요소
 모델은 Basic Block과 Stack Block이 단계별로 구성되어 있습니다.
@@ -39,11 +39,11 @@ Stack은 여러개의 Basic Block으로 이루어져 있으며 Doubly Residual S
 
 #### Basic Block
 ![](/img/in-post/2020/2020-09-09/generic_basic_block.png)
-<center>Figure 3 : Generic Basic Block</center>
+<center>*Figure 3 : Generic Basic Block*</center>
 
-Basic Block은 마지막 backcast, Forecast Function이 어떤 것이냐에 따라 Generic Basic Block, Seasonal Basic Block, Trend Basic Block으로 나뉩니다.
-기본적인 구조는 동일하므로 Generic Basic Block을 통해 Basick Block이 어떻게 구성되어 있는지 설명드리겠습니다. 
-논문에서 표기한 Basick Block의 그림을 상세하게 이해하기 위하여 내부 상세내역을 포함하여 다시 재구성한 그림이 Figure 3과 같습니다. 
+Basic Block은 마지막 Backcast 함수, Forecast 함수가 어떤 것이냐에 따라 Generic Basic Block, Seasonal Basic Block, Trend Basic Block으로 나뉩니다.
+기본적인 구조는 동일하므로 Generic Basic Block을 통해 Basic Block이 어떻게 구성되어 있는지 설명드리겠습니다. 
+논문에서 표기한 Basic Block의 그림을 상세하게 이해하기 위하여 내부 상세내역을 포함하여 다시 재구성한 그림이 Figure 3과 같습니다. 
 [코드](https://github.com/ElementAI/N-BEATS/blob/master/experiments/model.py) 및 [블로그](https://medium.com/@kshavgupta47/n-beats-neural-basis-expansion-analysis-for-interpretable-time-series-forecasting-91e94c830393) 를 참고하였습니다.
 
 Input으로 15개의 관측시점, Output으로 5개의 예측시점, Hidden size는 256, Theta size는 20이라고 가정하여 재구성한 그림을 보면서 상세하게 설명드리겠습니다.   
@@ -52,6 +52,14 @@ Input으로 15개의 시점이 Stack1로 들어와 Stack1의 내부 Generic Basi
 이 벡터는 각각 Backcast 경로와 Forecast 경로로 다시 분기되고, 분기된 백터는 한번더 FC layer를 거친뒤 경로에 맞는 함수 $g^b$ or $g^f$ 를 거쳐 Backcast 벡터(15차원==Input 크기)와 Forecast 벡터(5차원==Output 크기)가 생성됩니다.
 Generic Basic Block의  $g^b$, $g^f$는 FC layer이므로 Figure 4 에서는 FC layer로 표기되어 있습니다. 
 Forecast 벡터의 의미는 해당 Block에서 생성한 예측값(5개)을 의미하고, Backcast 벡터의 의미는 해당 Block에서 생성한 회귀관측값(15개)을 의미합니다.
+ * 참고사항 : FC는 Fully Connected Layer를 의미합니다.
+> hidden size, input size와 관련된 hyper-parameter는 논문에 기술되어 있는데 이상하게 $theta$의 차원은 기술이 되어 있지 않아 임으로 $theta$ size = input size + output size 로 지정하였습니다.
+
+#### Doubly Residual Stacking of Blocks
+
+
+
+
 
 
 
@@ -66,7 +74,6 @@ Forecast 벡터의 의미는 해당 Block에서 생성한 예측값(5개)을 의
 
 
 ## Reference
- - [[BLOG] N-BEATS — Beating Statistical Models with Pure Neural Nets, Neo Yi Peng](https://towardsdatascience.com/n-beats-beating-statistical-models-with-neural-nets-28a4ba4a4de8)
- - [[BLOG] N-BEATS: NEURAL BASIS EXPANSION ANALYSIS FOR INTERPRETABLE TIME SERIES FORECASTING, Keshav G
-](https://medium.com/@kshavgupta47/n-beats-neural-basis-expansion-analysis-for-interpretable-time-series-forecasting-91e94c830393)
- - [[REPO] N-Beats Pytorch, Keras Implemntation](https://github.com/philipperemy/n-beats) 
+ - [[BLOG]](https://towardsdatascience.com/n-beats-beating-statistical-models-with-neural-nets-28a4ba4a4de8) N-BEATS — Beating Statistical Models with Pure Neural Nets, Neo Yi Peng
+ - [[BLOG]](https://medium.com/@kshavgupta47/n-beats-neural-basis-expansion-analysis-for-interpretable-time-series-forecasting-91e94c830393) N-BEATS: NEURAL BASIS EXPANSION ANALYSIS FOR INTERPRETABLE TIME SERIES FORECASTING, Keshav G
+ - [[REPO]](https://github.com/philipperemy/n-beats) N-Beats Github, Pytorch and Keras Implemntation  
