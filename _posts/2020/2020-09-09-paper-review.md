@@ -15,7 +15,7 @@ tags:
 지금까지 대회에서 1등을 하던 모델은 항상 통계기반 모델이었지만 이번대회에서 우승을 차지한 모델은 [ES-RNN(Exponential Smoothing Long Short Term Memory networks)](https://arxiv.org/abs/1907.03329) 으로 통계적 방법론과 머신러닝 방법론을 잘 섞은 구조의 모델입니다.
 그런데 그 ES-RNN보다 더 좋은 예측 성능을 보이는 순수 머신러닝 방법론이 등장하였습니다.
 그것이 바로 오늘 포스팅할 모델인 `N-BEATS`이라고 불리는 단변량 예측 모델입니다.
-이 글은 N-beats 논문과 Medium글을 참고하여 정리하였음을 먼저 밝힙니다. 혹세 제가 잘못 알고 있는 점이나 보안할 점이 있다면 댓글 부탁드립니다.
+이 글은 N-beats 논문과 Medium 글을 참고하여 정리하였음을 먼저 밝힙니다. 혹시 제가 잘못 알고 있는 점이나 보안할 점이 있다면 댓글 부탁드립니다.
 
 #### Short Summary
 이 논문의 2가지 부분에서 기여점이 있습니다.
@@ -31,7 +31,7 @@ tags:
 ![](/img/in-post/2020/2020-09-09/input_output.png)
 <center>Figure 2 : Input & Output</center>
 관측된 시점을 $t$ 시점이라고 가정하면 모델로부터 나오는 Output은 길이 $H$의 예측값 $[t+1, t+2, ... t+H]$ 이고, Input은 길이가 $nH$($n$은 hyper-parameter) 관측값 $[t-nH, ..., t-1, t]$ 입니다.
-본 논문에서는 $n$을 2~7로 설정하여 Input의 길이를 $2H~7H$로 활용합니다. 
+본 논문에서는 $n$을 2~7로 설정하여 Input의 길이를 $2H$~$7H$로 활용합니다. 
 
 ### 2) 모델 구성요소
 모델은 Basic Block과 Stack Block이 단계별로 구성되어 있습니다.
@@ -74,19 +74,26 @@ $x_l = x_{l-1} = \hat{x_{l-1}},   \hat{y} = \sum_{l}\hat{y_l}$
 
 #### [3] 모델 구조
 ![](/img/in-post/2020/2020-09-09/model_structure.png)
-<center>Figure 5 : Model 내부 구조</center>
+<center>Figure 5 : 모델 내부 구조</center>
 
-Model은 앞서 설명한 여러개의 Stack으로 구성되어 있습니다.
+모델의 전체적 형태는 앞서 설명한 여러개의 Stack으로 구성되어 있습니다.
 Stack에서 설명한 것과 비슷하게 각 Stack에서 생성된 Backcast Output은 다음 Stack의 Input으로 활용됩니다.
 그리고 모든 Stack에서 생성된 Forecast Output을 더한 값이 모델의 Output, 즉 길이 $H$ 예측값 입니다.
-이 예측값과 실제값 사이 MSE(mean squared error)을 이용하여 Loss를 계산하고 Gradient Update하여 모델을 학습합니다.
+이 예측값과 실제값 차이를 나타내는 MSE(mean squared error)을 이용하여 Loss를 계산하고 Gradient Update하여 모델을 학습합니다.
 > 논문에서 Loss를 구성하는 방식에 대해 다루고 있지는 않습니다. 하지만 관련 코드와 블로그에서는 MSE를 이용하여 Loss를 계산하고 Update한다고 기술하고 있습니다.
 
 
 ### 3) 해석이 가능한 모델 구조
-해석이 가능한 모델구조는 전반적으로 앞서 설명한 모델 구성요소를 모두 포함하고 있습니다.
-다만 Basic Block의 구조에서 함수 $g^b$, $g^f$ 가 Generic Block가 다른 형태를 갖으며, 
-앞서 설명드린 Generic Basic Block은 함수 $g^b$, $g^f$ 가 FC layer로 학습이 가능한 Fucntion 입니다. 반면 해석이 가능한 
+![](/img/in-post/2020/2020-09-09/interpretable_model.png)
+<center>Figure 6 : 해석이 가능한 모델 내부 구조</center>
+
+해석이 가능한 모델구조는 전반적으로 앞서 설명한 모델의 구성요소를 모두 포함하고 있습니다.
+다만 Basic Block의 구조에서 $g^b$, $g^f$ 함수가 학습가능한 파라미터가 아니며 특수한 형태를 띄고 있습니다.
+단조 증가 함수 일 경우 Trend Block, 주기적 함수일 경우 Seasonal Block으로 나뉩니다.
+해석이 가능한 모델은 이 Seasonal Block으로 이루어진 `Seasonal Stack`과 Trend Block으로 이루어진 `Trend Stack` 두개가 Figure 6의 순서대로 쌓여있는 구조로 구성되어 잇습니다.
+  
+#### [1] Trend Block & Trend Stack
+   
  
  
 
