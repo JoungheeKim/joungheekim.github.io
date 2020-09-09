@@ -63,7 +63,7 @@ Stack은 여러개의 Block으로 구성되어 있습니다.
 각 Block으로부터 생성된 Backcast와 Forecast는 산술적 연산을 통해 Stack의 Output을 구성하거나 다음 Block Input으로 활용되는데 이 구조가 Residual Connection과 닮아 있어 두개이므로 Double Residual Stacking이라고 부릅니다.
 자세한 산술식은 아래와 같습니다.
 
-$x_l = x_{l-1} = \hat{x_{l-1}},   \hat{y} = \sum_{l}\hat{y_l}$
+<center>$x_l = x_{l-1} = \hat{x_{l-1}},   \hat{y} = \sum_{l}\hat{y_l}$</center>
  - Stack 안에 있는 $block_l$ 의 input $x_l$은 이전 $block_{l-1}$의 input인 $x_{l-1}$ 에서 $block_{l-1}$ 을 통과하면서 생성된 Backcast 벡터 $\hat{x_{l-1}}$를 뺀 것과 같습니다.
  - Stack 안에 있는 $l$개의 Block으로부터 생성된 Forecast 벡터를 모두 더한 것이 Stack의 Output입니다.
  
@@ -93,8 +93,26 @@ Stack에서 설명한 것과 비슷하게 각 Stack에서 생성된 Backcast Out
 해석이 가능한 모델은 이 Seasonal Block으로 이루어진 `Seasonal Stack`과 Trend Block으로 이루어진 `Trend Stack` 두개가 Figure 6의 순서대로 쌓여있는 구조로 구성되어 잇습니다.
   
 #### [1] Trend Block & Trend Stack
-   
- 
+![](/img/in-post/2020/2020-09-09/trend_block.png)
+<center>Figure 7 : Trend Block 내부 구조</center>
+
+트렌드(Trend)의 사전적 의미는 어떤 방향으로 쏠리는 현상을 의미합니다.
+즉 트랜드는 시간이 지남에 따라 서서히 단조증가 또는 단조감소와 같은 현상을 보여야 합니다.
+따라서 이와 비슷한 Output을 생성할 수 있도록 Basic Block의 함수 $g^b$, $g^f$을 변경한 것이 Trend Block입니다.
+Forecast를 구하는 수식은 아래와 같습니다.
+<center>$\hat{y}=T\theta^f, T=[1, t, ..., t^p], t=[0, 1, ..., H-2, H-1]^T/H$</center>
+
+
+
+
+
+
+       
+
+Trend Block은 Trend 모델을 흉내내기 위하여 설계된 Block이다. 
+일반적으로 트랜드는 시간이 지남에 따라 서서히 변하(증가 또는 감소)므로 이와 비슷한 함수를 만들어 forward와 backward에 적용한 모습이 figure과 같습니다.
+예를들어 forecast 분기로 생성된 \theta{_l} 가 바로 이 트랜드를 의미하고 이 트랜드가 시간이 지남에 따라 조금씩 더 반영되도록 함수를 설계한 모습입니다.
+그림과 같이 4차원일 때 Forcat의 마지막 벡터는 이 트렌드의 영향을 처음에는 조금씩 더 받아 증가하는 함수를 만들어야 합니다. 
  
 
  
