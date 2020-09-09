@@ -41,7 +41,7 @@ Stack은 여러개의 Basic Block으로 이루어져 있으며, Doubly Residual 
 ![](/img/in-post/2020/2020-09-09/generic_basic_block.png)
 <center>Figure 3 : Generic Basic Block 내부 구조</center>
 
-Basic Block은 마지막 Backcast 함수, Forecast 함수가 어떤 것이냐에 따라 Generic Basic Block, Seasonal Basic Block, Trend Basic Block으로 나뉩니다.
+Basic Block은 *마지막 Backcast 함수, Forecast 함수가 어떤 것*이냐에 따라 Generic Basic Block, Seasonal Basic Block, Trend Basic Block으로 나뉩니다.
 기본적인 구조는 동일하므로 Generic Basic Block을 통해 Basic Block이 어떻게 구성되어 있는지 설명드리겠습니다. 
 논문에서 표기한 Basic Block의 그림을 상세하게 이해하기 위하여 내부 상세내역을 포함하여 다시 재구성한 그림이 Figure 3과 같습니다. 
 [코드](https://github.com/ElementAI/N-BEATS/blob/master/experiments/model.py) 및 [블로그](https://medium.com/@kshavgupta47/n-beats-neural-basis-expansion-analysis-for-interpretable-time-series-forecasting-91e94c830393) 를 참고하였습니다.
@@ -68,9 +68,9 @@ Stack은 여러개의 Block으로 구성되어 있습니다.
  - Stack 안에 있는 $l$개의 Block으로부터 생성된 Forecast 벡터를 모두 더한 것이 Stack의 Output입니다.
  
 이와 같은 구조는 아래와 같은 효과를 갖고 있습니다.
- 1. Forcast와 Backcast에 적용된 Residaul Connection 구조는 Gradient의 흐름을 더 투명하게 하는 효과가 있습니다.
- 2. Backcast의 Residual Connection 구조는 이전 Block이 Input의 일부 신호(signal)을 제거 함으로써 다음 Block의 예측작업을 쉽게 만드는 효과가 있습니다.
- 3. Forcast의 Summation Connection 구조는 Input을 계층적으로 분해하는 효과를 갖고 있습니다.(Generic Basic Block에서는 큰 의미가 없을 수 있지만 뒤에 설명할 해석이 가능한 구조에서 큰 효과를 갖고 있음)  
+ 1. Forcast와 Backcast에 적용된 Residaul Connection 구조는 *Gradient의 흐름을 더 투명*하게 하는 효과가 있습니다.
+ 2. Backcast의 Residual Connection 구조는 이전 Block이 Input의 *일부 신호(signal)을 제거* 함으로써 다음 Block의 예측작업을 쉽게 만드는 효과가 있습니다.
+ 3. Forcast의 Summation Connection 구조는 Input을 *계층적으로 분해*하는 효과를 갖고 있습니다.(Generic Basic Block에서는 큰 의미가 없을 수 있지만 뒤에 설명할 해석이 가능한 구조에서 큰 효과를 갖고 있음)  
 
 #### [3] 모델 구조
 ![](/img/in-post/2020/2020-09-09/model_structure.png)
@@ -88,7 +88,7 @@ Stack에서 설명한 것과 비슷하게 각 Stack에서 생성된 Backcast Out
 <center>Figure 6 : 해석이 가능한 모델 내부 구조</center>
 
 해석이 가능한 모델구조는 전반적으로 앞서 설명한 모델의 구성요소를 모두 포함하고 있습니다.
-다만 Basic Block의 구조에서 $g^b$, $g^f$ 함수가 학습가능한 파라미터가 아니며 특수한 형태를 띄고 있습니다.
+다만 Basic Block의 구조에서 $g^b$, $g^f$ 함수가 *학습가능한 파라미터가 아니며 특수한 형태*를 띄고 있습니다.
 단조 증가 함수 일 경우 Trend Block, 주기적 함수일 경우 Seasonal Block으로 나뉩니다.
 해석이 가능한 모델은 이 Seasonal Block으로 이루어진 `Seasonal Stack`과 Trend Block으로 이루어진 `Trend Stack` 두개가 Figure 6의 순서대로 쌓여있는 구조로 구성되어 잇습니다.
   
@@ -97,8 +97,8 @@ Stack에서 설명한 것과 비슷하게 각 Stack에서 생성된 Backcast Out
 <center>Figure 7 : Trend Block 내부 구조</center>
 
 트렌드(Trend)의 사전적 의미는 어떤 방향으로 쏠리는 현상을 의미합니다.
-즉 트랜드는 시간이 지남에 따라 서서히 단조증가 또는 단조감소와 같은 현상을 보여야 합니다.
-따라서 이와 비슷한 Output을 생성할 수 있도록 Basic Block의 함수 $g^b$, $g^f$을 변경한 것이 Trend Block입니다.
+즉 트랜드는 시간이 지남에 따라 서서히 *단조증가 또는 단조감소와 같은 현상*을 보여야 합니다.
+따라서 이와 비슷한 Output을 생성할 수 있도록 **Basic Block의 함수 $g^b$, $g^f$을 변경**한 것이 Trend Block입니다.
 Block의 Forecast($\hat{y_l}$)를 구하는 수식은 아래와 같습니다.
 
 <center>$\hat{y_l}=T\theta^f_l$</center>
@@ -113,8 +113,8 @@ Trend Stack은 Trend Block으로 이루어진 Stack을 의미합니다.
 ![](/img/in-post/2020/2020-09-09/seasonal_block.png)
 <center>Figure 8 : Seasonal Block 내부 구조</center>
 
-계절성(Seasonal)이란 주기성이 있으며 되풀이 되는 특징을 갖고 있습니다.
-따라서 계절성을 띄게 하도록 [푸리에 급수(Fourier series)](https://spacebike.tistory.com/6) 를 모방하여 본 논문에서 주기함수를 제시합니다.
+계절성(Seasonal)이란 *주기성이 있으며 되풀이 되는 특징*을 갖고 있습니다.
+따라서 계절성을 띄게 하도록 [푸리에 급수(Fourier series)](https://spacebike.tistory.com/6) 를 모방하여 본 논문에서 **주기함수**를 제시합니다.
 즉 계절성을 띄도록 Basic Block의 함수 $g^b$, $g^f$을 주기함수로 변형한 것이 Seasonal Block입니다. 
 아래의 수식은 사인함수와 코사인함수 함수의 합으로 구성된 $g^f$의 모습입니다.
 이 주기함수로 부터 생성된 Output은 시간에 따라 주기성을 띄는 벡터를 생성합니다.
@@ -125,7 +125,7 @@ Trend Stack은 Trend Block으로 이루어진 Stack을 의미합니다.
 Seasonal Stack은 Seasonal Block으로 이루어진 Stack을 의미합니다.
 
 ## 실험 및 결과
-본 논문은 M3, M4, TOURISM 단변량 데이터셋에서 테스트를 진행하였습니다.
+본 논문은 M3, M4, TOURISM *단변량 데이터셋*에서 테스트를 진행하였습니다.
 앞에서 설명한 Block들을 이용하여 구성한 총 3가지 모델로 실험모델을 구성하고 다른 ML(Machine Learning),ST(Statical) 모델들과 비교합니다. 
 실험모델 중 하나인 N-BEATS-G는 Generic Basic Block만을 사용하여 구성한 N-Beats 모델이고, N-BEATS-I는 Sesonal Stack과 Trend Stack으로 구성된 해석가능한 N-Beats 모델입니다.
 마지막으로 N-BEATS-I+G 는 N-BEATS-G과 N-BEATS-I의 앙상블 모델입니다.
@@ -134,14 +134,16 @@ Seasonal Stack은 Seasonal Block으로 이루어진 Stack을 의미합니다.
 <center>Table 1 : 실험결과</center>
 
 비교모델 중 DL/TS hybrid는 M4 Competition에서 우승한 RS-RNN 모델입니다. 
-실험결과를 통해 N-BEATS 모델이 다양한 평가 Metric 으로 비교모델과 비교했을 때 모든 실험 데이터셋에서 가장 좋은 성능을 보인다는 것을 확인할 수 있습니다.
-다른 비교모델과는 다르게 스케일링이나 통계적 지식, 내부 구조 분석등이 전혀 필요 없음에도 **State of Art** 성능을 보였다는 것이 이 실험의 특징입니다.
+실험결과를 통해 N-BEATS 모델이 다양한 평가 Metric으로 비교했을 때 비교모델보다 모든 실험 데이터셋에서 가장 좋은 성능을 보인다는 것을 확인할 수 있습니다.
+다른 비교모델과는 다르게 *스케일링이나 통계적 지식, 내부 구조 분석등이 전혀 필요 없음*에도 **State of Art** 성능을 보였다는 것이 이 실험의 특징입니다.
 
 ## 결론(개인적인 생각)
 논문에서 Hyper-parameter Setting과 관련하여 상세하게 비교 평가한 내용들이 많아서 M-BEATS-G 모델은 구현하기가 매우 쉬습니다.
 반면에 M-BEATS-I은 상세한 설명이 있음에도 해석이 용이하지 않으며, 수식만 보고 모델을 구현하는 것은 어려워 보입니다.  
-아쉽게도 Seasonal, Trend 함수를 사용했을 때 정말 저자가 원하는 효과가 있는지에 대한 추가실험이 없어 저자의 주장을 온전히 믿기는 힘듭니다. 
+아쉽게도 Seasonal, Trend 함수를 사용했을 때 정말 저자가 원하는 효과가 있는지에 대한 *추가실험이 없어* 저자의 주장을 온전히 믿기는 힘듭니다. 
 실제 서비스에 해당 모델을 적용할 때 스케일링이나 내부 구조 지식 없이 바로 사용할 수 있다는 점이 매우 매력적인 특징입니다.
+>Pytorch Implementation이 있으므로 [REPO](https://github.com/philipperemy/n-beats) 에서 구현체를 활용할 수 있습니다.
+ 
 
 ## Reference
  - [[BLOG]](https://towardsdatascience.com/n-beats-beating-statistical-models-with-neural-nets-28a4ba4a4de8) N-BEATS — Beating Statistical Models with Pure Neural Nets, Neo Yi Peng
