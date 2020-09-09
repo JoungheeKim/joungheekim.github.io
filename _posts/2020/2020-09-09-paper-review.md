@@ -99,18 +99,17 @@ Stack에서 설명한 것과 비슷하게 각 Stack에서 생성된 Backcast Out
 트렌드(Trend)의 사전적 의미는 어떤 방향으로 쏠리는 현상을 의미합니다.
 즉 트랜드는 시간이 지남에 따라 서서히 단조증가 또는 단조감소와 같은 현상을 보여야 합니다.
 따라서 이와 비슷한 Output을 생성할 수 있도록 Basic Block의 함수 $g^b$, $g^f$을 변경한 것이 Trend Block입니다.
-Block의 Forecast($\hat{y}$)를 구하는 수식은 아래와 같습니다.
+Block의 Forecast($\hat{y_l}$)를 구하는 수식은 아래와 같습니다.
 
 <center>$\hat{y_l}=T\theta^f_l$</center>
 <center>$T=[1, t, ..., t^p]$</center>
 <center>$t=[0, 1, ..., H-2, H-1]^T/H$</center>
 
-Figure 7에서 생성된 Forecast($\hat{y_l}$) 은 길이 H 벡터인데 각 백터의 Elements는 시간 순서의 예측값입니다.
+Figure 7에서 생성된 Forecast($\hat{y_l}$) 은 길이 H(그림에서는 $5\times 1$) 벡터인데 각 백터의 elements는 시간 순서의 예측값입니다.
 즉 Trend Block으로부터 생성된 Forecast Output은 트랜드를 띄는 예측값을 생성합니다.
 Trend Stack은 Trend Block으로 이루어진 Stack을 의미합니다.
 
 #### [2] Seasonal Block % Seasonal Stack
-
 ![](/img/in-post/2020/2020-09-09/seasonal_block.png)
 <center>Figure 8 : Seasonal Block 내부 구조</center>
 
@@ -125,26 +124,24 @@ Trend Stack은 Trend Block으로 이루어진 Stack을 의미합니다.
 
 Seasonal Stack은 Seasonal Block으로 이루어진 Stack을 의미합니다.
 
+## 실험 및 결과
+본 논문은 M3, M4, TOURISM 단변량 데이터셋에서 테스트를 진행하였습니다.
+앞에서 설명한 Block들을 이용하여 구성한 총 3가지 모델로 실험모델을 구성하고 다른 ML(Machine Learning),ST(Statical) 모델들과 비교합니다. 
+실험모델 중 하나인 N-BEATS-G는 Generic Basic Block만을 사용하여 구성한 N-Beats 모델이고, N-BEATS-I는 Sesonal Stack과 Trend Stack으로 구성된 해석가능한 N-Beats 모델입니다.
+마지막으로 N-BEATS-I+G 는 N-BEATS-G과 N-BEATS-I의 앙상블 모델입니다.
 
- 
+![](/img/in-post/2020/2020-09-09/model_performance.png)
+<center>Table 1 : 실험결과</center>
 
-   
+비교모델 중 DL/TS hybrid는 M4 Competition에서 우승한 RS-RNN 모델입니다. 
+실험결과를 통해 N-BEATS 모델이 다양한 평가 Metric 으로 비교모델과 비교했을 때 모든 실험 데이터셋에서 가장 좋은 성능을 보인다는 것을 확인할 수 있습니다.
+다른 비교모델과는 다르게 스케일링이나 통계적 지식, 내부 구조 분석등이 전혀 필요 없음에도 **State of Art** 성능을 보였다는 것이 이 실험의 특징입니다.
 
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
+## 결론(개인적인 생각)
+논문에서 Hyper-parameter Setting과 관련하여 상세하게 비교 평가한 내용들이 많아서 M-BEATS-G 모델은 구현하기가 매우 쉬습니다.
+반면에 M-BEATS-I은 상세한 설명이 있음에도 해석이 용이하지 않으며, 수식만 보고 모델을 구현하는 것은 어려워 보입니다.  
+아쉽게도 Seasonal, Trend 함수를 사용했을 때 정말 저자가 원하는 효과가 있는지에 대한 추가실험이 없어 저자의 주장을 온전히 믿기는 힘듭니다. 
+실제 서비스에 해당 모델을 적용할 때 스케일링이나 내부 구조 지식 없이 바로 사용할 수 있다는 점이 매우 매력적인 특징입니다.
 
 ## Reference
  - [[BLOG]](https://towardsdatascience.com/n-beats-beating-statistical-models-with-neural-nets-28a4ba4a4de8) N-BEATS — Beating Statistical Models with Pure Neural Nets, Neo Yi Peng
