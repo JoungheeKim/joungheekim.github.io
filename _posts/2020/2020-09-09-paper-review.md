@@ -1,12 +1,13 @@
 ---
 layout:     post
-title:      "작업중"
+title:      "Paper Review"
 subtitle:   "N-BEATS"
 mathjax: true
 tags:
-  - time-series
-  - univariate
-  - multiple step prediction 
+  - Time-series
+  - Univariate
+  - Multiple step prediction 
+  - Deep Learning
 ---
 
 # [논문리뷰] - [NEURAL BASIS EXPANSION ANALYSIS FOR INTERPRETABLE TIME SERIES FORECASTING](https://arxiv.org/abs/1905.10437), ICLR 2020
