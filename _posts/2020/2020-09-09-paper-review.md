@@ -99,21 +99,32 @@ Stack에서 설명한 것과 비슷하게 각 Stack에서 생성된 Backcast Out
 트렌드(Trend)의 사전적 의미는 어떤 방향으로 쏠리는 현상을 의미합니다.
 즉 트랜드는 시간이 지남에 따라 서서히 단조증가 또는 단조감소와 같은 현상을 보여야 합니다.
 따라서 이와 비슷한 Output을 생성할 수 있도록 Basic Block의 함수 $g^b$, $g^f$을 변경한 것이 Trend Block입니다.
-Forecast를 구하는 수식은 아래와 같습니다.
-<center>$\hat{y}=T\theta^f, T=[1, t, ..., t^p], t=[0, 1, ..., H-2, H-1]^T/H$</center>
+Block의 Forecast($\hat{y}$)를 구하는 수식은 아래와 같습니다.
 
+<center>$\hat{y_l}=T\theta^f_l$</center>
+<center>$T=[1, t, ..., t^p]$</center>
+<center>$t=[0, 1, ..., H-2, H-1]^T/H$</center>
 
+Figure 7에서 생성된 Forecast($\hat{y_l}$) 은 길이 H 벡터인데 각 백터의 Elements는 시간 순서의 예측값입니다.
+즉 Trend Block으로부터 생성된 Forecast Output은 트랜드를 띄는 예측값을 생성합니다.
+Trend Stack은 Trend Block으로 이루어진 Stack을 의미합니다.
 
+#### [2] Seasonal Block % Seasonal Stack
 
+![](/img/in-post/2020/2020-09-09/seasonal_block.png)
+<center>Figure 8 : Seasonal Block 내부 구조</center>
 
+계절성(Seasonal)이란 주기성이 있으며 되풀이 되는 특징을 갖고 있습니다.
+따라서 계절성을 띄게 하도록 [푸리에 급수(Fourier series)](https://spacebike.tistory.com/6) 를 모방하여 본 논문에서 주기함수를 제시합니다.
+즉 계절성을 띄도록 Basic Block의 함수 $g^b$, $g^f$을 주기함수로 변형한 것이 Seasonal Block입니다. 
+아래의 수식은 사인함수와 코사인함수 함수의 합으로 구성된 $g^f$의 모습입니다.
+이 주기함수로 부터 생성된 Output은 시간에 따라 주기성을 띄는 벡터를 생성합니다.
 
-       
+<center>$\hat{y_l}=S\theta^f_l$</center>
+<center>$S=[1, cos(2\pi t), ...,cos(2\pi[H/2-1]t), sin(2\pi t), ..., sin(2\pi[H/2-1]t)]$</center>
 
-Trend Block은 Trend 모델을 흉내내기 위하여 설계된 Block이다. 
-일반적으로 트랜드는 시간이 지남에 따라 서서히 변하(증가 또는 감소)므로 이와 비슷한 함수를 만들어 forward와 backward에 적용한 모습이 figure과 같습니다.
-예를들어 forecast 분기로 생성된 \theta{_l} 가 바로 이 트랜드를 의미하고 이 트랜드가 시간이 지남에 따라 조금씩 더 반영되도록 함수를 설계한 모습입니다.
-그림과 같이 4차원일 때 Forcat의 마지막 벡터는 이 트렌드의 영향을 처음에는 조금씩 더 받아 증가하는 함수를 만들어야 합니다. 
- 
+Seasonal Stack은 Seasonal Block으로 이루어진 Stack을 의미합니다.
+
 
  
 
