@@ -1,7 +1,7 @@
 ---
 layout:     post
-title:      "Paper Review"
-subtitle:   "N-BEATS"
+title:      "[논문리뷰]N-BEATS"
+subtitle:   "NEURAL BASIS EXPANSION ANALYSIS FOR INTERPRETABLE TIME SERIES FORECASTING"
 mathjax: true
 tags:
   - Time-series
