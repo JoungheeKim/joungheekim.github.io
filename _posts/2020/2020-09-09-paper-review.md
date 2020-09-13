@@ -141,12 +141,14 @@ Seasonal Stack은 Seasonal Block으로 이루어진 Stack을 의미합니다.
 ## 결론(개인적인 생각)
 논문에서 Hyper-parameter Setting과 관련하여 상세하게 비교 평가한 내용들이 많아서 M-BEATS-G 모델은 구현하기가 매우 쉬습니다.
 반면에 M-BEATS-I은 상세한 설명이 있음에도 해석이 용이하지 않으며, 수식만 보고 모델을 구현하는 것은 어려워 보입니다.  
-아쉽게도 Seasonal, Trend 함수를 사용했을 때 정말 저자가 원하는 효과가 있는지에 대한 <u>추가실험이 없어</u> 저자의 주장을 온전히 믿기는 힘듭니다. 
-실제 서비스에 해당 모델을 적용할 때 스케일링이나 내부 구조 지식 없이 바로 사용할 수 있다는 점이 매우 매력적인 특징입니다.
+아쉽게도 Seasonal, Trend 함수를 사용했을 때 정말 저자가 원하는 효과가 있는지에 대한 <u>추가실험이 없어</u> 저자의 주장을 온전히 믿기는 힘듭니다.
+실제 서비스에 딥러닝 모델을 적용할 때 가장 문제가 되는 점은 학습 후 예측하면 평균(mean)으로 수렴하여 학습이 되어도 생각보다 쓸모가 없다는 점입니다.
+이 모델역시 스케일링이나 내부 구조 지식없이 사용할 수 있다는 점을 논문에 어필하였으나 개인적으로 다른 데이터셋에서 사용해본 결과 다른 딥러닝 모델처럼 평균으로 자주 수렴하는 것을 볼 수 있었습니다.
 >Pytorch Implementation이 있으므로 [REPO](https://github.com/philipperemy/n-beats) 에서 구현체를 활용할 수 있습니다.
  
 
 ## Reference
  - [[BLOG]](https://towardsdatascience.com/n-beats-beating-statistical-models-with-neural-nets-28a4ba4a4de8) N-BEATS — Beating Statistical Models with Pure Neural Nets, Neo Yi Peng
  - [[BLOG]](https://medium.com/@kshavgupta47/n-beats-neural-basis-expansion-analysis-for-interpretable-time-series-forecasting-91e94c830393) N-BEATS: NEURAL BASIS EXPANSION ANALYSIS FOR INTERPRETABLE TIME SERIES FORECASTING, Keshav G
- - [[REPO]](https://github.com/philipperemy/n-beats) N-Beats Github, Pytorch and Keras Implemntation  
+ - [[REPO]](https://github.com/philipperemy/n-beats) N-Beats Github, Pytorch and Keras Implemntation
+ - [[REPO]](https://github.com/ElementAI/N-BEATS) N-Beats Github, Full experiments are supported
