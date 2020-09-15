@@ -110,7 +110,7 @@ Figure 7에서 생성된 Forecast($\hat{y_l}$) 은 길이 H(그림에서는 $5\t
 즉 Trend Block으로부터 생성된 Forecast Output은 트랜드를 띄는 예측값을 생성합니다.
 Trend Stack은 Trend Block으로 이루어진 Stack을 의미합니다.
 
-#### [2] Seasonal Block % Seasonal Stack
+#### [2] Seasonal Block & Seasonal Stack
 ![](/img/in-post/2020/2020-09-09/seasonal_block.png)
 <center>Figure 8 : Seasonal Block 내부 구조</center>
 
