@@ -43,7 +43,7 @@ tags:
 오디오 데이터는 연속형(Continous) 아날로그 데이터입니다. 이 오디오 데이터를 컴퓨터에서 처리하거나 저장(`.wav`, `.mp4`)하려면 **디지털 데이터**로 변환해야 합니다.
 이 변환하는 과정을 [Analog Digital Conversion](https://hyunlee103.tistory.com/54) 라고 부르며 표본화(Sampling), 양자화(Quantizing)로 구성되어 있습니다.
 Analog Digital Conversion 과정을 통해 처리된 오디오 데이터는 이산형(Discrete) 디지털 데이터로 변환되어 정수배열(Integer Array)로 표현됩니다.
-이 정수배열이 WaveNet의 Input과 Output으로 활용됩니다.
+이 정수배열이 WaveNet의 Input과 Output으로 활용됩니다. [[참고문서]](http://166.104.231.121/ysmoon/mip2017/lecture_note/%EC%A0%9C10%EC%9E%A5.pdf)
 
 ### 2) Modeling
 WaveNet은 확률론적 모형(Probabilistic Model)으로써 T개의 배열로 구성된 오디오 데이터 $x_1, ..., x_{T-1} ,x_{T}$ 열이 주어졌을 때 음성으로써 성립할 확률 $P(x_1, ..., x_{T-1} ,x_{T})$ 을 학습하여 이후 생성에 활용합니다.
@@ -52,8 +52,8 @@ WaveNet은 확률론적 모형(Probabilistic Model)으로써 T개의 배열로 �
 <center>$=P(x_1, ..., x_{T-2}) &dot P(x_{T-1}|x_1, ..., x_{T-2}) &dot P(x_{T}|x_1, ..., x_{T-1})$</center>
 <center>$=\prod_{t=1}^T P(x_t|x_1, x_2, ..., x_{t-1})$</center>
 
-위 조건부확률을 따르는 모델은 $t$를 기준으로 과거의 음성 데이터 $x_1, ..., x_{t-1} ,x_{t}$ 을 이용하여 한 시점 뒤 음성 데이터 $x_{t+1}$가 나올 확률을 나타낼 수 있으므로 그 확률을 이용하여 음성을 생성할 수 있습니다.
-
+위 조건부확률을 따르는 모델은 $t$ 시점을 기준으로 과거의 음성 데이터 $x_1, ..., x_{t-1} ,x_{t}$ 을 이용하여 한 시점 뒤 음성 데이터 $x_{t+1}$가 나올 확률을 나타낼 수 있으므로 그 확률을 이용하여 음성을 생성할 수 있습니다.
+[[참고문서]](https://datascienceschool.net/view-notebook/a0c848e1e2d343d685e6077c35c4203b/)
 
 위 조건부확률을 따르는 모델은 과거 데이터를 이용하여 다음 시점을
 
