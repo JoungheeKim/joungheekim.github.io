@@ -35,12 +35,11 @@ tags:
 
 ## 모델 구조
 ![](/img/in-post/2020/2020-09-17/overview.png)
-<center>Figure 1 : WaveNet 전체구조</center>
+<center>Figure 1 : <a href="https://www.youtube.com/watch?v=nsrSrYtKkT8">WaveNet 전체구조</a></center>
 
 WaveNet은 30개의 Residaul Block을 쌓은 형태의 구조를 갖고 있습니다.
+정수 배열을 Input으로 받아 첫번째 Residaul Block부터 30번째 Residual Block까지 차례대로 들어갑니다.
 각각의 Residual Block으로부터 생성된 Output은 Skip Connection을 통해 합쳐지고 이를 모델의 Output으로 활용합니다. 
-정수 배열을 Input으로 받아 처리한 뒤 Output으로 각 정수(Class)가 나올 확률을 출력합니다. 
- 
 
 ### 1) Modeling
 WaveNet은 확률론적 모형(Probabilistic Model)으로써 T개의 배열로 구성된 음성 데이터 $x_1, ..., x_{T-1} ,x_{T}$ 열이 주어졌을 때 음성으로써 성립할 확률 $P(x_1, ..., x_{T-1} ,x_{T})$ 을 학습하여 이후 생성에 활용합니다.
@@ -81,7 +80,7 @@ WaveNet 모델로부터 추출된 Output 역시 -127~128(256개) 범위의 정�
 ![](/img/in-post/2020/2020-09-17/dilated_causal_convolution.png)
 <center>Figure 4 : Dilated Causal Convolutions 적용범위</center>
 
-모델의 Residual Block은 몇가지 활성화 함수와 Neural Layer로 구성되어 있습니다.
+모델의 Residual Block은 몇가지 Activation Function과 Neural Layer로 구성되어 있습니다.
 이 중에서 과거 음성 정보에 접근하는 구조를 갖는 Layer는 Dilated Causal Convolutions Layer 입니다.
 입력의 범위를 중점으로 상세하게 묘사하면 Figure 4의 왼쪽과 같습니다.
 
