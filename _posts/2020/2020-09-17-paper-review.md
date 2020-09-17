@@ -58,7 +58,8 @@ WaveNet은 확률론적 모형(Probabilistic Model)으로써 T개의 배열로 �
 아날로그 음성 데이터는 연속형(Continous) 데이터입니다. 이 음성 데이터를 컴퓨터에서 처리하거나 저장(`.wav`, `.mp4`)하려면 **디지털 데이터**로 변환해야 합니다.
 이 변환하는 과정을 [Analog Digital Conversion](https://hyunlee103.tistory.com/54) 라고 부르며 표본화(Sampling), 양자화(Quantizing)로 구성되어 있습니다.
 Analog Digital Conversion 과정을 통해 처리된 음성 데이터는 이산형(Discrete) 디지털 데이터로 변환되어 정수배열(Integer Array)로 표현됩니다.
-이 정수배열이 WaveNet의 Input과 Output으로 활용됩니다.  [[참고문서]](http://166.104.231.121/ysmoon/mip2017/lecture_note/%EC%A0%9C10%EC%9E%A5.pdf)
+이 정수배열이 WaveNet의 Input과 Output으로 활용됩니다.    
+[[참고문서]](http://166.104.231.121/ysmoon/mip2017/lecture_note/%EC%A0%9C10%EC%9E%A5.pdf)
 
 ### 3) SoftMax Distribution
 ![](/img/in-post/2020/2020-09-17/input_output.png)
@@ -108,16 +109,16 @@ Figure 6은 [DeepMind]() 에서 Dilated Causal Convolutions과 수용범위(Rece
 
 Residaul Block은 앞서 설명한 Dilated Convolution Layer와 두개의 Activation Function($tanh, \sigma$), 두개의 일반적인 Convolution Layer, 1$\times$1 Convolution Layer 으로 구성되어 있습니다.
 Dilated Convolution 통해 생성된 벡터는 두개의 경로를 통해 계산되는데 Convolution Layer와 $tanh$ 경로를 필터(Filter)라고 부르고, 
-Convolution Layer와 $\sigma$ 경로를 게이트(Gate)라고 부른다. 
-각각 경로를 통해 계산된 벡터는 다시 Element-Wise 곱을 통해 하나의 벡터로 변환되는데 이 방식을 Gated Activation Units이라고 합니다.
+Convolution Layer와 $\sigma$ 경로를 게이트(Gate)라고 명칭합니다. 
+각각 경로를 통해 계산된 벡터는 다시 $Element-Wise$ 곱을 통해 하나의 벡터로 변환되는데 이 방식을 Gated Activation Units이라고 합니다.
 
 #### Gated Activation Units
 <center>$z = \tanh(W_{f, k}*x) \odot \sigma (W_{g,k}*x)$</center>
-$*: Convolution 연산$  
-$\odot :Element-wise 곱셈$   
-$\sigma() : Sigmoid\:Function$  
-$W:학습 가능한 Convolution Filter$  
-$f: filter \\ g:gate \\ k:layer 번호$
+$* : Convolution 연산$  
+$\odot : Element-wise 곱셈$   
+$\sigma() : Sigmoid Function$  
+$W : 학습 가능한 Convolution Filter$  
+$f : filter \\   g : gate \\   k : layer 번호$
 
 Autoregressive Model 중 하나인 [참조논문(PixelCNN)](https://arxiv.org/pdf/1606.05328.pdf) 에서 고안한 방식으로 
 특정 Layer에서 생성한 <u>지역적 특징(Local Feature)을</u> **필터(Filter)로** 보고 이 필터의 정보를 다음 Layer에 얼만큼 전달해 줄지를 정해주는 <u>수도꼭지의 역할</u>을 하는 것이 **게이트(Gate)의** 기능입니다.
@@ -130,10 +131,12 @@ Gated Activation Unit을 통해 생성된 벡터 $z$는 1$\times$1 Convolution L
 <center>Figure 8 : Skip Connection 상세구조</center>
 
 Skip Connection은 각 Residual Block Layer에서 생성된 Layer Output을 1$\times$1 Convolution Layer 통과시킨 후 합하는 과정으로 구현됩니다.
-각 Residual Block Layer에서 생성된 Output은 layer Depth에 따라 서로 다른 수용범위(Receptive Field)를 보고 Local Output을 생성하므로 이 정보를 더하여 최종 모델의 Output을 생성합니다.  
-[[참고문서]1x1 Convolution](https://hwiyong.tistory.com/45)
+각 Residual Block Layer에서 생성된 Output은 layer Depth에 따라 서로 다른 수용범위(Receptive Field)를 이용하여 Local Output을 생성하므로 이 정보를 모두 더하여 최종 모델의 Output을 생성합니다.  
 
-## 7)  
+## 7) Conditional WaveNets
+
+WaveNet은 Condition Modeling $P(x|h)$ 이 가능합니다. 즉 WaveNet에 특징($h$)을 추가하여 특징에 맞는 음성을 생성할 수 있습니다.
+예를 들어 TTS(Text to Speech)인 경우 Text를 Condition으로 주어 모델을 학습시킴으로써 Generation 단계에서 Text를 Input으로 넣으면  
 
  
 
@@ -160,6 +163,7 @@ Skip Connection은 각 Residual Block Layer에서 생성된 Layer Output을 1$\t
 - [[BLOG]](https://ganghee-lee.tistory.com/41)  ResNet 설명 및 정리, Lee Ganghee
 - [[PAPER]](https://www.eksss.org/archive/view_article?pid=pss-10-1-39) 한국어 text-to-speech(TTS) 시스템을 위한 엔드투엔드 합성 방식 연구, 최연주
 - [[YOUTUBE]](https://www.youtube.com/watch?v=GyQnex_DK2k) A Generative Model for Raw Audio, 모두의연구소
-- [[YOUTUBE]](https://www.youtube.com/watch?v=nsrSrYtKkT8) Generative Model-Based Text-to-Speech Synthesis, Heiga Zen 
+- [[YOUTUBE]](https://www.youtube.com/watch?v=nsrSrYtKkT8) Generative Model-Based Text-to-Speech Synthesis, Heiga Zen
+- [[GITHUB]](https://www.youtube.com/watch?v=nsrSrYtKkT8) pytorch-wavenet, vincentherrmann  
 
  
