@@ -84,23 +84,42 @@ WaveNet 모델로부터 추출된 Output 역시 -127~128(256개) 범위의 정�
 이 중에서 과거 음성 정보에 접근하는 구조를 갖는 Layer는 Dilated Causal Convolutions Layer 입니다.
 입력의 범위를 중점으로 상세하게 묘사하면 Figure 4의 왼쪽과 같습니다.
 
-Dilated Causal Convolutions Layer 은 Dilated Convolution Layer의 기능과 Causal Convolutions Layer의 기능을 합쳐놓은 Convolution Layer입니다.
-[Causal Convolution이란](https://dataplay.tistory.com/29) 시간 순서를 고려하여 Convolution Filter를 적용하는 변형 Convolution Layer입니다.  
+![](/img/in-post/2020/2020-09-17/convolution_variant.png)
+<center>Figure 5 : Causal Convolutions VS Dilated Causal Convolutions</center>
+
+Dilated Causal Convolutions Layer 은 Dilated Convolution Layer의 기능과 Causal Convolutions Layer의 기능을 합쳐놓은 Convolution Layer입니다. 
+[Causal Convolution이란](https://dataplay.tistory.com/29) 시간 순서를 고려하여 Convolution Filter를 적용하는 변형 Convolution Layer입니다. 
 Causal Convolution을 위로 쌓을 수록 Input 데이터의 수용 범위(Receptive Field)가 커지므로 RNN 계열의 모델처럼 음성 데이터(시계열 데이터)를 모델링 할 수 있습니다.
 다만 Causal Convolution만을 이용하면 수용 범위를 넓히기 위해서 많은 양의 Layer를 쌓아야 하는 단점이 존재합니다. 이를 해결하기 위하여 Dilated Convolution을 함께 적용합니다.
 
-[Dilated Convolution이란](https://dataplay.tistory.com/29) 추출 간격을 조절하여 더 넓은 수용 범위를 갖게 하는 변형 Convolution Layer입니다.
-즉 추출 간격을 조절하는 Causal Convolutions 적용하면 적게 Layer를 쌓아도 넓은 수용 범위를 갖을 수 있는 장점을 갖고 있습니다.
+[Dilated Convolution이란](https://dataplay.tistory.com/29) 추출 간격(Dilation)을 조절하여 더 넓은 수용 범위를 갖게 하는 변형 Convolution Layer입니다.
+즉 추출 간격을 조절하는 Dilated Causal Convolutions을 적용하면 적게 Layer를 쌓아도 넓은 수용 범위를 갖을 수 있는 장점을 갖고 있습니다. 
+Figure 5처럼 Layer를 쌓을 때 추출 간격을 차례대로 1, 2, 4, ..., 512 까지 늘리면 모델의 Input 수용범위(Receptive Field)는 1024 입니다.
+
+WaveNet 논문에서는 추출간격을 일정 수준(512)까지 늘리는 것을 반복하여 (1, 2, 4, ..., 512, 1, 2, 4, ..., 512, ...) 총 30층의 Layer를 쌓아 모델을 구성합니다.      
+Figure 6은 [DeepMind]() 에서 Dilated Causal Convolutions과 수용범위(Receptive Field)를 설명하기 위하여 만든 에니메이션 입니다.
+
+![](https://lh3.googleusercontent.com/Zy5xK_i2F8sNH5tFtRa0SjbLp_CU7QwzS2iB5nf2ijIf_OYm-Q5D0SgoW9SmfbDF97tNEF7CmxaL-o6oLC8sGIrJ5HxWNk79dL1r7Rc=w1440-rw-v1)
+<center>Figure 6 : Dilated Causal Convolutions 에니메이션</center>
+
+### 5) Residual Connection & Gated Activation Units
+![](/img/in-post/2020/2020-09-17/convolution_variant.png)
+<center>Figure 5 : Causal Convolutions VS Dilated Causal Convolutions</center>
 
 
 
-WaveNet 논문에서는 이 추출 간격을 1, 2, 4, ..., 512 까지 차례로 늘리며 Layer를 쌓으므로 1024의 수용범위를 갖는 Layer를   
-  
 
 
 
 
-RNN 계열의 모델은 학습 및 활용 할때 느린 단점을 갖고 있지만  
+
+
+
+
+
+
+
+
 
 
 
