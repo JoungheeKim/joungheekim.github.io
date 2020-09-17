@@ -48,7 +48,7 @@ WaveNet은 확률론적 모형(Probabilistic Model)으로써 T개의 배열로 �
 <center>$=P(x_1, ..., x_{T-2}) \cdot P(x_{T-1}|x_1, ..., x_{T-2}) \cdot P(x_{T}|x_1, ..., x_{T-1})$</center>
 <center>$=\prod_{t=1}^T P(x_t|x_1, x_2, ..., x_{t-1})$</center>
 
-위 조건부확률을 따르는 모델은 $t$ 시점을 기준으로 과거의 음성 데이터 $x_1, ..., x_{t-1} ,x_{t}$ 을 이용하여 한 시점 뒤 음성 데이터 $x_{t+1}$가 나올 확률을 나타낼 수 있으므로 그 확률을 이용하여 음성을 생성할 수 있습니다.
+위 조건부확률을 따르는 모델은 $t$ 시점을 기준으로 과거의 음성 데이터 $x_1, ..., x_{t-1} ,x_{t}$ 을 이용하여 한 시점 뒤 음성 데이터 $x_{t+1}$가 나올 확률을 나타낼 수 있으므로 그 확률을 이용하여 음성을 생성할 수 있습니다.  
 [[참고문서]](https://datascienceschool.net/view-notebook/a0c848e1e2d343d685e6077c35c4203b/)
 
 ### 2) Input & Output
@@ -58,7 +58,7 @@ WaveNet은 확률론적 모형(Probabilistic Model)으로써 T개의 배열로 �
 아날로그 음성 데이터는 연속형(Continous) 데이터입니다. 이 음성 데이터를 컴퓨터에서 처리하거나 저장(`.wav`, `.mp4`)하려면 **디지털 데이터**로 변환해야 합니다.
 이 변환하는 과정을 [Analog Digital Conversion](https://hyunlee103.tistory.com/54) 라고 부르며 표본화(Sampling), 양자화(Quantizing)로 구성되어 있습니다.
 Analog Digital Conversion 과정을 통해 처리된 음성 데이터는 이산형(Discrete) 디지털 데이터로 변환되어 정수배열(Integer Array)로 표현됩니다.
-이 정수배열이 WaveNet의 Input과 Output으로 활용됩니다. [[참고문서]](http://166.104.231.121/ysmoon/mip2017/lecture_note/%EC%A0%9C10%EC%9E%A5.pdf)
+이 정수배열이 WaveNet의 Input과 Output으로 활용됩니다.  [[참고문서]](http://166.104.231.121/ysmoon/mip2017/lecture_note/%EC%A0%9C10%EC%9E%A5.pdf)
 
 ### 3) SoftMax Distribution
 ![](/img/in-post/2020/2020-09-17/input_output.png)
@@ -96,14 +96,14 @@ Causal Convolution을 위로 쌓을 수록 Input 데이터의 수용 범위(Rece
 즉 추출 간격을 조절하는 Dilated Causal Convolutions을 적용하면 적게 Layer를 쌓아도 넓은 수용 범위를 갖을 수 있는 장점을 갖고 있습니다. 
 Figure 5처럼 Layer를 쌓을 때 추출 간격을 차례대로 1, 2, 4, ..., 512 까지 늘리면 모델의 Input 수용범위(Receptive Field)는 1024 입니다.
 
-WaveNet 논문에서는 추출간격을 일정 수준(512)까지 늘리는 것을 반복하여 (1, 2, 4, ..., 512, 1, 2, 4, ..., 512, ...) 총 30층의 Layer를 쌓아 모델을 구성합니다.      
+WaveNet 논문에서는 추출간격을 일정 수준(512)까지 늘리는 것을 반복하여 (1, 2, 4, ..., 512, 1, 2, 4, ..., 512, ...) 총 30층의 Layer를 쌓아 모델을 구성합니다. 
 Figure 6은 [DeepMind]() 에서 Dilated Causal Convolutions과 수용범위(Receptive Field)를 설명하기 위하여 만든 에니메이션 입니다.
 
 ![](https://lh3.googleusercontent.com/Zy5xK_i2F8sNH5tFtRa0SjbLp_CU7QwzS2iB5nf2ijIf_OYm-Q5D0SgoW9SmfbDF97tNEF7CmxaL-o6oLC8sGIrJ5HxWNk79dL1r7Rc=w1440-rw-v1)
 <center>Figure 6 : Dilated Causal Convolutions 에니메이션</center>
 
 ### 5) Residual Connection & Gated Activation Units
-![](/img/in-post/2020/2020-09-17/convolution_variant.png)
+![](/img/in-post/2020/2020-09-17/residual_connection.png)
 <center>Figure 7 : Residaul Block 상세구조</center>
 
 Residaul Block은 앞서 설명한 Dilated Convolution Layer와 두개의 Activation Function($tanh, \sigma$), 두개의 일반적인 Convolution Layer, 1$\times$1 Convolution Layer 으로 구성되어 있습니다.
@@ -113,59 +113,28 @@ Convolution Layer와 $\sigma$ 경로를 게이트(Gate)라고 부른다.
 
 #### Gated Activation Units
 <center>$z = \tanh(W_{f, k}*x) \odot \sigma (W_{g,k}*x)$</center>
-$*: Convolution 연산\\ \odot :Element-wise 곱셈 \\ \sigma() : Sigmoid\:Function\\ W:학습 가능한 Convolution Filter \\ f: filter \\ g:gate\\k:layer 번호$
+$*: Convolution 연산$  
+$\odot :Element-wise 곱셈$   
+$\sigma() : Sigmoid\:Function$  
+$W:학습 가능한 Convolution Filter$  
+$f: filter \\ g:gate \\ k:layer 번호$
 
 Autoregressive Model 중 하나인 [참조논문(PixelCNN)](https://arxiv.org/pdf/1606.05328.pdf) 에서 고안한 방식으로 
 특정 Layer에서 생성한 <u>지역적 특징(Local Feature)을</u> **필터(Filter)로** 보고 이 필터의 정보를 다음 Layer에 얼만큼 전달해 줄지를 정해주는 <u>수도꼭지의 역할</u>을 하는 것이 **게이트(Gate)의** 기능입니다.
 
-Gated Activation Unit을 통해 생성된 벡터 $z$는 1$\times$1 Convolution Layer 지나 Reisidual Connection으로 해당 Layer의 Input과 합쳐져 Layer Output이 됩니다. 
+Gated Activation Unit을 통해 생성된 벡터 $z$는 1$\times$1 Convolution Layer 지나 Reisidual Connection으로 해당 Layer Input과 합쳐져 Layer Output이 됩니다. 
 이러한 [Residaul Connection](https://ganghee-lee.tistory.com/41) 구조는 딥러닝 모델을 더 깊게 쌓게 할 뿐만 아니라 빠르게 학습할 수 있도록 돕는 역할을 합니다.
 
+### 6) Skip Connection
+![](/img/in-post/2020/2020-09-17/skip_connection.png)
+<center>Figure 8 : Skip Connection 상세구조</center>
 
+Skip Connection은 각 Residual Block Layer에서 생성된 Layer Output을 1$\times$1 Convolution Layer 통과시킨 후 합하는 과정으로 구현됩니다.
+각 Residual Block Layer에서 생성된 Output은 layer Depth에 따라 서로 다른 수용범위(Receptive Field)를 보고 Local Output을 생성하므로 이 정보를 더하여 최종 모델의 Output을 생성합니다.  
+[[참고문서]1x1 Convolution](https://hwiyong.tistory.com/45)
 
+## 7)  
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-WaveNet 모델 역시 시계열 음성 데이터를 모델링 해야 하므로 이 Layer를 적용할 수 있습니다.
-
- 
-
-과거의 음성 데이터 $x_1, ..., x_{t-1} ,x_{t}$ 만을 이용하여 다음 음성 데이터 $x_t$를 생성해야 하는 WaveNet의 모델에 사용됩니다.
-
-
-
- 
-
- 
-
-WaveNet에서는 과거의 음성 데이터 $x_1, ..., x_{t-1} ,x_{t}$ 만을 이용하여 다음 음성 데이터 $x_t$를 생성해야 합니다.
-따라서 과거 음성데이터만 접근할 수 있는 구조인 Causal Convolutional Network를 쌓아올린 구조로 과거의 정보에 접근합니다.
-이런 구조는 Recurrent Network와 비슷한 효과를 갖을 수 있지만 더 빠르다는 장점을 갖고 있습니다.
-
-
-
-
-
-
-위 조건부확률을 따르는 모델은 과거 데이터를 이용하여 다음 시점을
-
-<center>$p(x)=\prod_{t=1}^T p(x_t|x_1, x_2, ..., x_{t-1}) $</center>
-Wavenet의 음성 생성 가정은 조건부확률로 위와 같이 나타냅니다. 이는 모든 음성 데이터 $x_1, ..., x_{T-1} ,x_{T}$ 가 주어졋을 때 
  
 
 
@@ -184,9 +153,13 @@ Wavenet의 음성 생성 가정은 조건부확률로 위와 같이 나타냅니
 ## Reference
 - [[BLOG]](https://medium.com/@satyam.kumar.iiitv/understanding-wavenet-architecture-361cc4c2d623) Understanding WaveNet architecture, Satyam Kumar
 - [[BLOG]](https://ahnjg.tistory.com/94) WaveNet 이란?, JG Ahn
-- [[PAPER]](https://www.eksss.org/archive/view_article?pid=pss-10-1-39) 한국어 text-to-speech(TTS) 시스템을 위한 엔드투엔드 합성 방식 연구, 최연주
+- [[BLOG]](https://deepmind.com/blog/article/wavenet-generative-model-raw-audio) DeepMind WaveNet Review
 - [[BLOG]](https://hyunlee103.tistory.com/54)  오디오 데이터 전처리, Hyunlee103
 - [[BLOG]](https://hanseokhyeon.tistory.com/entry/%ED%8C%8C%EC%9D%B4%EC%8D%AC%EC%97%90%EC%84%9C-librosa-%ED%8C%A8%ED%82%A4%EC%A7%80%EB%A1%9C-%EC%8A%A4%ED%8E%99%ED%8A%B8%EB%9F%BC-%EA%B7%B8%EB%A6%AC%EA%B8%B0) 파이썬 librosa 패키지로 스펙트럼 그리기, HanSeokhyeon
+- [[BLOG]](https://hwiyong.tistory.com/45)  1x1 Convolution 이란, Hwiyong Jo
+- [[BLOG]](https://ganghee-lee.tistory.com/41)  ResNet 설명 및 정리, Lee Ganghee
+- [[PAPER]](https://www.eksss.org/archive/view_article?pid=pss-10-1-39) 한국어 text-to-speech(TTS) 시스템을 위한 엔드투엔드 합성 방식 연구, 최연주
 - [[YOUTUBE]](https://www.youtube.com/watch?v=GyQnex_DK2k) A Generative Model for Raw Audio, 모두의연구소
 - [[YOUTUBE]](https://www.youtube.com/watch?v=nsrSrYtKkT8) Generative Model-Based Text-to-Speech Synthesis, Heiga Zen 
+
  
