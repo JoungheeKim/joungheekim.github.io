@@ -78,7 +78,7 @@ WaveNet은 확률론적 모델링에 따라 매 $t$ 시점 특정 파형이 나�
 WaveNet 모델로부터 추출된 Output 역시 -127~128(256개) 범위의 정수이며, 이 정수를 Reconstruction을 통해 다시 음성 디지털 데이터로 변형한 것이 최종 결과물입니다.  
 
 ### 4) Dilated Causal Convolutions
-![](/img/in-post/2020/2020-09-17/input_output.png)
+![](/img/in-post/2020/2020-09-17/dilated_causal_convolution.png)
 <center>Figure 4 : Dilated Causal Convolutions 적용범위</center>
 
 모델의 Residual Block은 몇가지 활성화 함수와 Neural Layer로 구성되어 있습니다.
