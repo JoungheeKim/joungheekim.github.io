@@ -19,26 +19,31 @@ tags:
 
 하지만 위 방법으로부터 생성된 음성은 실제 사람의 음성만큼 매끄럽지 않으며 음편사이의 경계가 부자연스러운 문제들이 있습니다.
 
-2016년 [딥마인드(DeepMind)](https://deepmind.com/blog/article/wavenet-generative-model-raw-audio) 에서 딥러닝 기반 오디오 생성모델에 관한 논문을 공개하였습니다.  
-오늘은 이 딥러닝 기반 End-to-End 오디오 생성 모델인 `WaveNet` 을 포스팅하겠습니다.
+2016년 [딥마인드(DeepMind)](https://deepmind.com/blog/article/wavenet-generative-model-raw-audio) 에서 딥러닝 기반 음성 생성모델에 관한 논문을 공개하였습니다.  
+오늘은 이 딥러닝 기반 End-to-End 음성 생성 모델인 `WaveNet` 을 포스팅하겠습니다.
 이 글은 [WaveNet 논문](https://arxiv.org/abs/1609.03499) 과 [Medium 글](https://medium.com/@satyam.kumar.iiitv/understanding-wavenet-architecture-361cc4c2d623) 을 참고하여 정리하였음을 먼저 밝힙니다. 
-또한 논문을 이해하기 위하여 필요한 내용을 외부 코드 및 글을 정리하여 추가하였으므로 포스팅한 글은 논문의 내용만을 담고 있지 않습니다. 
+또한 논문을 이해하기 위하여 필요한 내용을 외부 코드 및 글을 정리하여 추가하였으므로 포스팅한 글은 **논문의 내용만을 담고 있지 않습니다.** 
 제가 잘못 알고 있는 점이나 보안할 점이 있다면 댓글 부탁드립니다.
 
 #### Short Summary
 이 논문의 큰 특징 4가지는 아래와 같습니다.
 
-1. WaveNet은 자연스러운 오디오 파형을 직접 생성합니다.
-2. 긴 오디오 파형을 학습하고 생성할 수 있는 새로운 구조를 제시합니다.  
+1. WaveNet은 자연스러운 음성 파형을 직접 생성합니다.
+2. 긴 음성 파형을 학습하고 생성할 수 있는 새로운 구조를 제시합니다.  
 3. 학습된 모델은 컨디션 모델링으로 인해 다양한 특징적인 음성을 생성할 수 있습니다.
-4. 음악을 포함한 다양한 오디오 생성분야에서도 좋은 성능을 보입니다.
+4. 음악을 포함한 다양한 음성 생성분야에서도 좋은 성능을 보입니다.
 
 ## 모델 구조
 ![](/img/in-post/2020/2020-09-17/overview.png)
-<center>Figure 1 : WaveNet Overview</center>
+<center>Figure 1 : WaveNet 전체구조</center>
+
+WaveNet은 30개의 Residaul Block을 쌓은 형태의 구조를 갖고 있습니다.
+각각의 Residual Block으로부터 생성된 Output은 Skip Connection을 통해 합쳐지고 이를 모델의 Output으로 활용합니다. 
+정수 배열을 Input으로 받아 처리한 뒤 Output으로 각 정수(Class)가 나올 확률을 출력합니다. 
+ 
 
 ### 1) Modeling
-WaveNet은 확률론적 모형(Probabilistic Model)으로써 T개의 배열로 구성된 오디오 데이터 $x_1, ..., x_{T-1} ,x_{T}$ 열이 주어졌을 때 음성으로써 성립할 확률 $P(x_1, ..., x_{T-1} ,x_{T})$ 을 학습하여 이후 생성에 활용합니다.
+WaveNet은 확률론적 모형(Probabilistic Model)으로써 T개의 배열로 구성된 음성 데이터 $x_1, ..., x_{T-1} ,x_{T}$ 열이 주어졌을 때 음성으로써 성립할 확률 $P(x_1, ..., x_{T-1} ,x_{T})$ 을 학습하여 이후 생성에 활용합니다.
 이 확률은 각 음성 데이터들의 조건부 확률을 이용하여 아래와 같이 표현될수 있습니다.
 <center>$P(x_1, ..., x_{T-1} ,x_{T})=P(x_1, ..., x_{T-1}) * P(x_{T}|x_1, ..., x_{T-1})$</center>
 <center>$=P(x_1, ..., x_{T-2}) * P(x_{T-1}|x_1, ..., x_{T-2}) * P(x_{T}|x_1, ..., x_{T-1})$</center>
@@ -49,48 +54,35 @@ WaveNet은 확률론적 모형(Probabilistic Model)으로써 T개의 배열로 �
 
 ### 2) Input & Output
 ![](/img/in-post/2020/2020-09-17/analog_to_digital_conversion.png)
-<center>Figure 2 : 오디오 데이터를 디지털 데이터로 변환과정</center>
+<center>Figure 2 : 아날로그 음성 데이터로부터 디지털 데이터로 변환과정</center>
 
-오디오 데이터는 연속형(Continous) 아날로그 데이터입니다. 이 오디오 데이터를 컴퓨터에서 처리하거나 저장(`.wav`, `.mp4`)하려면 **디지털 데이터**로 변환해야 합니다.
+아날로그 음성 데이터는 연속형(Continous) 데이터입니다. 이 음성 데이터를 컴퓨터에서 처리하거나 저장(`.wav`, `.mp4`)하려면 **디지털 데이터**로 변환해야 합니다.
 이 변환하는 과정을 [Analog Digital Conversion](https://hyunlee103.tistory.com/54) 라고 부르며 표본화(Sampling), 양자화(Quantizing)로 구성되어 있습니다.
-Analog Digital Conversion 과정을 통해 처리된 오디오 데이터는 이산형(Discrete) 디지털 데이터로 변환되어 정수배열(Integer Array)로 표현됩니다.
+Analog Digital Conversion 과정을 통해 처리된 음성 데이터는 이산형(Discrete) 디지털 데이터로 변환되어 정수배열(Integer Array)로 표현됩니다.
 이 정수배열이 WaveNet의 Input과 Output으로 활용됩니다. [[참고문서]](http://166.104.231.121/ysmoon/mip2017/lecture_note/%EC%A0%9C10%EC%9E%A5.pdf)
 
 ### 3) SoftMax Distribution
 ![](/img/in-post/2020/2020-09-17/input_output.png)
-<center>Figure 2 : 오디오 데이터를 디지털 데이터로 변환과정</center>
+<center>Figure 3 : 모델의 Input & Output 변환과정</center>
 
-일반적인 오디오는 각 샘플을 16(bit) 정수 값으로 저장하므로 앞서 설명한 Anlog Digital Conversion을 통해 생성된 정수배열의 정수는 $-2^7 ~ 2^7$ 사이의 숫자입니다.
+일반적인 음성 데이터는 각 샘플을 16(bit) 정수 값으로 저장하므로 앞서 설명한 Anlog Digital Conversion을 통해 생성된 정수배열의 정수는 $-2^7$ ~ $2^7$ 사이의 숫자입니다.
 WaveNet은 확률론적 모델링에 따라 매 $t$ 시점 특정 파형이 나올 확률 $P(x_t|x_1, …, x_t−1)$ 을 계산하는데 이 확률을 범주형 분포(Categorical Distribution)로 가정하면 
-매 $t$ 시점 $-2^7 ~ 2^7$ 사이의 숫자가 나올 확률 $P(-2^7|x_1, …, x_t−1), ..., P(2^7|x_1, …, x_t−1)$ 을 계산해야 합니다. 
-각 숫자가 나올 확률(총 65,536 개의 확률)을 다루는 것은 매우 어려우므로 WaveNet에서는 이를 256개의 숫자(총 256 개의 확률)로 변환하는 $\mu$-law Companding 이라는 변환방법을 사용합니다. 
+매 $t$ 시점 $-2^7$ ~ $2^7$ 사이의 숫자가 나올 확률 $P(-2^7|x_1, …, x_t−1), ..., P(2^7|x_1, …, x_t−1)$ 을 계산해야 합니다. 
+각 숫자가 나올 확률(총 65,536 개의 확률)을 다루는 것은 매우 어려우므로 WaveNet에서는 이를 256개의 숫자(총 256 개의 확률)로 변환하는 $\mu$-law Companding 이라는 변환방법을 사용합니다.
+논문에서는 $\mu$-law Companding와 같은 비선형적인 변환방식이 선형적인 변형방식보다 더 효과적이라고 기술하고 있습니다. 
 
-#### $\mu$-law Companding
+#### $\mu$-law Companding Transformation
 <center>$f(x_t) = sign(x_t)\frac{\ln(1+\mu\mid x_t\mid)}{\ln(1+\mu)}$</center>
 
+결론적으로 WaveNet 모델에서 Input으로 사용하는 것은 $\mu$-law Companding 변환방법을 이용하여 음성 디지털 데이터를 작은 범위의 정수 배열로 변환한 값입니다.
+WaveNet 모델로부터 추출된 Output 역시 -127~128(256개) 범위의 정수이며, 이 정수를 Reconstruction을 통해 다시 음성 디지털 데이터로 변형한 것이 최종 결과물입니다.  
 
+### 4) Dilated causal Convolutions
 
- 
-이 범주가 $-2^7 ~ 2^7$ 사이의 숫자이면 각 숫자가 나올 확률(총 65,536 개의 확률)을 계산해야 합니다.
+모델의 
+WaveNet에서는 과거의 음성 데이터 $x_1, ..., x_{t-1} ,x_{t}$ 만을 이용하여 다음 음성 데이터 $x_t$를 생성해야 합니다.
+따라서 과거 음성데이터만 접근할 수 있는 구조인 Causal Convolutional Network를 쌓아올린 구조로 과거의 정보에 접근합니다.
 
- 
-
-별로 특정 숫자(파형)이 나올
-
- 
-이 범주가 $-2^7 ~ 2^7$ 사이의 숫자이면 각 숫자가 나올 확률(총 65,536 개의 확률)을 계산해야 합니다.
-65,536개의 범주는 다루기 어려울 뿐만 아니라   
-
-범주형 분포를 이용하여 $-2^7 ~ 2^7$ 사이 각 숫자가 나올 확률(총 65,536 개의 확률)을 매 $t$ 시점 생성해야 하는데 이는 다루기 매우 어려운 크기입니다.
-이를 해결하기 위하여 µ-law companding transformation 기법을 이용하여 총   
-모델은 범주형 분포(Categorical Distribution)를 이용하여 
-
-모델의 확률을 범주형 분포(Categorical Distribution)이라고 가정하고 모델링  
- 
-
-
-
-### 3)  
 
 
 
