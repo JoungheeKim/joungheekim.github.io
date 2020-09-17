@@ -77,11 +77,49 @@ WaveNet은 확률론적 모델링에 따라 매 $t$ 시점 특정 파형이 나�
 결론적으로 WaveNet 모델에서 Input으로 사용하는 것은 $\mu$-law Companding 변환방법을 이용하여 음성 디지털 데이터를 작은 범위의 정수 배열로 변환한 값입니다.
 WaveNet 모델로부터 추출된 Output 역시 -127~128(256개) 범위의 정수이며, 이 정수를 Reconstruction을 통해 다시 음성 디지털 데이터로 변형한 것이 최종 결과물입니다.  
 
-### 4) Dilated causal Convolutions
+### 4) Dilated Causal Convolutions
+![](/img/in-post/2020/2020-09-17/input_output.png)
+<center>Figure 4 : Dilated Causal Convolutions 적용범위</center>
 
-모델의 
+모델의 Residual Block은 몇가지 활성화 함수와 Neural Layer로 구성되어 있습니다.
+이 중에서 과거 음성 정보에 접근하는 구조를 갖는 Layer는 Dilated Causal Convolutions Layer 입니다.
+입력의 범위를 중점으로 상세하게 묘사하면 Figure 4의 왼쪽과 같습니다.
+
+Dilated Causal Convolutions Layer 은 Dilated Convolution Layer의 기능과 Causal Convolutions Layer의 기능을 합쳐놓은 Convolution Layer입니다.
+[Causal Convolution이란](https://dataplay.tistory.com/29) 시간 순서를 고려하여 Convolution Filter를 적용하는 변형 Convolution Layer입니다.  
+Causal Convolution을 위로 쌓을 수록 Input 데이터의 수용 범위(Receptive Field)가 커지므로 RNN 계열의 모델처럼 음성 데이터(시계열 데이터)를 모델링 할 수 있습니다.
+다만 Causal Convolution만을 이용하면 수용 범위를 넓히기 위해서 많은 양의 Layer를 쌓아야 하는 단점이 존재합니다. 이를 해결하기 위하여 Dilated Convolution을 함께 적용합니다.
+
+[Dilated Convolution이란](https://dataplay.tistory.com/29) 추출 간격을 조절하여 더 넓은 수용 범위를 갖게 하는 변형 Convolution Layer입니다.
+즉 추출 간격을 조절하는 Causal Convolutions 적용하면 적게 Layer를 쌓아도 넓은 수용 범위를 갖을 수 있는 장점을 갖고 있습니다.
+
+
+
+WaveNet 논문에서는 이 추출 간격을 1, 2, 4, ..., 512 까지 차례로 늘리며 Layer를 쌓으므로 1024의 수용범위를 갖는 Layer를   
+  
+
+
+
+
+RNN 계열의 모델은 학습 및 활용 할때 느린 단점을 갖고 있지만  
+
+
+
+WaveNet 모델 역시 시계열 음성 데이터를 모델링 해야 하므로 이 Layer를 적용할 수 있습니다.
+
+ 
+
+과거의 음성 데이터 $x_1, ..., x_{t-1} ,x_{t}$ 만을 이용하여 다음 음성 데이터 $x_t$를 생성해야 하는 WaveNet의 모델에 사용됩니다.
+
+
+
+ 
+
+ 
+
 WaveNet에서는 과거의 음성 데이터 $x_1, ..., x_{t-1} ,x_{t}$ 만을 이용하여 다음 음성 데이터 $x_t$를 생성해야 합니다.
 따라서 과거 음성데이터만 접근할 수 있는 구조인 Causal Convolutional Network를 쌓아올린 구조로 과거의 정보에 접근합니다.
+이런 구조는 Recurrent Network와 비슷한 효과를 갖을 수 있지만 더 빠르다는 장점을 갖고 있습니다.
 
 
 
