@@ -44,8 +44,8 @@ WaveNet은 30개의 Residaul Block을 쌓은 형태의 구조를 갖고 있습�
 ### 1) Modeling
 WaveNet은 확률론적 모형(Probabilistic Model)으로써 T개의 배열로 구성된 음성 데이터 $x_1, ..., x_{T-1} ,x_{T}$ 열이 주어졌을 때 음성으로써 성립할 확률 $P(x_1, ..., x_{T-1} ,x_{T})$ 을 학습하여 이후 생성에 활용합니다.
 이 확률은 각 음성 데이터들의 조건부 확률을 이용하여 아래와 같이 표현될수 있습니다.
-<center>$P(x_1, ..., x_{T-1} ,x_{T})=P(x_1, ..., x_{T-1}) * P(x_{T}|x_1, ..., x_{T-1})$</center>
-<center>$=P(x_1, ..., x_{T-2}) * P(x_{T-1}|x_1, ..., x_{T-2}) * P(x_{T}|x_1, ..., x_{T-1})$</center>
+<center>$P(x_1, ..., x_{T-1} ,x_{T})=P(x_1, ..., x_{T-1}) \cdot P(x_{T}|x_1, ..., x_{T-1})$</center>
+<center>$=P(x_1, ..., x_{T-2}) \cdot P(x_{T-1}|x_1, ..., x_{T-2}) \cdot P(x_{T}|x_1, ..., x_{T-1})$</center>
 <center>$=\prod_{t=1}^T P(x_t|x_1, x_2, ..., x_{t-1})$</center>
 
 위 조건부확률을 따르는 모델은 $t$ 시점을 기준으로 과거의 음성 데이터 $x_1, ..., x_{t-1} ,x_{t}$ 을 이용하여 한 시점 뒤 음성 데이터 $x_{t+1}$가 나올 확률을 나타낼 수 있으므로 그 확률을 이용하여 음성을 생성할 수 있습니다.
@@ -104,7 +104,25 @@ Figure 6은 [DeepMind]() 에서 Dilated Causal Convolutions과 수용범위(Rece
 
 ### 5) Residual Connection & Gated Activation Units
 ![](/img/in-post/2020/2020-09-17/convolution_variant.png)
-<center>Figure 5 : Causal Convolutions VS Dilated Causal Convolutions</center>
+<center>Figure 7 : Residaul Block 상세구조</center>
+
+Residaul Block은 앞서 설명한 Dilated Convolution Layer와 두개의 Activation Function($tanh, \sigma$), 두개의 일반적인 Convolution Layer, 1$\times$1 Convolution Layer 으로 구성되어 있습니다.
+Dilated Convolution 통해 생성된 벡터는 두개의 경로를 통해 계산되는데 Convolution Layer와 $tanh$ 경로를 필터(Filter)라고 부르고, 
+Convolution Layer와 $\sigma$ 경로를 게이트(Gate)라고 부른다. 
+각각 경로를 통해 계산된 벡터는 다시 Element-Wise 곱을 통해 하나의 벡터로 변환되는데 이 방식을 Gated Activation Units이라고 합니다.
+
+#### Gated Activation Units
+<center>$z = \tanh(W_{f, k}*x) \odot \sigma (W_{g,k}*x)$</center>
+$*: Convolution 연산\\ \odot :Element-wise 곱셈 \\ \sigma() : Sigmoid\:Function\\ W:학습 가능한 Convolution Filter \\ f: filter \\ g:gate\\k:layer 번호$
+
+Autoregressive Model 중 하나인 [참조논문(PixelCNN)](https://arxiv.org/pdf/1606.05328.pdf) 에서 고안한 방식으로 
+특정 Layer에서 생성한 <u>지역적 특징(Local Feature)을</u> **필터(Filter)로** 보고 이 필터의 정보를 다음 Layer에 얼만큼 전달해 줄지를 정해주는 <u>수도꼭지의 역할</u>을 하는 것이 **게이트(Gate)의** 기능입니다.
+
+Gated Activation Unit을 통해 생성된 벡터 $z$는 1$\times$1 Convolution Layer 지나 Reisidual Connection으로 해당 Layer의 Input과 합쳐져 Layer Output이 됩니다. 
+이러한 [Residaul Connection](https://ganghee-lee.tistory.com/41) 구조는 딥러닝 모델을 더 깊게 쌓게 할 뿐만 아니라 빠르게 학습할 수 있도록 돕는 역할을 합니다.
+
+
+
 
 
 
