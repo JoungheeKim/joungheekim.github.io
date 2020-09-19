@@ -10,7 +10,7 @@ tags:
   - Deep Learning
 ---
 
-# [논문리뷰] - [NEURAL BASIS EXPANSION ANALYSIS FOR INTERPRETABLE TIME SERIES FORECASTING](https://arxiv.org/abs/1905.10437), ICLR 2020
+# [논문리뷰] - [N-BEATS : NEURAL BASIS EXPANSION ANALYSIS FOR INTERPRETABLE TIME SERIES FORECASTING](https://arxiv.org/abs/1905.10437), ICLR 2020
 
 2018년 세계적인 시계열(Time-Series) 경진대회인 [M4 Competition](https://www.sciencedirect.com/science/article/abs/pii/S0169207018300785) 이 개최되었습니다.
 지금까지 대회에서 1등을 하던 모델은 항상 통계기반 모델이었지만 이번대회에서 우승을 차지한 모델은 [ES-RNN(Exponential Smoothing Long Short Term Memory networks)](https://arxiv.org/abs/1907.03329) 으로 통계적 방법론과 머신러닝 방법론을 잘 섞은 구조의 모델입니다.

@@ -4,13 +4,12 @@ title:      "[논문리뷰]WaveNet"
 subtitle:   "A Generative Model for Raw Audio"
 mathjax: true
 tags:
-  - Time-series
-  - Univariate
-  - Multiple step prediction 
+  - Text-to-Speech
+  - Speech Synthesis
   - Deep Learning
 ---
 
-# [논문리뷰] - [A Generative Model for Raw Audio](https://arxiv.org/abs/1609.03499), DeepMind
+# [논문리뷰] - [WaveNet : A Generative Model for Raw Audio](https://arxiv.org/abs/1609.03499), DeepMind
 
 딥러닝 기반 음성합성방법이 등장하기 전까지는 아래와 같은 2가지 대표적인 방식을 주로 채택하여 음성을 생성하거나 합성하였습니다. 
 
@@ -161,9 +160,14 @@ WaveNet은 Condition Modeling $P(x|h)$ 이 가능합니다. 즉 WaveNet에 특�
 - [[BLOG]](https://hanseokhyeon.tistory.com/entry/%ED%8C%8C%EC%9D%B4%EC%8D%AC%EC%97%90%EC%84%9C-librosa-%ED%8C%A8%ED%82%A4%EC%A7%80%EB%A1%9C-%EC%8A%A4%ED%8E%99%ED%8A%B8%EB%9F%BC-%EA%B7%B8%EB%A6%AC%EA%B8%B0) 파이썬 librosa 패키지로 스펙트럼 그리기, HanSeokhyeon
 - [[BLOG]](https://hwiyong.tistory.com/45)  1x1 Convolution 이란, Hwiyong Jo
 - [[BLOG]](https://ganghee-lee.tistory.com/41)  ResNet 설명 및 정리, Lee Ganghee
+- [[BLOG]](https://medium.com/@evinpinar/wavenet-implementation-and-experiments-2d2ee57105d5) WaveNet Implementation and Experiments, Evin Pınar Örnek
 - [[PAPER]](https://www.eksss.org/archive/view_article?pid=pss-10-1-39) 한국어 text-to-speech(TTS) 시스템을 위한 엔드투엔드 합성 방식 연구, 최연주
 - [[YOUTUBE]](https://www.youtube.com/watch?v=GyQnex_DK2k) A Generative Model for Raw Audio, 모두의연구소
 - [[YOUTUBE]](https://www.youtube.com/watch?v=nsrSrYtKkT8) Generative Model-Based Text-to-Speech Synthesis, Heiga Zen
 - [[GITHUB]](https://www.youtube.com/watch?v=nsrSrYtKkT8) pytorch-wavenet, vincentherrmann  
+
+
+- [[BLOG]](https://medium.com/@Alibaba_Cloud/interspeech-2017-speech-synthesis-technology-890c225d2006) 활용사례 
+
 
  
