@@ -132,7 +132,7 @@ Gated Activation Unit을 통해 생성된 벡터 $z$는 1$\times$1 Convolution L
 Skip Connection은 각 Residual Block Layer에서 생성된 Layer Output을 1$\times$1 Convolution Layer 통과시킨 후 합하는 과정으로 구현됩니다.
 각 Residual Block Layer에서 생성된 Output은 layer Depth에 따라 서로 다른 수용범위(Receptive Field)를 이용하여 Local Output을 생성하므로 이 정보를 모두 더하여 최종 모델의 Output을 생성합니다.  
 
-## 7) Conditional WaveNets
+### 7) Conditional WaveNets
 ![](/img/in-post/2020/2020-09-17/conditional_wavenet.png)
 <center>Figure 9 : 조건을 추가한 WaveNet 상세구조</center>
 
@@ -160,6 +160,11 @@ Wavenet에 Condition Modeling을 하는 방법에는 2가지 형태가 있습니
 ![](/img/in-post/2020/2020-09-17/upsampling.png)
 <center>Figure 10 : Upsampling 방법 예시(Spectrogram)</center>
 
+## 실험 및 결과
+
+TTS(Text to Speech) Task에서 WaveNet의 성능을 평가하기 위하여 HMM(Hidden Markov Model), LSTM-RNN Model을 비교 모델로 준비합니다.
+피실험자에게 실험모델을 통해 생성된 음성을 들려주고 선호하는 모델을 선택하도록 합니다. 또한 선택된 모델의 점수를 부여하도록 실험을 설계하여 모델의 음성 생성능력을 테스트합니다.
+Table1은 5점 
 
 
 
