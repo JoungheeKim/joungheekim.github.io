@@ -133,17 +133,32 @@ Skip Connection은 각 Residual Block Layer에서 생성된 Layer Output을 1$\t
 각 Residual Block Layer에서 생성된 Output은 layer Depth에 따라 서로 다른 수용범위(Receptive Field)를 이용하여 Local Output을 생성하므로 이 정보를 모두 더하여 최종 모델의 Output을 생성합니다.  
 
 ## 7) Conditional WaveNets
+![](/img/in-post/2020/2020-09-17/conditional_wavenet.png)
+<center>Figure 9 : 조건을 추가한 WaveNet 상세구조</center>
 
 WaveNet은 Condition Modeling $P(x|h)$ 이 가능합니다. 즉 WaveNet에 특징($h$)을 추가하여 특징에 맞는 음성을 생성할 수 있습니다.
-예를 들어 TTS(Text to Speech)인 경우 Text를 Condition으로 주어 모델을 학습시킴으로써 Generation 단계에서 Text를 Input으로 넣으면  
+예를 들어 TTS(Text to Speech)인 경우 Text Embedding을 Condition으로 주어 모델을 학습시킴으로써 Generation 단계에서 Text Embedding를 Input으로 넣으면 관련 Text에 맞는 음성을 생성합니다.
+다른 예로써 Vocoder인 경우 스펙트로그램을 Wavenet의 Condition으로 주어 모델을 학습시킴으로써 Generation 단계에서 스펙트로그램을 넣으면 그에 맞는 음성을 생성할 수 있습니다.
 
- 
+Wavenet에 Condition Modeling을 하는 방법에는 2가지 형태가 있습니다.
+1. **전역적 조건(Global Conditioning)** : 시점에 따라 변하지 않는 조건을 부는 방법. ( **예)** 화자에 대한 정보가 조건($h$)인 경우 모든 $t$ 시점에서 동일한 영향을 줘야 합니다.)   
+2. **지역적 조건(Local Conditioning)** : 시점에 따라 변하는 조건을 부여하는 방법. ( **예)** TTS에서 Linguistic Feature은 $t$ 시점에 따라 다른 영향을 줘야 해당 단어에 맞는 음성을 생성할 수 있습니다.)
 
+#### 전역적 조건(Global Conditioning) 수식
+<center>$z = \tanh(W_{f, k}*x+V_{f,k}^{T}h) \odot \sigma (W_{g,k}*x+V_{g,k}^{T}h)$</center>
 
+전역적 조건에서 $h$는 조건에 해당하는 벡터를 의미하고, $V^T_{f,k}, V^T_{g,k}$ 는 각 선형함수를 의미합니다.
+벡터 곱으로 생성된 $V^T_{f,k}h, V^T_{g,k}h$은 필터와 게이트 부분에 추가되어 모든 시점에 영향을 주는 장치로써 작동합니다. 
 
+#### 지역적 조건(Local Conditioning) 수식
+<center>$z = \tanh(W_{f,k}*x+V_{f,k}*y) \odot \sigma (W_{g,k}*x+V_{g,k}*y)$</center>
 
+지역적 조건에서 $h_t$는 일정 길이의 Sequence 벡터입니다. 지역적 조건으로 $h_t$를 사용하려면 Sequence의 길이가 음성의 길이와 일치해야 합니다.
+따라서 Transposed Convolution 또는 간단한 복제를 통해서 길이를 증가(Upsampling)시켜 길이를 맞추는 작업을 한 후 Condition input으로 활용합니다.
+길이를 맞추는 함수를 통해 생성된 조건 정보 $y=f(h)는 $1x1 Convolution $V_{f,k}, V_{g,k}$를 이용하여 벡터로 변환된 두 필터와 게이트에 추가됩니다.
 
-
+![](/img/in-post/2020/2020-09-17/upsampling.png)
+<center>Figure 10 : Upsampling 방법 예시(Spectrogram)</center>
 
 
 
