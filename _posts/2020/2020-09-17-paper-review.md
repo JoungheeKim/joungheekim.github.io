@@ -27,10 +27,10 @@ tags:
 #### Short Summary
 이 논문의 큰 특징 4가지는 아래와 같습니다.
 
-1. WaveNet은 자연스러운 음성 파형을 직접 생성합니다.
-2. 긴 음성 파형을 학습하고 생성할 수 있는 새로운 구조를 제시합니다.  
-3. 학습된 모델은 컨디션 모델링으로 인해 다양한 특징적인 음성을 생성할 수 있습니다.
-4. 음악을 포함한 다양한 음성 생성분야에서도 좋은 성능을 보입니다.
+1. WaveNet은 자연스러운 **음성 파형을 직접 생성**합니다.
+2. **긴 음성 파형을 학습**하고 생성할 수 있는 새로운 구조를 제시합니다.  
+3. 학습된 모델은 컨디션 모델링으로 인해 **다양한 특징적인 음성**을 생성할 수 있습니다.
+4. 음악을 포함한 **다양한 음성 생성분야**에서도 좋은 성능을 보입니다.
 
 ## 모델 구조
 ![](/img/in-post/2020/2020-09-17/overview.png)
@@ -67,14 +67,14 @@ Analog Digital Conversion 과정을 통해 처리된 음성 데이터는 이산�
 일반적인 음성 데이터는 각 샘플을 16(bit) 정수 값으로 저장하므로 앞서 설명한 Anlog Digital Conversion을 통해 생성된 정수배열의 정수는 $-2^7$ ~ $2^7$ 사이의 숫자입니다.
 WaveNet은 확률론적 모델링에 따라 매 $t$ 시점 특정 파형이 나올 확률 $P(x_t|x_1, …, x_t−1)$ 을 계산하는데 이 확률을 범주형 분포(Categorical Distribution)로 가정하면 
 매 $t$ 시점 $-2^7$ ~ $2^7$ 사이의 숫자가 나올 확률 $P(-2^7|x_1, …, x_t−1), ..., P(2^7|x_1, …, x_t−1)$ 을 계산해야 합니다. 
-각 숫자가 나올 확률(총 65,536 개의 확률)을 다루는 것은 매우 어려우므로 WaveNet에서는 이를 256개의 숫자(총 256 개의 확률)로 변환하는 $\mu$-law Companding 이라는 변환방법을 사용합니다.
-논문에서는 $\mu$-law Companding와 같은 비선형적인 변환방식이 선형적인 변형방식보다 더 효과적이라고 기술하고 있습니다. 
+<u>각 숫자가 나올 확률(총 65,536 개의 확률)을 다루는 것은 매우 어려우</u>므로 WaveNet에서는 이를 256개의 숫자(총 256 개의 확률)로 변환하는 $\mu$-law Companding 이라는 변환방법을 사용합니다.
+논문에서는 $\mu$-law Companding와 같은 **비선형적인 변환방식이 선형적인 변형방식보다 더 효과적**이라고 기술하고 있습니다. 
 
 #### $\mu$-law Companding Transformation
 <center>$f(x_t) = sign(x_t)\frac{\ln(1+\mu\mid x_t\mid)}{\ln(1+\mu)}$</center>
 
-결론적으로 WaveNet 모델에서 Input으로 사용하는 것은 $\mu$-law Companding 변환방법을 이용하여 음성 디지털 데이터를 작은 범위의 정수 배열로 변환한 값입니다.
-WaveNet 모델로부터 추출된 Output 역시 -127~128(256개) 범위의 정수이며, 이 정수를 Reconstruction을 통해 다시 음성 디지털 데이터로 변형한 것이 최종 결과물입니다.  
+결론적으로 WaveNet 모델에서 Input으로 사용하는 것은 $\mu$-law Companding 변환방법을 이용하여 음성 디지털 데이터를 **작은 범위의 정수 배열**로 변환한 값입니다.
+WaveNet 모델로부터 추출된 Output 역시 -127~128(256개) 범위의 정수이며, 이 정수를 Reconstruction을 통해 다시 <u>음성 디지털 데이터로 변형</u>한 것이 최종 결과물입니다.  
 
 ### 4) Dilated Causal Convolutions
 ![](/img/in-post/2020/2020-09-17/dilated_causal_convolution.png)
@@ -88,11 +88,12 @@ WaveNet 모델로부터 추출된 Output 역시 -127~128(256개) 범위의 정�
 <center>Figure 5 : Causal Convolutions VS Dilated Causal Convolutions</center>
 
 Dilated Causal Convolutions Layer 은 Dilated Convolution Layer의 기능과 Causal Convolutions Layer의 기능을 합쳐놓은 Convolution Layer입니다. 
-[Causal Convolution이란](https://dataplay.tistory.com/29) 시간 순서를 고려하여 Convolution Filter를 적용하는 변형 Convolution Layer입니다. 
+
+[Causal Convolution이란](https://dataplay.tistory.com/29) **시간 순서를 고려**하여 Convolution Filter를 적용하는 변형 Convolution Layer입니다. 
 Causal Convolution을 위로 쌓을 수록 Input 데이터의 수용 범위(Receptive Field)가 커지므로 RNN 계열의 모델처럼 음성 데이터(시계열 데이터)를 모델링 할 수 있습니다.
 다만 Causal Convolution만을 이용하면 수용 범위를 넓히기 위해서 많은 양의 Layer를 쌓아야 하는 단점이 존재합니다. 이를 해결하기 위하여 Dilated Convolution을 함께 적용합니다.
 
-[Dilated Convolution이란](https://dataplay.tistory.com/29) 추출 간격(Dilation)을 조절하여 더 넓은 수용 범위를 갖게 하는 변형 Convolution Layer입니다.
+[Dilated Convolution이란](https://dataplay.tistory.com/29) **추출 간격(Dilation)을 조절**하여 더 <u>넓은 수용 범위</u>를 갖게 하는 변형 Convolution Layer입니다.
 즉 추출 간격을 조절하는 Dilated Causal Convolutions을 적용하면 적게 Layer를 쌓아도 넓은 수용 범위를 갖을 수 있는 장점을 갖고 있습니다. 
 Figure 5처럼 Layer를 쌓을 때 추출 간격을 차례대로 1, 2, 4, ..., 512 까지 늘리면 모델의 Input 수용범위(Receptive Field)는 1024 입니다.
 
@@ -107,9 +108,9 @@ Figure 6은 [DeepMind]() 에서 Dilated Causal Convolutions과 수용범위(Rece
 <center>Figure 7 : Residaul Block 상세구조</center>
 
 Residaul Block은 앞서 설명한 Dilated Convolution Layer와 두개의 Activation Function($tanh, \sigma$), 두개의 일반적인 Convolution Layer, 1$\times$1 Convolution Layer 으로 구성되어 있습니다.
-Dilated Convolution 통해 생성된 벡터는 두개의 경로를 통해 계산되는데 Convolution Layer와 $tanh$ 경로를 필터(Filter)라고 부르고, 
-Convolution Layer와 $\sigma$ 경로를 게이트(Gate)라고 명칭합니다. 
-각각 경로를 통해 계산된 벡터는 다시 $Element-Wise$ 곱을 통해 하나의 벡터로 변환되는데 이 방식을 Gated Activation Units이라고 합니다.
+Dilated Convolution 통해 생성된 벡터는 두개의 경로를 통해 계산되는데 Convolution Layer와 $tanh$ 경로를 **필터**(Filter)라고 부르고, 
+Convolution Layer와 $\sigma$ 경로를 **게이트**(Gate)라고 명칭합니다. 
+각각 경로를 통해 계산된 벡터는 다시 $Element-Wise$ 곱을 통해 하나의 벡터로 변환되는데 이 방식을 **Gated Activation Units**이라고 합니다.
 
 #### Gated Activation Units
 <center>$z = \tanh(W_{f, k}*x) \odot \sigma (W_{g,k}*x)$</center>
@@ -120,10 +121,10 @@ $W : 학습 가능한 Convolution Filter$
 $f : filter \\   g : gate \\   k : layer 번호$
 
 Autoregressive Model 중 하나인 [참조논문(PixelCNN)](https://arxiv.org/pdf/1606.05328.pdf) 에서 고안한 방식으로 
-특정 Layer에서 생성한 <u>지역적 특징(Local Feature)을</u> **필터(Filter)로** 보고 이 필터의 정보를 다음 Layer에 얼만큼 전달해 줄지를 정해주는 <u>수도꼭지의 역할</u>을 하는 것이 **게이트(Gate)의** 기능입니다.
+특정 Layer에서 생성한 <u>지역적 특징(Local Feature)</u>을 **필터**(Filter)로 보고 이 필터의 정보를 다음 Layer에 얼만큼 전달해 줄지를 정해주는 <u>수도꼭지의 역할</u>을 하는 것이 **게이트**(Gate)의 기능입니다.
 
 Gated Activation Unit을 통해 생성된 벡터 $z$는 1$\times$1 Convolution Layer 지나 Reisidual Connection으로 해당 Layer Input과 합쳐져 Layer Output이 됩니다. 
-이러한 [Residaul Connection](https://ganghee-lee.tistory.com/41) 구조는 딥러닝 모델을 더 깊게 쌓게 할 뿐만 아니라 빠르게 학습할 수 있도록 돕는 역할을 합니다.
+이러한 [Residaul Connection](https://ganghee-lee.tistory.com/41) 구조는 딥러닝 모델을 <u>더 깊게 쌓게 할 뿐만 아니라 빠르게 학습</u>할 수 있도록 돕는 역할을 합니다.
 
 ### 6) Skip Connection
 ![](/img/in-post/2020/2020-09-17/skip_connection.png)
@@ -136,9 +137,9 @@ Skip Connection은 각 Residual Block Layer에서 생성된 Layer Output을 1$\t
 ![](/img/in-post/2020/2020-09-17/conditional_wavenet.png)
 <center>Figure 9 : 조건을 추가한 WaveNet 상세구조</center>
 
-WaveNet은 Conditional Modeling $P(x|h)$ 이 가능합니다. 즉 WaveNet에 특징($h$)을 추가하여 특징에 맞는 음성을 생성할 수 있습니다.
-예를 들어 TTS(Text to Speech)인 경우 Text Embedding을 조건정보로 추가하여 모델을 학습시킴으로써 Generation 단계에서 Text Embedding를 Input으로 넣으면 관련 Text에 맞는 음성을 생성합니다.
-다른 예로써 Vocoder인 경우 스펙트로그램을 Wavenet의 조건정보로 추가하여 모델을 학습시킴으로써 Generation 단계에서 스펙트로그램을 넣으면 그에 맞는 음성을 생성할 수 있습니다.
+WaveNet은 Conditional Modeling $P(x|h)$ 이 가능합니다. 즉 WaveNet에 특징($h$)을 추가하여 **특징에 맞는 음성을 생성**할 수 있습니다.
+예를 들어 TTS(Text to Speech)인 경우 **Text Embedding**을 조건정보로 추가하여 모델을 학습시킴으로써 Generation 단계에서 Text Embedding를 Input으로 넣으면 관련 <u>Text에 맞는 음성</u>을 생성합니다.
+다른 예로써 Vocoder인 경우 **스펙트로그램**을 Wavenet의 조건정보로 추가하여 모델을 학습시킴으로써 Generation 단계에서 <u>스펙트로그램을에 맞는 음성</u>을 생성할 수 있습니다.
 
 Conditional Modeling 하는 방법에는 2가지 형태가 있습니다.
 1. **전역적 조건(Global Conditioning)** : 시점에 따라 변하지 않는 조건 정보를 추가하는 방법.
@@ -152,7 +153,7 @@ Conditional Modeling 하는 방법에는 2가지 형태가 있습니다.
 따라서 전역적 조건정보 $h$를 <u>모든 시점에 동일하게 추가</u>하여 모델의 학습 및 생성에 영향을 주어야합니다. 
 논문에서는 위 수식을 통해 **모든 시점에서 동일하게 조건정보**를 추가하였습니다. 
 수식에서 $h$는 조건에 해당하는 벡터를 의미하고, $V^T_{f,k}, V^T_{g,k}$ 는 각 선형함수를 의미합니다. 
-벡터 곱으로 생성된 $V^T_{f,k}h, V^T_{g,k}h$은 필터와 게이트 부분에 추가되어 모든 시점에 영향을 주는 장치로써 작동합니다. 
+벡터 곱으로 생성된 $V^T_{f,k}h, V^T_{g,k}h$은 필터와 게이트 부분에 추가되어 <u>모든 시점에 영향을 주는 장치</u>로써 작동합니다. 
 
 #### 지역적 조건(Local Conditioning) 수식
 <center>$z = \tanh(W_{f,k}*x+V_{f,k}*y) \odot \sigma (W_{g,k}*x+V_{g,k}*y)$</center>
@@ -164,7 +165,7 @@ TTS(Text to Speech)인 경우 Linguistic Feature 또는 Text Embedding 과 같�
 해당 정보를 담고 있는 음성의 위치와 정확하게 매핑시키는 것은 어렵지만 조건정보를 일률적으로 증가시키는 방식으로 음성의 길이와 조건의 길이를 일치 시킬 수 있습니다. 
 따라서 논문에서는 Transposed Convolution 또는 간단한 복제를 통해서 <u>길이를 증가시킨 후 모델의 조건 정보로 활용</u>합니다. 
 Figure 10은 조건 정보의 길이를 증가시키는 방법(Usampling)의 예시입니다.
-길이를 맞추는 함수를 통해 생성된 조건 정보 $y=f(h)$는 1x1 Convolution 함수 $V_{f,k}, V_{g,k}$를 통과한 후 필터와 게이트에 추가되어 각 시점에 영향을 주는 장치로써 작동합니다.
+길이를 맞추는 함수를 통해 생성된 조건 정보 $y=f(h)$는 1x1 Convolution 함수 $V_{f,k}, V_{g,k}$를 통과한 후 필터와 게이트에 추가되어 <u>각 시점에 영향을 주는 장치</u>로써 작동합니다.
 
 ![](/img/in-post/2020/2020-09-17/upsampling.png)
 <center>Figure 10 : Upsampling 방법 예시</center>
@@ -172,12 +173,12 @@ Figure 10은 조건 정보의 길이를 증가시키는 방법(Usampling)의 예
 ## 실험 및 결과
 
 ### 1) MULTI-SPEAKER SPEECH GENERATION
-[VCTK Dataset(English multi-speaker corpus)](https://datashare.is.ed.ac.uk/handle/10283/3443) 을 이용하여 다양한 화자의 ID를 조건으로 주어 WaveNet 모델로부터 각 화자의 특징을 포함한 음성을 생성할 수 있는지를 테스트 합니다.
+[VCTK Dataset(English multi-speaker corpus)](https://datashare.is.ed.ac.uk/handle/10283/3443) 을 이용하여 다양한 화자의 ID를 조건으로 추가하여 **WaveNet 모델로부터 각 화자의 특징을 포함한 음성을 생성**할 수 있는지를 테스트 합니다.
 화자의 ID를 One-Hot Vector로 변환한 후 학습 시 조건정보로 추가합니다. 학습된 WaveNet은 각 화자에 맞는 음성을 생성할 수 있음을 보여주었습니다.
 
 ### 2) TEXT-TO-SPEECH
-WaveNet을 이용하여 TTS(Text to Speech)를 하기 위해서 추가하는 조건정보는 음소, 음소 길이, 기본 주파수 $F_0$ 등이 있습니다. 
-즉 합습 시 이 정보들을 추가하여 학습한 후 생성할 때에는 조건 정보만을 이용하여 음성을 생성합니다. 
+WaveNet을 이용하여 TTS(Text to Speech)를 하기 위해서 추가하는 조건정보는 <u>음소, 음소 길이, 기본 주파수 $F_0$</u> 등이 있습니다. 
+즉 합습 시 이 정보들을 추가하여 학습한 후 **생성할 때에는 조건 정보**만을 이용하여 음성을 생성합니다. 
 문장으로부터 음소와 음소길이 기본주파수를 추출하는 방식에 대해서 논문에서 언급하지 않습니다. 
 다만 외부 모델로 부터 학습하이 관련 정보를 추출하고 이 조건정보를 WaveNet의 입력으로 활용한다고 기술합니다.   
 아마도 추가적인 음성모델링을 통해 이런 기본정보를 추출하는 것으로 추측합니다.
@@ -190,7 +191,7 @@ WaveNet(L)은 Linguistic Features(음소, 음소 길이) 조건정보로 추가�
 
 ![](/img/in-post/2020/2020-09-17/mos_result.png)
 
-MOS Test에서 압도적으로 WaveNet에서 생성된 음성이 가장 높은 점수를 획득하였습니다. 실제 음성의 데이터와도 큰 차이가 나지 않는 점수인걸 확인 할 수 있습니다.
+MOS Test에서 **압도적**으로 WaveNet에서 생성된 음성이 <u>가장 높은 점수</u>를 획득하였습니다. 실제 음성의 데이터와도 큰 차이가 나지 않는 점수인걸 확인 할 수 있습니다.
 
 ## 결론(개인적인 생각)
 음성합성을 위하여 처음으로 본 논문이기 때문에 논문에서 자세하게 다루지 않는 내용을 이해하기 위하여 다양한 외부 정보를 추가하여 리뷰하였습니다. 
