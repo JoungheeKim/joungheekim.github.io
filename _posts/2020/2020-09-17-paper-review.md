@@ -172,11 +172,11 @@ Figure 10은 조건 정보의 길이를 증가시키는 방법(Usampling)의 예
 
 ## 실험 및 결과
 
-### 1) MULTI-SPEAKER SPEECH GENERATION
+### 1) Multi-Speaker Speech Generation
 [VCTK Dataset(English multi-speaker corpus)](https://datashare.is.ed.ac.uk/handle/10283/3443) 을 이용하여 다양한 화자의 ID를 조건으로 추가하여 **WaveNet 모델로부터 각 화자의 특징을 포함한 음성을 생성**할 수 있는지를 테스트 합니다.
 화자의 ID를 One-Hot Vector로 변환한 후 학습 시 조건정보로 추가합니다. 학습된 WaveNet은 각 화자에 맞는 음성을 생성할 수 있음을 보여주었습니다.
 
-### 2) TEXT-TO-SPEECH
+### 2) Text to Speech
 WaveNet을 이용하여 TTS(Text to Speech)를 하기 위해서 추가하는 조건정보는 <u>음소, 음소 길이, 기본 주파수 $F_0$</u> 등이 있습니다. 
 즉 합습 시 이 정보들을 추가하여 학습한 후 **생성할 때에는 조건 정보**만을 이용하여 음성을 생성합니다. 
 문장으로부터 음소와 음소길이 기본주파수를 추출하는 방식에 대해서 논문에서 언급하지 않습니다. 
