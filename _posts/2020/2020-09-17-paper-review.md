@@ -142,42 +142,63 @@ WaveNet은 Conditional Modeling $P(x|h)$ 이 가능합니다. 즉 WaveNet에 특
 
 Wavenet을 Conditional Modeling 하는 방법에는 2가지 형태가 있습니다.
 1. **전역적 조건(Global Conditioning)** : 시점에 따라 변하지 않는 조건 정보르 추가하는 방법.
-2. **지역적 조건(Local Conditioning)** : 시점에 따라 변하는 조건 정보를 추가하는 방법. ( **예)** TTS에서 Linguistic Feature은 $t$ 시점에 따라 다른 영향을 줘야 해당 단어에 맞는 음성을 생성할 수 있습니다.)
+2. **지역적 조건(Local Conditioning)** : 시점에 따라 변하는 조건 정보를 추가하는 방법.
 
 #### 전역적 조건(Global Conditioning) 수식
 <center>$z = \tanh(W_{f, k}*x+V_{f,k}^{T}h) \odot \sigma (W_{g,k}*x+V_{g,k}^{T}h)$</center>
 
-모델로부터 여러 화자의 음성을 생성하고 싶을 때에는 조건으로 화자의 정보 $h$를 추가하여 음성과 함께 학습합니다.
-이 정보는 화자 고유의 특성이므로 시점별로 변하는 정보가 아닙니다.  
-따라서 전역적 조건정보 $h$를 모든 시점에 동일하게 추가하여 모델의 학습 및 생성에 영향을 주어야합니다.
-논문에서는 위 수식을 통해 모든 시점에서 동일하게 조건정보를 추가하였습니다.
-수식에서 $h$는 조건에 해당하는 벡터를 의미하고, $V^T_{f,k}, V^T_{g,k}$ 는 각 선형함수를 의미합니다.
+모델로부터 여러 화자의 음성을 생성하고 싶을 때에는 조건으로 화자의 정보 $h$를 추가하여 음성과 함께 학습합니다. 
+이 정보는 화자 고유의 특성이므로 시점별로 변하는 정보가 아닙니다. 
+따라서 전역적 조건정보 $h$를 모든 시점에 동일하게 추가하여 모델의 학습 및 생성에 영향을 주어야합니다. 
+논문에서는 위 수식을 통해 모든 시점에서 동일하게 조건정보를 추가하였습니다. 
+수식에서 $h$는 조건에 해당하는 벡터를 의미하고, $V^T_{f,k}, V^T_{g,k}$ 는 각 선형함수를 의미합니다. 
 벡터 곱으로 생성된 $V^T_{f,k}h, V^T_{g,k}h$은 필터와 게이트 부분에 추가되어 모든 시점에 영향을 주는 장치로써 작동합니다. 
 
 #### 지역적 조건(Local Conditioning) 수식
 <center>$z = \tanh(W_{f,k}*x+V_{f,k}*y) \odot \sigma (W_{g,k}*x+V_{g,k}*y)$</center>
 
-TTS(Text to Speech)인 경우 Linguistic Feature 또는 Text Embedding 과 같은 정보를 조건으로 추가하여 음성을 생성합니다.
-이 정보는 음성과 길이는 다르지만 순서가 있는 일정 길이의 Sequence 벡터 입니다.
+TTS(Text to Speech)인 경우 Linguistic Feature 또는 Text Embedding 과 같은 정보를 조건으로 추가하여 음성을 생성합니다. 
+이 정보는 음성과 길이는 다르지만 순서가 있는 일정 길이의 Sequence 벡터 입니다. 
 따라서 이 조건 정보를 음성의 정보와 매칭시켜 시점에 따라 다르게 넣어주어야 합니다.  
 **예)** '나는 사과를 좋아한다'라는 TEXT를 조건 정보로 추가할 때 음성에서 '사과'라는 소리가 나오는 시점에 '사과' 단어의 Embedding 이 영향을 주도록 음성과 조건정보의 시점을 매칭시켜야 합니다.  
-해당 정보를 담고 있는 음성의 위치와 정확하게 매핑시키는 것은 어렵지만 조건정보를 일률적으로 증가시키는 방식으로 음성의 길이와 조건의 길이를 일치 시킬 수 있습니다.
-따라서 논문에서는 Transposed Convolution 또는 간단한 복제를 통해서 길이를 증가시킨 후 모델의 조건 정보로 활용합니다.
-길이를 맞추는 함수를 통해 생성된 조건 정보 $y=f(h)$는 $1x1 Convolution 함수 $V_{f,k}, V_{g,k}$를 통과한 후 필터와 게이트에 추가되어 각 시점에 영향을 주는 장치로써 작동합니다.
+해당 정보를 담고 있는 음성의 위치와 정확하게 매핑시키는 것은 어렵지만 조건정보를 일률적으로 증가시키는 방식으로 음성의 길이와 조건의 길이를 일치 시킬 수 있습니다. 
+따라서 논문에서는 Transposed Convolution 또는 간단한 복제를 통해서 길이를 증가시킨 후 모델의 조건 정보로 활용합니다. 
+Figure 10은 조건 정보의 길이를 증가시키는 방법(Usampling)의 예시입니다.
+길이를 맞추는 함수를 통해 생성된 조건 정보 $y=f(h)$는 1x1 Convolution 함수 $V_{f,k}, V_{g,k}$를 통과한 후 필터와 게이트에 추가되어 각 시점에 영향을 주는 장치로써 작동합니다.
 
 ![](/img/in-post/2020/2020-09-17/upsampling.png)
-<center>Figure 10 : Upsampling 방법 예시(Spectrogram)</center>
+<center>Figure 10 : Upsampling 방법 예시</center>
 
 ## 실험 및 결과
 
+### 1) MULTI-SPEAKER SPEECH GENERATION
+[VCTK Dataset(English multi-speaker corpus)](https://datashare.is.ed.ac.uk/handle/10283/3443) 을 이용하여 다양한 화자의 ID를 조건으로 주어 WaveNet 모델로부터 각 화자의 특징을 포함한 음성을 생성할 수 있는지를 테스트 합니다.
+화자의 ID를 One-Hot Vector로 변환한 후 학습 시 조건정보로 추가합니다. 학습된 WaveNet은 각 화자에 맞는 음성을 생성할 수 있음을 보여주었습니다.
+
+### 2) TEXT-TO-SPEECH
+WaveNet을 이용하여 TTS(Text to Speech)를 하기 위해서 추가하는 조건정보는 음소, 음소 길이, 기본 주파수 $F_0$ 등이 있습니다. 
+즉 합습 시 이 정보들을 추가하여 학습한 후 생성할 때에는 조건 정보만을 이용하여 음성을 생성합니다. 
+문장으로부터 음소와 음소길이 기본주파수를 추출하는 방식에 대해서 논문에서 언급하지 않습니다. 
+다만 외부 모델로 부터 학습하이 관련 정보를 추출하고 이 조건정보를 WaveNet의 입력으로 활용한다고 기술합니다.   
+아마도 추가적인 음성모델링을 통해 이런 기본정보를 추출하는 것으로 추측합니다.
+
 TTS(Text to Speech) Task에서 WaveNet의 성능을 평가하기 위하여 HMM(Hidden Markov Model), LSTM-RNN Model을 비교 모델로 준비합니다.
-피실험자에게 실험모델을 통해 생성된 음성을 들려주고 선호하는 모델을 선택하도록 합니다. 또한 선택된 모델의 점수를 부여하도록 실험을 설계하여 모델의 음성 생성능력을 테스트합니다.
-Table1은 5점 
+WaveNet(L)은 Linguistic Features(음소, 음소 길이) 조건정보로 추가하여 학습한 모델이고, WaveNet(L+F)는 Linguistic Features 뿐만 아니라 기본주파수에 log Scale을 한 $log F_0$ 를 추가하여 학습한 모델입니다.  
+총 2가지 방법으로 모델의 성능을 평가합니다.
+1. **Paired Comparison Test** : 피실험자에게 두 개의 실험모델로부터 생성된 음성을 들려주고 그 중 더 좋은 음성을 선택하는 실험.
+2. **Mean Opinion Score(MOS) Test** : 피실험자에게 실험모델로부터 생성된 음성을 들려주고 1~5점의 품질 점수를 선택하도록 하는 실험. 
 
+![](/img/in-post/2020/2020-09-17/mos_result.png)
 
+MOS Test에서 압도적으로 WaveNet에서 생성된 음성이 가장 높은 점수를 획득하였습니다. 실제 음성의 데이터와도 큰 차이가 나지 않는 점수인걸 확인 할 수 있습니다.
 
-
-
+## 결론(개인적인 생각)
+음성합성을 위하여 처음으로 본 논문이기 때문에 논문에서 자세하게 다루지 않는 내용을 이해하기 위하여 다양한 외부 정보를 추가하여 리뷰하였습니다. 
+딥러닝 모델 구조와 그 작동원리는 논문에서 자세하게 설명하기 때문에 이해하기 쉬웠지만 TTS를 만들기 위하여 문장으로부터 음소, 음소길이, 기본 주파수를 추출하는 방법은 자세하게 기술하지 않았으므로 구현체를 만드는 것은 다소 어려워보입니다.
+다행히 [MEDIUM BLOG](https://medium.com/@evinpinar/wavenet-implementation-and-experiments-2d2ee57105d5) 에서 WaveNet 구현체와 실험방법에 대해 자세히 설명하였기 때문에 이점을 참고하면 좋을 것 같습니다.
+> WaveNet 논문에서는 음소정보와 기본주파수를 조건정보로 모델에 추가하여 TTS에 적용한 사례를 보여줍니다. 
+> 최근 논문에서는 WaveNet을 주로 Vocoder로 활용하고 있습니다. 즉 스펙토그램을 조건정보로 모델에 추가하여 음성을 합성하는 용도로 WaveNet을 사용합니다.
+> 연세대학교 석박통합과정 황민제님의 [발표영상](https://youtu.be/m2A9g6Xu91I) 에서도 WaveNet을 Vocoder로 활용할 경우 더 빠르게 학습이 가능하며 모델의 성능을 향상시킬 수 있다고 언급합니다.
 
 
 ## Reference
@@ -192,10 +213,11 @@ Table1은 5점
 - [[PAPER]](https://www.eksss.org/archive/view_article?pid=pss-10-1-39) 한국어 text-to-speech(TTS) 시스템을 위한 엔드투엔드 합성 방식 연구, 최연주
 - [[YOUTUBE]](https://www.youtube.com/watch?v=GyQnex_DK2k) A Generative Model for Raw Audio, 모두의연구소
 - [[YOUTUBE]](https://www.youtube.com/watch?v=nsrSrYtKkT8) Generative Model-Based Text-to-Speech Synthesis, Heiga Zen
-- [[GITHUB]](https://www.youtube.com/watch?v=nsrSrYtKkT8) pytorch-wavenet, vincentherrmann  
-
-
-- [[BLOG]](https://medium.com/@Alibaba_Cloud/interspeech-2017-speech-synthesis-technology-890c225d2006) 활용사례 
+- [[YOUTUBE]](https://youtu.be/m2A9g6Xu91I) Generative Model-Based Text-to-Speech Synthesis, Heiga Zen
+- [[GITHUB]](https://github.com/vincentherrmann/pytorch-wavenet) pytorch-wavenet, vincentherrmann  
+- [[BLOG]](https://medium.com/@Alibaba_Cloud/interspeech-2017-speech-synthesis-technology-890c225d2006) 활용사례
+- [[BLOG]](https://tech.kakaoenterprise.com/66) AI에게 어떻게 음성을 가르칠까?, Tech Log
+ 
 
 
  
