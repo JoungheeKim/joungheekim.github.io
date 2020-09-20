@@ -137,11 +137,11 @@ Skip Connection은 각 Residual Block Layer에서 생성된 Layer Output을 1$\t
 <center>Figure 9 : 조건을 추가한 WaveNet 상세구조</center>
 
 WaveNet은 Conditional Modeling $P(x|h)$ 이 가능합니다. 즉 WaveNet에 특징($h$)을 추가하여 특징에 맞는 음성을 생성할 수 있습니다.
-예를 들어 TTS(Text to Speech)인 경우 Text Embedding을 Condition으로 주어 모델을 학습시킴으로써 Generation 단계에서 Text Embedding를 Input으로 넣으면 관련 Text에 맞는 음성을 생성합니다.
-다른 예로써 Vocoder인 경우 스펙트로그램을 Wavenet의 Condition으로 주어 모델을 학습시킴으로써 Generation 단계에서 스펙트로그램을 넣으면 그에 맞는 음성을 생성할 수 있습니다.
+예를 들어 TTS(Text to Speech)인 경우 Text Embedding을 조건정보로 추가하여 모델을 학습시킴으로써 Generation 단계에서 Text Embedding를 Input으로 넣으면 관련 Text에 맞는 음성을 생성합니다.
+다른 예로써 Vocoder인 경우 스펙트로그램을 Wavenet의 조건정보로 추가하여 모델을 학습시킴으로써 Generation 단계에서 스펙트로그램을 넣으면 그에 맞는 음성을 생성할 수 있습니다.
 
-Wavenet을 Conditional Modeling 하는 방법에는 2가지 형태가 있습니다.
-1. **전역적 조건(Global Conditioning)** : 시점에 따라 변하지 않는 조건 정보르 추가하는 방법.
+Conditional Modeling 하는 방법에는 2가지 형태가 있습니다.
+1. **전역적 조건(Global Conditioning)** : 시점에 따라 변하지 않는 조건 정보를 추가하는 방법.
 2. **지역적 조건(Local Conditioning)** : 시점에 따라 변하는 조건 정보를 추가하는 방법.
 
 #### 전역적 조건(Global Conditioning) 수식
@@ -149,8 +149,8 @@ Wavenet을 Conditional Modeling 하는 방법에는 2가지 형태가 있습니�
 
 모델로부터 여러 화자의 음성을 생성하고 싶을 때에는 조건으로 화자의 정보 $h$를 추가하여 음성과 함께 학습합니다. 
 이 정보는 화자 고유의 특성이므로 시점별로 변하는 정보가 아닙니다. 
-따라서 전역적 조건정보 $h$를 모든 시점에 동일하게 추가하여 모델의 학습 및 생성에 영향을 주어야합니다. 
-논문에서는 위 수식을 통해 모든 시점에서 동일하게 조건정보를 추가하였습니다. 
+따라서 전역적 조건정보 $h$를 <u>모든 시점에 동일하게 추가</u>하여 모델의 학습 및 생성에 영향을 주어야합니다. 
+논문에서는 위 수식을 통해 **모든 시점에서 동일하게 조건정보**를 추가하였습니다. 
 수식에서 $h$는 조건에 해당하는 벡터를 의미하고, $V^T_{f,k}, V^T_{g,k}$ 는 각 선형함수를 의미합니다. 
 벡터 곱으로 생성된 $V^T_{f,k}h, V^T_{g,k}h$은 필터와 게이트 부분에 추가되어 모든 시점에 영향을 주는 장치로써 작동합니다. 
 
@@ -160,9 +160,9 @@ Wavenet을 Conditional Modeling 하는 방법에는 2가지 형태가 있습니�
 TTS(Text to Speech)인 경우 Linguistic Feature 또는 Text Embedding 과 같은 정보를 조건으로 추가하여 음성을 생성합니다. 
 이 정보는 음성과 길이는 다르지만 순서가 있는 일정 길이의 Sequence 벡터 입니다. 
 따라서 이 조건 정보를 음성의 정보와 매칭시켜 시점에 따라 다르게 넣어주어야 합니다.  
-**예)** '나는 사과를 좋아한다'라는 TEXT를 조건 정보로 추가할 때 음성에서 '사과'라는 소리가 나오는 시점에 '사과' 단어의 Embedding 이 영향을 주도록 음성과 조건정보의 시점을 매칭시켜야 합니다.  
+예를들자면 '나는 사과를 좋아한다'라는 TEXT를 조건 정보로 추가할 때 음성에서 '사과'라는 소리가 나오는 시점에 '사과' 단어의 Embedding 이 영향을 주도록 **음성과 조건정보의 시점을 매칭**시켜야 합니다.  
 해당 정보를 담고 있는 음성의 위치와 정확하게 매핑시키는 것은 어렵지만 조건정보를 일률적으로 증가시키는 방식으로 음성의 길이와 조건의 길이를 일치 시킬 수 있습니다. 
-따라서 논문에서는 Transposed Convolution 또는 간단한 복제를 통해서 길이를 증가시킨 후 모델의 조건 정보로 활용합니다. 
+따라서 논문에서는 Transposed Convolution 또는 간단한 복제를 통해서 <u>길이를 증가시킨 후 모델의 조건 정보로 활용</u>합니다. 
 Figure 10은 조건 정보의 길이를 증가시키는 방법(Usampling)의 예시입니다.
 길이를 맞추는 함수를 통해 생성된 조건 정보 $y=f(h)$는 1x1 Convolution 함수 $V_{f,k}, V_{g,k}$를 통과한 후 필터와 게이트에 추가되어 각 시점에 영향을 주는 장치로써 작동합니다.
 
