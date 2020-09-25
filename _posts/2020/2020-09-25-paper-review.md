@@ -59,20 +59,62 @@ TTS(Text to Speech)는 매우 복잡하며 긴 작업절차가 필요한 어려�
 ### 2) CBHG 모듈
 
 CBHG 모듈은 인코더와 디코더에 공통적으로 존재하는 모듈로써 순차적인(Sequence) 데이터를 처리하는데 특화되어 있습니다.
-**CBHG** 모듈은 1차 **C**onvolution **B**ank, **H**ighway 네트워크, Bidirectional **G**RU로 구성되어 있습니다.
+**CBHG** 모듈은 1D **C**onvolution **B**ank, **H**ighway 네트워크, Bidirectional **G**RU로 구성되어 있습니다.
+모듈은 Sequence 벡터를 Input으로 사용하며 Sequence 벡터가 Output으로 추출됩니다.
 모듈의 상세 프로세스는 아래와 같습니다.
 
-1. Sequence 데이터를 1부터 K개의 필터를 갖고 있는 **1차 Convolution bank**에 통과시켜 Feature 벡터를 생성합니다.
+1. Sequence 데이터를 1부터 K개의 필터를 갖고 있는 **1D Convolution bank**에 통과시켜 Feature 벡터를 생성합니다.
 2. Feature 벡터를 **Max polling Layer**에 통과시켜 Sequence에 따라 변하지 않는 부분(local invariance)을 추출합니다.
-3. 고정된 폭을 갖은 몇개의 **1차 Convolution Network**을 통과시켜 Sequence 데이터의 벡터 사이즈와 일치하는 벡터를 생성합니다. 
+3. 고정된 폭을 갖은 몇개의 **1D Convolution Network**을 통과시켜 Sequence 데이터의 벡터 사이즈와 일치하는 벡터를 생성합니다.
 4. 3)에서 생성된 벡터와 1)의 Sequence Input 벡터를 더하여 **Residual Connection**을 구성합니다.
 5. 4)에서 생성된 벡터를 **Highway 네트워크**에 통과시켜 high-level features를 생성합니다.
 6. high-level features를 **GRU**의 입력으로 사용합니다.
 
+CBHG 모듈 안에 있는 4) Residual Connection은 모델의 성능 뿐만 아니라 빠르게 수렴할 수 있도록 돕는 역할을 합니다.
+모든 1D Convolution Network는 Batch Normalization을 포함하고 있어 정규화 작용을 합니다.
+참고로 모든 1D Convolution 안에는 Batch Normalization을 적용합니다.
 
 #### Highway 네트워크
-Hightway 네트워크는 Gate 구조를 사용하는 Residual 네트워크 입니다. 
+Hightway 네트워크는 Gate 구조를 사용하는 Residual 네트워크 입니다.
 
+
+### 3) 인코더(Encoder)
+
+인코더는 문장으로부터 고정된 길이의 특징(벡터)를 추출하는 것이 목적입니다.
+따라서 앞서 설명한 것 처럼 캐릭터 단위로 나뉜 캐릭터 One-Hot 벡터가 인코더의 Input으로 들어와 어텐션 모듈에서 사용될 Sequence 벡터로 변환되는 과정은 아래와 같습니다.
+
+1. 임베딩 매트릭스(Embedding Matrix)를 이용하여 One-Hot 벡터로 표현된 캐릭터 Input을 임베딩 벡터로 변환합니다.
+2. 임베딩 벡터를 (FC layer + Lelu + Dropout)으로 구성된 Pre-net 모듈에 통과시킵니다.
+3. Pre-Net을 통과시켜 생성된 벡터를 CBHG 넣으면 어텐션 모듈에서 활용될 Sequence 벡터가 생성됩니다.
+
+Pre-Net에는 2층의 Fully Connected Layer(FC Layer) 입니다. 이 모듈은 과적합을 막기위한 목적으로 Dropout이 적용되어 있습니다.
+
+### 4) 디코더(Decoder)
+
+디코더는 인코더에서 생성된 Sequence 벡터와 $t-1$ 시점까지 생성된 디코더의 멜 스펙토그램을 Input으로 받아 $t$ 시점의 멜 스펙토그램을 생성합니다.
+어텐션 기반 모델이므로 인코더에서 생성된 Sequence 벡터는 어텐션 모듈에서 계산된 가중치에 따라 가중합 되어 Decoder-RNN 모듈에 사용됩니다.
+자세한 디코더 프로세스는 아래와 같습니다.
+
+1. 디코더의 Input은 $t-1$ 시점까지 디코더에서 생성된 멜 스펙토그램입니다.
+처음 시점에는 생성된 멜 스펙토그램이 없으므로 모든 값이 0인 멜 스펙토그램<Go 프레임>을 Input으로 사용합니다.
+2. 멜 스펙토그램을 Pre-Net 모듈에 통과시켜 벡터를 생성 한 후 Attention-RNN의 Input으로 사용합니다.
+3. Attention-RNN으로 부터 추출된 Sequence hidden 벡터($h_1, h_2, ..., h_{t-1}$)를 어텐센 모듈에 넣어 인코더의 벡터의 각 시점과 관련된 벡터의 가중합인 Context 벡터($c_1, c_2, ..., c_{t-1}$)를 추출합니다.
+4. Attention-RNN hidden 벡터($h_1, h_2, ..., h_{t-1}$)와 Context 벡터($c_1, c_2, ..., c_{t-1}$)를 Concatenate 하여 Decoder-RNN의 Input으로 사용합니다.
+5. Decoder-RNN에서 추출된 결과가 디코더의 Output인 $t$ 시점의 멜 스펙토그램입니다.
+
+오디오로부터 추출한 멜 스펙토그램은 시간에 따라 연속한 프레임으로 구성되어 있습니다.
+따라서 **겹치는 정보가 많으므로**(연속시점의 멜 스펙토그램은 반복되는 프레임으로 구성된 경우가 많음) 디코더에서 한 시점에서 여러개($\tau$)의 멜 스펙트그램을 추출하여 학습 및 수렴 속도를 상승시킵니다.
+즉 총 $p$길이의 멜 스펙토그램이 존재하면 디코더에서 예측하는 총 시점은 $t=p/\tau$
+
+&t& 시점에서 추출된 멜 스펙토그램
+
+
+
+
+
+
+
+인코더는 문장으로부터 고정된 일련의 특징을 추출하기 위
 
 
 
