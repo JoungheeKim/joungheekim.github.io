@@ -32,14 +32,16 @@ TTS(Text to Speech)는 매우 복잡하며 긴 작업절차가 필요한 어려�
 
 ## 모델 구조
 ![](/img/in-post/2020/2020-09-25/model_structure.gif)
+<center>**Tacotron 모델 전체구조**</center>
 
 모델은 크게 문장을 Input으로 받아 정보를 추출하는 **인코더**, 인코더로부터 추출된 정보를 이용하여 멜 스펙토그램을 생성하는 **디코더**, 
-인코더의 정보를 디코더에 매핑해주는 *어텐션*, 마지막으로 디코더에서 생성된 <u>멜 스펙토그램</u>을 이용하여 Linear 스펙토그램을 생성하는 **후처리** 부분으로 나뉠 수 있습니다.
+인코더의 정보를 디코더에 매핑해주는 **어텐션**, 마지막으로 디코더에서 생성된 멜 스펙토그램을 이용하여 Linear 스펙토그램을 생성하는 **후처리** 부분으로 나뉠 수 있습니다.
 그리고 추가적으로 모델로부터 나온 최종 결과물인 Linear 스펙토그램을 오디오로 바꿔주는 **Grifin-Lim 알고리즘**이 있습니다.
 인코더와 디코더 안에는 공통적으로 반복되는 CBHG 공통 모듈이 존재합니다. 
 
 ### 1) Input & Output
 ![](/img/in-post/2020/2020-09-25/input_output.png)
+<center>**Input & Output 예시**</center>
 
 모델의 학습(Training) 및 추론(Inference) 단계에서 Input은 캐릭터 단위의 One-hot 벡터 입니다. 
 따라서 영어 문장을 모델에 넣기 위해서는 문장을 캐릭터 단위로 나누고 One-hot Encoding하는 작업이 필요합니다.
@@ -58,11 +60,11 @@ TTS(Text to Speech)는 매우 복잡하며 긴 작업절차가 필요한 어려�
 > 자세한 전처리 과정은 [[오디오 데이터 전처리]](https://hyunlee103.tistory.com/54) 에서 참고 부탁드립니다.
 
 ![](/img/in-post/2020/2020-09-25/preprocess.png)
-<center><bold>오디오 데이터 전처리 예시</bold></center>
+<center>**오디오 데이터 전처리 예시**</center>
 
 ### 2) CBHG 모듈
 ![](/img/in-post/2020/2020-09-25/cbhg_example.png)
-<center><bold>Encoder에 적용된 CBHG 모듈 예시</bold></center>
+<center>**Encoder에 적용된 CBHG 모듈 예시**</center>
 
 CBHG 모듈은 인코더와 디코더에 공통적으로 존재하는 모듈로써 순차적인(Sequence) 데이터를 처리하는데 특화되어 있습니다.
 **CBHG** 모듈은 1D **C**onvolution **B**ank, **H**ighway 네트워크, Bidirectional **G**RU로 구성되어 있습니다.
@@ -76,14 +78,19 @@ CBHG 모듈은 인코더와 디코더에 공통적으로 존재하는 모듈로�
 5. 4)에서 생성된 벡터를 **Highway 네트워크**에 통과시켜 high-level features를 생성합니다.
 6. high-level features를 **GRU**의 입력으로 사용합니다.
 
-CBHG 모듈 안에 있는 4) Residual Connection은 모델의 성능 뿐만 아니라 빠르게 수렴할 수 있도록 돕는 역할을 합니다.
+CBHG 모듈 안에 있는 4) Residual Connection은 모델의 깊게 쌓을 수 있게 하며 학습할 때 빠르게 수렴할 수 있도록 돕는 역할을 합니다.
 모든 1D Convolution Network는 Batch Normalization을 포함하고 있어 정규화 작용을 합니다.
 
 #### Highway 네트워크
+
 <center>$\text{Highway}(x) = T(x) * H(x) + (1-T(x)) * x$</center>
 
-Hightway 네트워크는 Gate 구조를 사용하는 Residual 네트워크 입니다. 
-HighWay Layer를 통과하여 계산된 $H(x)$와 HighWay Layer의 Input인 $x$를 얼만큼 비율로 섞을지를 $T(x)$를 통해 결정하는 구조로 이루어져 있습니다.   
+$T(x)=\sigma FC(x) : Fully Connected Layer + Sigmoid Activation$
+$H(x)=FC(x) : Fully Connected Layer$
+
+Hightway 네트워크는 **Gate 구조**를 추가한 <u>Residual Connection</u> 입니다.
+일반적인 Residual Connection은 Input $x$와 함수 $H(x)$가 있을 때 결과 $y$와의 관계를 $y=x+H(x)$로 정의합니다.
+HighWay 네트워크는 $x$와 $H(x)$을 얼만큼 비율로 섞을지를 학습하여 결정할 수 있도록 0~1의 값을 갖는 $T(x)$를 만들어 $x$와 $H(x)$에 곱해 줍니다.
 
 
 ### 3) 인코더(Encoder)
