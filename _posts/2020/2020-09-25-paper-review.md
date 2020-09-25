@@ -32,7 +32,7 @@ TTS(Text to Speech)는 매우 복잡하며 긴 작업절차가 필요한 어려�
 
 ## 모델 구조
 ![](/img/in-post/2020/2020-09-25/model_structure.gif)
-<center>**Tacotron 모델 전체구조**</center>
+<center>Tacotron 모델 전체구조</center>
 
 모델은 크게 문장을 Input으로 받아 정보를 추출하는 **인코더**, 인코더로부터 추출된 정보를 이용하여 멜 스펙토그램을 생성하는 **디코더**, 
 인코더의 정보를 디코더에 매핑해주는 **어텐션**, 마지막으로 디코더에서 생성된 멜 스펙토그램을 이용하여 Linear 스펙토그램을 생성하는 **후처리** 부분으로 나뉠 수 있습니다.
@@ -41,7 +41,7 @@ TTS(Text to Speech)는 매우 복잡하며 긴 작업절차가 필요한 어려�
 
 ### 1) Input & Output
 ![](/img/in-post/2020/2020-09-25/input_output.png)
-<center>**Input & Output 예시**</center>
+<center>Input & Output 예시</center>
 
 모델의 학습(Training) 및 추론(Inference) 단계에서 Input은 캐릭터 단위의 One-hot 벡터 입니다. 
 따라서 영어 문장을 모델에 넣기 위해서는 문장을 캐릭터 단위로 나누고 One-hot Encoding하는 작업이 필요합니다.
@@ -64,7 +64,7 @@ TTS(Text to Speech)는 매우 복잡하며 긴 작업절차가 필요한 어려�
 
 ### 2) CBHG 모듈
 ![](/img/in-post/2020/2020-09-25/cbhg_example.png)
-<center>**Encoder에 적용된 CBHG 모듈 예시**</center>
+<center>Encoder에 적용된 CBHG 모듈 예시</center>
 
 CBHG 모듈은 인코더와 디코더에 공통적으로 존재하는 모듈로써 순차적인(Sequence) 데이터를 처리하는데 특화되어 있습니다.
 **CBHG** 모듈은 1D **C**onvolution **B**ank, **H**ighway 네트워크, Bidirectional **G**RU로 구성되어 있습니다.
@@ -94,7 +94,7 @@ HighWay 네트워크는 $x$와 $H(x)$을 얼만큼 비율로 섞을지를 학습
 
 ### 3) 인코더(Encoder)
 ![](/img/in-post/2020/2020-09-25/encoder.png)
-<center>**Encoder 상세구조**</center>
+<center>Encoder 상세구조</center>
 
 인코더는 문장으로부터 고정된 길이의 특징(벡터)를 추출하는 것이 목적입니다.
 따라서 앞서 설명한 것 처럼 캐릭터 단위로 나뉜 캐릭터 One-Hot 벡터가 인코더의 Input으로 들어와 어텐션 모듈에서 사용될 Sequence 벡터로 변환되는 과정은 아래와 같습니다.
