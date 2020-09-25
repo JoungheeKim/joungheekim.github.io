@@ -39,6 +39,7 @@ TTS(Text to Speech)는 매우 복잡하며 긴 작업절차가 필요한 어려�
 인코더와 디코더 안에는 공통적으로 반복되는 CBHG 공통 모듈이 존재합니다. 
 
 ### 1) Input & Output
+![](/img/in-post/2020/2020-09-25/input_output.png)
 
 모델의 학습(Training) 및 추론(Inference) 단계에서 Input은 캐릭터 단위의 One-hot 벡터 입니다. 
 따라서 영어 문장을 모델에 넣기 위해서는 문장을 캐릭터 단위로 나누고 One-hot Encoding하는 작업이 필요합니다.
@@ -56,7 +57,12 @@ TTS(Text to Speech)는 매우 복잡하며 긴 작업절차가 필요한 어려�
 > 멜 스펙토그램은 Linear 스펙토그램을 Mel filter Bank라는 필터에 통과시켜 얻을 수 있습니다.
 > 자세한 전처리 과정은 [[오디오 데이터 전처리]](https://hyunlee103.tistory.com/54) 에서 참고 부탁드립니다.
 
+![](/img/in-post/2020/2020-09-25/preprocess.png)
+<center><bold>오디오 데이터 전처리 예시</bold></center>
+
 ### 2) CBHG 모듈
+![](/img/in-post/2020/2020-09-25/cbhg_example.png)
+<center><bold>Encoder에 적용된 CBHG 모듈 예시</bold></center>
 
 CBHG 모듈은 인코더와 디코더에 공통적으로 존재하는 모듈로써 순차적인(Sequence) 데이터를 처리하는데 특화되어 있습니다.
 **CBHG** 모듈은 1D **C**onvolution **B**ank, **H**ighway 네트워크, Bidirectional **G**RU로 구성되어 있습니다.
@@ -72,10 +78,12 @@ CBHG 모듈은 인코더와 디코더에 공통적으로 존재하는 모듈로�
 
 CBHG 모듈 안에 있는 4) Residual Connection은 모델의 성능 뿐만 아니라 빠르게 수렴할 수 있도록 돕는 역할을 합니다.
 모든 1D Convolution Network는 Batch Normalization을 포함하고 있어 정규화 작용을 합니다.
-참고로 모든 1D Convolution 안에는 Batch Normalization을 적용합니다.
 
 #### Highway 네트워크
-Hightway 네트워크는 Gate 구조를 사용하는 Residual 네트워크 입니다.
+<center>$\text{Highway}(x) = T(x) * H(x) + (1-T(x)) * x$</center>
+
+Hightway 네트워크는 Gate 구조를 사용하는 Residual 네트워크 입니다. 
+HighWay Layer를 통과하여 계산된 $H(x)$와 HighWay Layer의 Input인 $x$를 얼만큼 비율로 섞을지를 $T(x)$를 통해 결정하는 구조로 이루어져 있습니다.   
 
 
 ### 3) 인코더(Encoder)
