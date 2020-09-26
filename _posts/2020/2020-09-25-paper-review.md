@@ -136,9 +136,9 @@ Seq2Seq 구조의 특성상 인코더와 디코더 사이에 Bottle Neck이 존�
 어텐션에는 다양한 형태가 존재하지만 타코트론에서 적용한 방법은 [Bahdanau Attetnion](https://arxiv.org/abs/1409.0473) 입니다.
 $h_1, h_2, ..., h_n$는 인코더에서 생성된 $n$개의 Hidden 벡터이고, 디코더의 모듈 Attention-RNN에서 $t$ 시점에 생성된 Hidden 벡터를 $d_t$라고 할때 Bahdanau Attention 통해 구한 Context 벡터 $c_t$는 아래와 같습니다.
 
-$c_t=\sum_{j=1}^n a_{tj}h_j$
-$a_tj=\frac{exp(score(d_t, h_j))}{\sum_{i=1}^n exp(score(d_t, h_i))}$
-$score(d_t, h_j)=v^T tanh(w_d d_t + w_h h_j)$
+<center>$c_t=\sum_{j=1}^n a_{tj}h_j$</center>
+<center>$a_{tj}=\frac{exp(score(d_t, h_j))}{\sum_{i=1}^n exp(score(d_t, h_i))}$</center>
+<center>$score(d_t, h_j)=v^T tanh(w_d d_t + w_h h_j)$</center>
 
 위 식은 [Medium BLOG](https://medium.com/analytics-vidhya/neural-machine-translation-using-bahdanau-attention-mechanism-d496c9be30c3) 글을 참고하여 재구성하였습니다.
 위의 식이 전체으로 의미하는 것은 $d_t$ 와 $h_n$ 가 얼마나 유사한지를 Score Function을 이용하여 추출한 뒤 그것의 비율대로 $h_n$을 곱하여 Context 벡터 $c_t$를 구성하는 것입니다.
