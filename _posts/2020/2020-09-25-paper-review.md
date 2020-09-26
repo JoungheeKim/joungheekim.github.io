@@ -20,7 +20,8 @@ TTS(Text to Speech)는 매우 복잡하며 긴 작업절차가 필요한 어려�
 따라서 이 논문이 나온 이후로 이제는 <u>전문가의 도움 없이도 개인이 음성을 합성</u>할 수 있게 되었습니다.
 
 오늘 포스팅은 `타코트론` 또는 `Tacotron`라고 불리는 End-to-End 모델 대해 상세하게 리뷰하도록 하겠습니다.
-이 글은 [Tacotron 논문](https://arxiv.org/abs/1703.10135)과 [Tacotron을 한국어에 적용한 논문](http://www.ndsl.kr/ndsl/search/detail/article/articleSearchResultDetail.do?cn=JAKO201811648108967) 을 참고하여 정리하였음을 먼저 밝힙니다. 
+이 글은 [Tacotron 논문](https://arxiv.org/abs/1703.10135)과 [Tacotron을 한국어에 적용한 논문](http://www.ndsl.kr/ndsl/search/detail/article/articleSearchResultDetail.do?cn=JAKO201811648108967) 을 참고하여 정리하였음을 먼저 밝힙니다.
+논문 그대로를 리뷰하기보다는 생각을 정리하는 목적으로 제작하고 있기 때문에 실제 내용과 다른점이 존재할 수 있습니다. 
 혹시 제가 잘못 알고 있는 점이나 보안할 점이 있다면 댓글 부탁드립니다.
 
 #### Short Summary
@@ -60,13 +61,13 @@ TTS(Text to Speech)는 매우 복잡하며 긴 작업절차가 필요한 어려�
 > 자세한 전처리 과정은 [[오디오 데이터 전처리]](https://hyunlee103.tistory.com/54) 에서 참고 부탁드립니다.
 
 ![](/img/in-post/2020/2020-09-25/preprocess.png)
-<center>**오디오 데이터 전처리 예시**</center>
+<center>오디오 데이터 전처리 예시</center>
 
 ### 2) CBHG 모듈
 ![](/img/in-post/2020/2020-09-25/cbhg_example.png)
 <center>Encoder에 적용된 CBHG 모듈 예시</center>
 
-CBHG 모듈은 인코더와 디코더에 공통적으로 존재하는 모듈로써 순차적인(Sequence) 데이터를 처리하는데 특화되어 있습니다.
+CBHG 모듈은 <u>인코더와 디코더에 공통적으로 존재</u>하는 모듈로써 순차적인(Sequence) 데이터를 처리하는데 특화되어 있습니다.
 **CBHG** 모듈은 1D **C**onvolution **B**ank, **H**ighway 네트워크, Bidirectional **G**RU로 구성되어 있습니다.
 모듈은 Sequence 벡터를 Input으로 사용하며 Sequence 벡터가 Output으로 추출됩니다.
 모듈의 상세 프로세스는 아래와 같습니다.
@@ -78,14 +79,16 @@ CBHG 모듈은 인코더와 디코더에 공통적으로 존재하는 모듈로�
 5. 4)에서 생성된 벡터를 **Highway 네트워크**에 통과시켜 high-level features를 생성합니다.
 6. high-level features를 **GRU**의 입력으로 사용합니다.
 
+1D Convolution Bank는 총 K개의 필터를 갖고 있습니다. 필터는 각각 $k$의 길이(1~K)를 갖고 있습니다.
+즉 각 필터는 $k$개의 Sequence를 보고 연산을 통해 정보를 추출하는 역할을 합니다.  
 CBHG 모듈 안에 있는 4) Residual Connection은 모델의 깊게 쌓을 수 있게 하며 학습할 때 빠르게 수렴할 수 있도록 돕는 역할을 합니다.
 모든 1D Convolution Network는 Batch Normalization을 포함하고 있어 정규화 작용을 합니다.
 
 #### Highway 네트워크
 
 <center>$\text{Highway}(x) = T(x) * H(x) + (1-T(x)) * x$</center>
-$T(x)=\sigma FC(x) : Fully Connected Layer + Sigmoid Activation$
-$H(x)=FC(x) : Fully Connected Layer$
+$T(x)=\sigma(FC(x))$ : FC Layer + Sigmoid
+$H(x)=FC(x)$ : FC Layer
 
 Hightway 네트워크는 **Gate 구조**를 추가한 <u>Residual Connection</u> 입니다.
 일반적인 Residual Connection은 Input $x$와 함수 $H(x)$가 있을 때 결과 $y$와의 관계를 $y=x+H(x)$로 정의합니다.
@@ -106,10 +109,11 @@ HighWay 네트워크는 $x$와 $H(x)$을 얼만큼 비율로 섞을지를 학습
 Pre-Net에는 2층의 Fully Connected Layer(FC Layer) 입니다. 이 모듈은 과적합을 막기위한 목적으로 Dropout이 적용되어 있습니다.
 
 ### 4) 디코더(Decoder)
+![](/img/in-post/2020/2020-09-25/encoder.png)
+<center>Decoder 상세구조</center>
 
 디코더는 인코더에서 생성된 Sequence 벡터와 $t-1$ 시점까지 생성된 디코더의 멜 스펙토그램을 Input으로 받아 $t$ 시점의 멜 스펙토그램을 생성합니다.
-어텐션 기반 모델이므로 인코더에서 생성된 Sequence 벡터는 어텐션 모듈에서 계산된 가중치에 따라 가중합 되어 Decoder-RNN 모듈에 사용됩니다.
-자세한 디코더 프로세스는 아래와 같습니다.
+어텐션 기반 모델이므로 디코더 Attention-RNN에서 생성된 hidden 벡터($h_i$)를 query로 이용하여 그에 맞는 인코더의 정보를 추출하여 가중합한 Context 벡터($c_i$)를 추출하고 Decoder-RNN 모듈에 사용합니다.
 
 1. 디코더의 Input은 $t-1$ 시점까지 디코더에서 생성된 멜 스펙토그램입니다.
 처음 시점에는 생성된 멜 스펙토그램이 없으므로 모든 값이 0인 멜 스펙토그램<Go 프레임>을 Input으로 사용합니다.
