@@ -44,7 +44,7 @@ TTS(Text to Speech)는 매우 복잡하며 긴 작업절차가 필요한 어려�
 ![](/img/in-post/2020/2020-09-25/input_output.png)
 <center>Input & Output 예시</center>
 
-모델의 학습(Training) 및 추론(Inference) 단계에서 Input은 캐릭터 단위의 One-hot 벡터 입니다. 
+모델의 학습(Training) 및 추론(Inference) 단계에서 Input은 **캐릭터 단위의 One-hot 벡터** 입니다. 
 따라서 영어 문장을 모델에 넣기 위해서는 문장을 캐릭터 단위로 나누고 One-hot Encoding하는 작업이 필요합니다.
 예를들어 'I love you' 문장은 각각 한개의 캐릭터 'i', ' ', 'l', 'v'..., 'u' 로 나누고 One-hot Encoding을 통해 각 캐릭터에 맞는 숫자열[8, 6, 13, ..., 2]로 변형한 뒤 모델의 Input으로 사용합니다. 
 한글의 경우 문장을 초성, 중성, 종성, 그리고 문장 부호로 나누어 총 80개의 캐릭터로 문자를 나누고 난 뒤 One-hot Encoding을 통해 숫자열로 변형합니다.
@@ -80,14 +80,14 @@ CBHG 모듈은 <u>인코더와 디코더에 공통적으로 존재</u>하는 모
 6. high-level features를 **GRU**의 입력으로 사용합니다.
 
 1D Convolution Bank는 총 K개의 필터를 갖고 있습니다. 필터는 각각 $k$의 길이(1~K)를 갖고 있습니다.
-즉 각 필터는 $k$개의 Sequence를 보고 연산을 통해 **특정 길이($k$)를 고려한 정보를 추출**하는 역할을 합니다.  
+즉 각 필터는 $k$개의 Sequence를 보고 연산을 통해 **특정 길이($k$)를 고려한 정보를 추출**하는 역할을 합니다. 
 CBHG 모듈 안에 있는 4) Residual Connection은 모델의 깊게 쌓을 수 있게 하며 학습할 때 <u>빠르게 수렴할 수 있도록</u> 돕는 역할을 합니다.
 모든 1D Convolution Network는 Batch Normalization을 포함하고 있어 <u>정규화 작용</u>을 합니다.
 
 #### Highway 네트워크
 
 <center>$\text{Highway}(x) = T(x) * H(x) + (1-T(x)) * x$</center>
-$T(x)=\sigma(FC(x))$ : FC Layer + Sigmoid
+$T(x)=\sigma(FC(x))$ : FC Layer + Sigmoid  
 $H(x)=FC(x)$ : FC Layer
 
 Hightway 네트워크는 **Gate 구조**를 추가한 <u>Residual Connection</u> 입니다.
@@ -133,7 +133,7 @@ Pre-Net에는 2층의 Fully Connected Layer(FC Layer) 입니다. 이 모듈은 <
 <center>Attention 상세구조</center>
 
 Seq2Seq 구조의 특성상 인코더와 디코더 사이에 <u>Bottle Neck이 존재</u>하여 모델 정확도가 하락하거나 Gradient Vanishing 문제가 발생하므로 이를 해결하기 위하여 **어텐션 구조**가 제안되었습니다.
-어텐션에는 다양한 형태가 존재하지만 타코트론에서 적용한 방법은 [Bahdanau Attetnion](https://arxiv.org/abs/1409.0473) 입니다.
+어텐션에는 다양한 형태가 존재하지만 타코트론에서 적용한 방법은 [Bahdanau Attetnion](https://arxiv.org/abs/1409.0473) 입니다. 
 $h_1, h_2, ..., h_n$는 인코더에서 생성된 $n$개의 Hidden 벡터이고, 디코더의 모듈 Attention-RNN에서 $t$ 시점에 생성된 Hidden 벡터를 $d_t$라고 할때 Bahdanau Attention 통해 구한 Context 벡터 $c_t$는 아래와 같습니다.
 
 <center>$c_t=\sum_{j=1}^n a_{tj}h_j$</center>
@@ -167,8 +167,8 @@ TTS(Text to Speech) Task에서 모델의 성능을 평가하기 위하여 피실
 
 ## 결론 및 개인적인 생각
 2020년 현재를 기준으로 타코트론을 한글에도 적용한 프로그램과 논문이 있어 참고하기 좋았습니다.
-오디오 전처리 방법에 대해 깊게 고민하지 않아도 어느정도는 딥러닝 모델에서 보정해 주기 때문에 오디오를 잘 몰라도 구현이 가능해 보입니다.
-하지만 성능을 향상시키기 위하여 오디오 특징들을 이해할 필요가 있어보입니다.
+오디오 전처리 방법에 대해 깊게 고민하지 않아도 어느정도는 딥러닝 모델에서 보정해 주기 때문에 <u>오디오 데이터 다루는 법을 잘 몰라도 구현이 가능</u>해 보입니다.
+하지만 성능을 향상시키기 위하여 **오디오 특징들을 이해할 필요**가 있어보입니다.
 타코트론은 CBHG 모듈로 Sequence 정보를 추출하도록 구성하였지만 이 구조가 소리를 분석하는데 얼마나 효과적인가는 잘 모르겠습니다.
 타코트론과 비슷한 다양한 모델들(Seq2Seq-Attention 기반)이 있는데 그 모델들과 비교평가가 있었더라면 좋겠다는 생각을 합니다.  
 
