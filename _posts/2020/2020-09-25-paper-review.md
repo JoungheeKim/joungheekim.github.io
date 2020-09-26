@@ -179,5 +179,6 @@ TTS(Text to Speech) Task에서 모델의 성능을 평가하기 위하여 피실
 - [[BLOG]](https://medium.com/analytics-vidhya/neural-machine-translation-using-bahdanau-attention-mechanism-d496c9be30c3) Neural Machine Translation using Bahdanau Attention Mechanism
 - [[SLIDE]](https://www.slideshare.net/carpedm20/deview-2017-80824162) 책 읽어주는 딥러닝: 배우 유인나가 해리포터를 읽어준다면 DEVIEW 2017
 - [[PAPER]](http://www.ndsl.kr/ndsl/search/detail/article/articleSearchResultDetail.do?cn=JAKO201811648108967) 한국어 text-to-speech(TTS) 시스템을 위한 엔드투엔드 합성 방식 연구
-- [[https://brightwon.tistory.com/11]](https://brightwon.tistory.com/11) MFCC 이해하기
+- [[BLOG]](https://brightwon.tistory.com/11) MFCC 이해하기
+- [[GITHUB]](https://github.com/r9y9/tacotron_pytorch) Tacotron pytorch
 
