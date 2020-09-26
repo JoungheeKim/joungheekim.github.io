@@ -132,19 +132,28 @@ Pre-Net에는 2층의 Fully Connected Layer(FC Layer) 입니다. 이 모듈은 �
 ### 5) 어텐션(Attention)
 ![](/img/in-post/2020/2020-09-25/attention.png)
 
-Seq2Seq 구조의 특성상 Encoder와 Decoder 사이에 Bottle Neck이 존재하여 모델 정확도가 하락하거나 Gradient Vanishing 문제가 발생하므로 이를 해결하기 위하여 **Attetnion 구조**가 제안되었습니다.
-Attention에는 다양한 형태가 존재하지만 타코트론에서 적용한 방법은 [Bahdanau Attetnion](https://arxiv.org/abs/1409.0473) 입니다.
-$h_1, h_2, ..., h_n$는 Encoder에서 생성된 n개의 Hidden 벡터이고, Decoder의 모듈 Attention-RNN에서 $t$ 시점에 생성된 Hidden 벡터를 $h_t$라고 할때 Bahdanau Attention 통해 구한 Context 벡터 $c_t$는 아래와 같습니다.
+Seq2Seq 구조의 특성상 인코더와 디코더 사이에 Bottle Neck이 존재하여 모델 정확도가 하락하거나 Gradient Vanishing 문제가 발생하므로 이를 해결하기 위하여 **어텐션 구조**가 제안되었습니다.
+어텐션에는 다양한 형태가 존재하지만 타코트론에서 적용한 방법은 [Bahdanau Attetnion](https://arxiv.org/abs/1409.0473) 입니다.
+$h_1, h_2, ..., h_n$는 인코더에서 생성된 $n$개의 Hidden 벡터이고, 디코더의 모듈 Attention-RNN에서 $t$ 시점에 생성된 Hidden 벡터를 $d_t$라고 할때 Bahdanau Attention 통해 구한 Context 벡터 $c_t$는 아래와 같습니다.
 
-$\mathbf{c}_t$
-$& = \sum_{j=1}^{T_{\mathbf{x}}} \mathbf{a}_{tj}\mathbf{h}_j \\$
-$& = \mathbf{H} \mathbf{a}_t \\$
-$\mathbf{a}_t & = \text{Softmax}\left(\left(\text{Score}(\mathbf{s}_{t-1}, \mathbf{h}_j)\right)_{j=1}^{T_{\mathbf{x}}}\right) \in \mathbb{R}^{T_{\mathbf{x}}} \\$
-$\text{Score}(\mathbf{s}_{t-1}, \mathbf{h}_j) & = \mathbf{v}^\text{T}\tanh (\mathbf{W_a}\mathbf{s}_{t-1} + \mathbf{U_a}\mathbf{h}_j)$
-     
+$c_t=\sum_{j=1}^n a_{tj}h_j$
+$a_tj=\frac{exp(score(d_t, h_j))}{\sum_{i=1}^n exp(score(d_t, h_i))}$
+$score(d_t, h_j)=v^T tanh(w_d d_t + w_h h_j)$
 
+위 식은 [Medium BLOG](https://medium.com/analytics-vidhya/neural-machine-translation-using-bahdanau-attention-mechanism-d496c9be30c3) 글을 참고하여 재구성하였습니다.
+위의 식이 전체으로 의미하는 것은 $d_t$ 와 $h_n$ 가 얼마나 유사한지를 Score Function을 이용하여 추출한 뒤 그것의 비율대로 $h_n$을 곱하여 Context 벡터 $c_t$를 구성하는 것입니다.
+Score Function에서 $w_a, w_h$는 각 인코더, 디코더에서서 생성된 Hidden 벡터를 낮은 차원으로 사영(Projection)하는 Fully Connected Layer입니다. 
+이 Layer를 통해 동일한 차원으로 사영된 벡터를 서로 합하여 $tanh$ 비선형 함수를 씌운뒤 $v^T$ 라는 벡터와 Element-Wise 곱하여 하나의 숫자로 변형 합니다.
+이 숫자가 $d_t$ 와 $h_n$ 가 주어졌을 때 계산된 유사도 점수입니다.
+이 유사도 점수를 기반으로 각 인코더의 Hidden 벡터를 가중합 한 벡터가 Context 벡터 $c_t$입니다. 
     
-**Bahdanau Attention** 
+### 6) 후처리(Post Processing)
+
+후처리 모듈은 디코더에서 생성된 멜 스펙토그램을 이용하여 Linear 스펙토그램을 생성하기 위한 과정입니다.
+Seq2Seq 모델의 특성상 디코더는 시점별로 한개씩 멜 스펙토그램을 생성하지만 후처리에서는 디코더에서 생성을 완료한 멜 스펙토그램을 이용하여 Linear 스펙토그램을 생성합니다.
+후처리 모듈은 CBHG 모듈로 구성되어 있습니다.
+
+### 7)  
 
 
 
