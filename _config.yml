@@ -99,3 +99,13 @@ page-mathjax: true
 
 
 
+# Friends
+friends: [
+    {
+        title: "Youngerous BLOG",
+        href: "https://youngerous.github.io/"
+    }
+]
+
+
+
