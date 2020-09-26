@@ -118,8 +118,8 @@ Pre-Net에는 2층의 Fully Connected Layer(FC Layer) 입니다. 이 모듈은 �
 1. 디코더의 Input은 $t-1$ 시점까지 디코더에서 생성된 멜 스펙토그램입니다.
 처음 시점에는 생성된 멜 스펙토그램이 없으므로 모든 값이 0인 멜 스펙토그램<Go 프레임>을 Input으로 사용합니다.
 2. 멜 스펙토그램을 Pre-Net 모듈에 통과시켜 벡터를 생성 한 후 Attention-RNN의 Input으로 사용합니다.
-3. Attention-RNN으로 부터 추출된 Sequence hidden 벡터($h_1, h_2, ..., h_{t-1}$)를 어텐센 모듈에 넣어 인코더의 벡터의 각 시점과 관련된 벡터의 가중합인 Context 벡터($c_1, c_2, ..., c_{t-1}$)를 추출합니다.
-4. Attention-RNN hidden 벡터($h_1, h_2, ..., h_{t-1}$)와 Context 벡터($c_1, c_2, ..., c_{t-1}$)를 Concatenate 하여 Decoder-RNN의 Input으로 사용합니다.
+3. Attention-RNN으로 부터 추출된 Sequence hidden 벡터($d_1, d_2, ..., d_{t-1}$)를 어텐센 모듈에 넣어 인코더의 벡터의 각 시점과 관련된 벡터의 가중합인 Context 벡터($c_1, c_2, ..., c_{t-1}$)를 추출합니다.
+4. Attention-RNN hidden 벡터($d_1, d_2, ..., d_{t-1}$)와 Context 벡터($c_1, c_2, ..., c_{t-1}$)를 Concatenate 하여 Decoder-RNN의 Input으로 사용합니다.
 5. Decoder-RNN에서 추출된 결과가 디코더의 Output인 $t$ 시점의 멜 스펙토그램입니다.
 
 
@@ -132,6 +132,19 @@ Pre-Net에는 2층의 Fully Connected Layer(FC Layer) 입니다. 이 모듈은 �
 ### 5) 어텐션(Attention)
 ![](/img/in-post/2020/2020-09-25/attention.png)
 
+Seq2Seq 구조의 특성상 Encoder와 Decoder 사이에 Bottle Neck이 존재하여 모델 정확도가 하락하거나 Gradient Vanishing 문제가 발생하므로 이를 해결하기 위하여 **Attetnion 구조**가 제안되었습니다.
+Attention에는 다양한 형태가 존재하지만 타코트론에서 적용한 방법은 [Bahdanau Attetnion](https://arxiv.org/abs/1409.0473) 입니다.
+$h_1, h_2, ..., h_n$는 Encoder에서 생성된 n개의 Hidden 벡터이고, Decoder의 모듈 Attention-RNN에서 $t$ 시점에 생성된 Hidden 벡터를 $h_t$라고 할때 Bahdanau Attention 통해 구한 Context 벡터 $c_t$는 아래와 같습니다.
+
+$\mathbf{c}_t$
+$& = \sum_{j=1}^{T_{\mathbf{x}}} \mathbf{a}_{tj}\mathbf{h}_j \\$
+$& = \mathbf{H} \mathbf{a}_t \\$
+$\mathbf{a}_t & = \text{Softmax}\left(\left(\text{Score}(\mathbf{s}_{t-1}, \mathbf{h}_j)\right)_{j=1}^{T_{\mathbf{x}}}\right) \in \mathbb{R}^{T_{\mathbf{x}}} \\$
+$\text{Score}(\mathbf{s}_{t-1}, \mathbf{h}_j) & = \mathbf{v}^\text{T}\tanh (\mathbf{W_a}\mathbf{s}_{t-1} + \mathbf{U_a}\mathbf{h}_j)$
+     
+
+    
+**Bahdanau Attention** 
 
 
 
