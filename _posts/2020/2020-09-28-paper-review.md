@@ -45,23 +45,22 @@ Input(Width × Height × RGB) -> Model -> Output(Width × Height × Class)
 
 ### 1) 수축 경로(Contracting Path)
 
-수축 경로에서 아래와 같은 Downsampling 과정을 반복하여 특징맵(Feature Map)을 생성합니다.
+수축 경로에서 아래와 같은 **Downsampling 과정**을 반복하여 특징맵(Feature Map)을 생성합니다.
 
 1. 3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)
 2. 3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)
 3. 2×2 Max-polling Layer (Stride 2)
 
-수축경로는 주변 픽셀들을 참조하는 범위를 넓혀가며 **이미지로부터 Contextual 정보를 추출**하는 역할을 합니다. 
+수축경로는 주변 픽셀들을 <u>참조하는 범위를 넓혀</u>가며 이미지로부터 **Contextual 정보를 추출**하는 역할을 합니다. 
 3×3 Convolution을 수행할 때 <u>패딩을 하지 않으므로 특징맵(Feature Map)의 크기가 감소</u>합니다.
 Downsampling 할 때 마다 채널(Channel)의 수를 2배 증가시키면서 진행합니다.
-즉 처음 Input Channel(1)을 64개로 증가시키는 부분을 제외하면 채널은 1->64->128->256->512->1024 개로 Downsampling 진행할 때마다 증가합니다.
+즉 처음 Input Channel(1)을 64개로 증가시키는 부분을 제외하면 채널은 1>64>128>256>512>1024 개로 Downsampling 진행할 때마다 증가합니다.
 >논문에서는 Batch-Normalization이 언급되지 않았으나 구현체 및 다수의 리뷰에서 Batch-Normalization을 사용하는 것을 확인하였습니다.
->[참고자료](https://github.com/milesial/Pytorch-UNet)
+>[[참고자료]](https://github.com/milesial/Pytorch-UNet)
 
-### 2) Bottle Neck
+### 2) Bottle Neck(전환 구간)
 
 수축 경로에서 확장 경로로 **전환되는 구간**입니다.
-아래 과정을 통해 특징맵(Feature Map)을 생성합니다.
 
 1. 3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)
 2. 3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)
@@ -71,26 +70,26 @@ Downsampling 할 때 마다 채널(Channel)의 수를 2배 증가시키면서 �
 
 ### 3) 확장 경로(Expanding Path)
 
-확장 경로에서 아래와 같은 Upsampling 과정을 반복하여 특징맵(Feature Map)을 생성합니다.
+확장 경로에서 아래와 같은 **Upsampling 과정**을 반복하여 특징맵(Feature Map)을 생성합니다.
 
 1. Deconvolution layer (Stride 2)
-2. 수축 경로의 동일한 Level 특징맵(Feature Map)을 추출하고 크기를 맞추기 위하여 자르고(Cropping) 이전 Layer에서 생성된 특징맵(Feature Map)과 연결(Concatenation)합니다.
+2. 수축 경로에서 동일한 Level의 특징맵(Feature Map)을 추출하고 크기를 맞추기 위하여 자른 후(Cropping) 이전 Layer에서 생성된 특징맵(Feature Map)과 연결(Concatenation)합니다.
 3. 3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)
 4. 3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)
 
 확장경로는 2)Skip Connection을 통해 수축 경로에서 생성된 **Contextual 정보와 위치정보 결합**하는 역할을 합니다.
 동일한 Level에서 수축경로의 특징맵과 확장경로의 특징맵의 크기가 다른 이유는 여러번의 패딩이 없는 3×3 Convolution Layer를 지나면서 특징맵의 크기가 줄어들기 때문입니다.
-확장경로의 마지막에 Class의 갯수만큼 필터를 갖고 있는 1×1 Convolution Layer가 있습니다. 
-1×1 Convolution Layer를 통과한 후 각 픽셀이 어떤 Class에 해당하는지에 대한 정보를 나타내는 3D(Width × Height × Class) 벡터가 생성됩니다.  
+확장경로의 마지막에 Class의 갯수만큼 필터를 갖고 있는 **1×1 Convolution Layer**가 있습니다. 
+1×1 Convolution Layer를 통과한 후 <u>각 픽셀이 어떤 Class에 해당하는지</u>에 대한 정보를 나타내는 **3차원(Width × Height × Class) 벡터**가 생성됩니다.  
  
 ## 학습 방법
 
-본 논문에서 다양한 학습 장치들을 통해 모델의 성능을 향상시킵니다.
+본 논문에서 다양한 <u>학습 장치</u>들을 통해 모델의 성능을 향상시킵니다.
 
-- **Overlap-tile strategy** : 큰 이미지를 겹치는 부분이 있도록 일정크기로 나누고 모델의 Input으로 활용합니다. 
-- **Mirroring Extrapolate** : 이미지의 경계(Border)부분을 거울이 반사된 것처럼 확장하여 Input으로 활용합니다. 
-- **Weight Loss** : 모델이 객체간 경계를 구분할 수 있도록 Weight Loss를 구성하고 학습합니다.
-- **Data Augmentation** : 적은 데이터로 모델을 잘 학습할 수 있도록 데이터 증강 방법을 활용합니다.
+- **Overlap-tile strategy** : 큰 이미지를 <u>겹치는 부분</u>이 있도록 일정크기로 나누고 모델의 Input으로 활용합니다. 
+- **Mirroring Extrapolate** : 이미지의 경계(Border)부분을 거울이 반사된 것처럼 <u>확장</u>하여 Input으로 활용합니다. 
+- **Weight Loss** : 모델이 <u>객체간 경계</u>를 구분할 수 있도록 Weight Loss를 구성하고 학습합니다.
+- **Data Augmentation** : <u>적은 데이터</u>로 모델을 잘 학습할 수 있도록 데이터 증강 방법을 활용합니다.
 
 #### Overlap-tile strategy
 ![](/img/in-post/2020/2020-09-28/overlap_tile.png)
@@ -98,7 +97,7 @@ Downsampling 할 때 마다 채널(Channel)의 수를 2배 증가시키면서 �
 
 위 그림은 [MEDIUM BLOG](https://medium.com/@msmapark2/u-net-%EB%85%BC%EB%AC%B8-%EB%A6%AC%EB%B7%B0-u-net-convolutional-networks-for-biomedical-image-segmentation-456d6901b28a) 에서 만든 그림을 참고하여 재구성 하였습니다.
 이미지의 크기가 큰 경우 이미지를 자른 후 각 이미지에 해당하는 Segmentation을 진행해야 합니다.
-U-Net은 Input과 Output의 이미지 크기가 다르기 때문에 위 그림에서 처럼 파란색 영역을 Input으로 넣으면 노란색 영역이 Output으로 추출됩니다.
+U-Net은 <u>Input과 Output의 이미지 크기</u>가 다르기 때문에 위 그림에서 처럼 파란색 영역을 Input으로 넣으면 노란색 영역이 Output으로 추출됩니다.
 동일하게 초록색 영역을 Segmentation하기 위해서는 빨간색 영역을 모델의 Input으로 사용해야 합니다.
 즉 겹치는 부분이 존재하도록 자르고 Segmentation하기 때문에 Overlap Tile 전략이라고 논문에서는 지칭합니다.
 
