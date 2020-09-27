@@ -36,7 +36,7 @@ tags:
 
 1. 점진적으로 넓은 범위의 이미지 픽셀을 보며 의미정보(Context Information)을 추출하는 **수축 경로(Contracting Path)**
 2. 의미정보를 픽셀 위치정보와 결합(Localization)하여 각 픽셀마다 어떤 객체에 속하는지를 구분하는 **확장 경로(Expanding Path)**
-3. 수축 경로에서 확장 경로로 전환되는 **Bottle Neck**
+3. 수축 경로에서 확장 경로로 전환되는 **전환 구간(Bottle Neck)**
 
 모델의 Input은 이미지의 픽셀별 RGB 데이터이고 모델의 Output은 이미지의 각 픽셀별 객체 구분 정보(Class)입니다.
 Convolution 연산과정에서 패딩을 사용하지 않으므로 **모델의 Output Size는 Input Size보다 작습니다.**
@@ -58,7 +58,7 @@ Downsampling 할 때 마다 채널(Channel)의 수를 2배 증가시키면서 �
 >논문에서는 Batch-Normalization이 언급되지 않았으나 구현체 및 다수의 리뷰에서 Batch-Normalization을 사용하는 것을 확인하였습니다.
 >[[참고자료]](https://github.com/milesial/Pytorch-UNet)
 
-### 2) Bottle Neck(전환 구간)
+### 2) 전환 구간(Bottle Neck)
 
 수축 경로에서 확장 경로로 **전환되는 구간**입니다.
 
@@ -99,7 +99,7 @@ Downsampling 할 때 마다 채널(Channel)의 수를 2배 증가시키면서 �
 이미지의 크기가 큰 경우 이미지를 자른 후 각 이미지에 해당하는 Segmentation을 진행해야 합니다.
 U-Net은 <u>Input과 Output의 이미지 크기</u>가 다르기 때문에 위 그림에서 처럼 파란색 영역을 Input으로 넣으면 노란색 영역이 Output으로 추출됩니다.
 동일하게 초록색 영역을 Segmentation하기 위해서는 빨간색 영역을 모델의 Input으로 사용해야 합니다.
-즉 겹치는 부분이 존재하도록 자르고 Segmentation하기 때문에 Overlap Tile 전략이라고 논문에서는 지칭합니다.
+즉 **겹치는 부분이 존재**하도록 이미지를 자르고 Segmentation하기 때문에 Overlap Tile 전략이라고 논문에서는 지칭합니다.
 
 #### Mirroring Extrapolate
 ![](/img/in-post/2020/2020-09-28/mirroring.png)
@@ -120,13 +120,13 @@ U-Net은 <u>Input과 Output의 이미지 크기</u>가 다르기 때문에 위 �
 <center>$p_k(x)=exp(a_k(x))/(\sum^K_i exp(a_i(x)))$</center>
 <center>$w(x)=w_c(x)+w_0 \cdot exp(-\frac{(d_1(x)+d_2(x))^2}{2\sigma^2})$</center> 
 
-$a_k(x)$ : 픽셀 x가 Class k일 값(픽셀 별 모델의 Output) 
-$p_k(x)$ : 픽셀 x가 Class k일 확률(0~1)
-$l(x)$ : 픽셀 x의 실제 Label
-$w_0$ : 논문의 Weight hyper-parameter, 논문에서 10으로 설정.
-$\sigma$ : 논문의 Weight hyper-parameter, 논문에서 5로 설정.
-$d_1(x)$ : 픽셀 x의 위치로부터 가장 가까운 경계와 거리
-$d_2(x)$ :  픽셀 x의 위치로부터 두번째로 가까운 경계와 거리
+$a_k(x)$ : 픽셀 x가 Class k일 값(픽셀 별 모델의 Output)  
+$p_k(x)$ : 픽셀 x가 Class k일 확률(0~1)  
+$l(x)$ : 픽셀 x의 실제 Label  
+$w_0$ : 논문의 Weight hyper-parameter, 논문에서 10으로 설정  
+$\sigma$ : 논문의 Weight hyper-parameter, 논문에서 5로 설정  
+$d_1(x)$ : 픽셀 x의 위치로부터 가장 가까운 경계와 거리  
+$d_2(x)$ :  픽셀 x의 위치로부터 두번째로 가까운 경계와 거리  
 
 $w(x)$는 <u>픽셀 x와 경계의 거리가 가까우면</u> 큰 값을 갖게 되므로 **해당 픽셀의 Loss 비중이 커지**게 됩니다.
 즉 학습 시 경계에 해당하는 픽셀을 잘 학습하게 됩니다.      
