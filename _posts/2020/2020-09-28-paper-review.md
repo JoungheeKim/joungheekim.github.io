@@ -79,8 +79,8 @@ Downsampling 할 때 마다 채널(Channel)의 수를 2배 증가시키면서 �
 
 확장경로는 2)Skip Connection을 통해 수축 경로에서 생성된 **Contextual 정보와 위치정보 결합**하는 역할을 합니다.
 동일한 Level에서 수축경로의 특징맵과 확장경로의 특징맵의 크기가 다른 이유는 여러번의 패딩이 없는 3×3 Convolution Layer를 지나면서 특징맵의 크기가 줄어들기 때문입니다.
-확장경로의 마지막에 Class의 갯수만큼 필터를 갖고 있는 <span style="color:ocean">**1×1 Convolution Layer**</span>가 있습니다. 
-<span style="color:ocean">1×1 Convolution Layer</span>를 통과한 후 <u>각 픽셀이 어떤 Class에 해당하는지</u>에 대한 정보를 나타내는 **3차원(Width × Height × Class) 벡터**가 생성됩니다.  
+확장경로의 마지막에 Class의 갯수만큼 필터를 갖고 있는 <span style="color:#368DC5">**1×1 Convolution Layer**</span>가 있습니다. 
+<span style="color:#368DC5">1×1 Convolution Layer</span>를 통과한 후 <u>각 픽셀이 어떤 Class에 해당하는지</u>에 대한 정보를 나타내는 **3차원(Width × Height × Class) 벡터**가 생성됩니다.  
  
 ## 학습 방법
 
