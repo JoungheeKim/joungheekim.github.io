@@ -23,11 +23,10 @@ tags:
 혹시 제가 잘못 알고 있는 점이나 보안할 점이 있다면 댓글 부탁드립니다.
 
 #### Short Summary
-이 논문의 큰 특징 3가지는 아래와 같습니다.
+이 논문의 큰 특징 2가지는 아래와 같습니다.
 
 1. 넓은 범위의 이미지 픽셀로부터 의미정보를 추출하고 의미정보를 기반으로 각 픽셀마다 객체를 분류하는 **U 모양의 아키텍처**를 제시합니다.
-2. 적은 학습 데이터로 모델의 성능을 올리기 위하여 생물 의학분야에서 효과적인 이미지 데이터 증가 방법을 제시합니다. 
-3. 서로 근접한 객체 경계를 잘 구분하도록 학습하기 위하여 Weighted Loss를 제시합니다.
+2. 서로 근접한 객체 경계를 잘 구분하도록 학습하기 위하여 Weighted Loss를 제시합니다.
 
 ## 모델 구조
 ![](/img/in-post/2020/2020-09-28/model_structure.gif)
@@ -84,7 +83,7 @@ Downsampling 할 때 마다 채널(Channel)의 수를 2배 증가시키면서 �
 확장경로의 마지막에 Class의 갯수만큼 필터를 갖고 있는 1×1 Convolution Layer가 있습니다. 
 1×1 Convolution Layer를 통과한 후 각 픽셀이 어떤 Class에 해당하는지에 대한 정보를 나타내는 3D(Width × Height × Class) 벡터가 생성됩니다.  
  
-## 학습
+## 학습 방법
 
 본 논문에서 다양한 학습 장치들을 통해 모델의 성능을 향상시킵니다.
 
@@ -95,28 +94,28 @@ Downsampling 할 때 마다 채널(Channel)의 수를 2배 증가시키면서 �
 
 #### Overlap-tile strategy
 ![](/img/in-post/2020/2020-09-28/overlap_tile.png)
-<center>Overlap-tile 예시</center>
+<center>Overlap Tile 예시</center>
 
 위 그림은 [MEDIUM BLOG](https://medium.com/@msmapark2/u-net-%EB%85%BC%EB%AC%B8-%EB%A6%AC%EB%B7%B0-u-net-convolutional-networks-for-biomedical-image-segmentation-456d6901b28a) 에서 만든 그림을 참고하여 재구성 하였습니다.
-이미지의 크기가 큰 경우 이미지를 자른 후 각 이미지에 해당하는 Segmenation을 진행해야 합니다.
+이미지의 크기가 큰 경우 이미지를 자른 후 각 이미지에 해당하는 Segmentation을 진행해야 합니다.
 U-Net은 Input과 Output의 이미지 크기가 다르기 때문에 위 그림에서 처럼 파란색 영역을 Input으로 넣으면 노란색 영역이 Output으로 추출됩니다.
-동일하게 초록색 영역을 Segmenation하기 위해서는 빨간색 영역을 모델의 Input으로 사용해야 합니다.
-즉 겹치는 부분이 존재하는데 이 때문에 Overlap Tile 전략이라고 논문에서는 지칭합니다.
+동일하게 초록색 영역을 Segmentation하기 위해서는 빨간색 영역을 모델의 Input으로 사용해야 합니다.
+즉 겹치는 부분이 존재하도록 자르고 Segmentation하기 때문에 Overlap Tile 전략이라고 논문에서는 지칭합니다.
 
 #### Mirroring Extrapolate
 ![](/img/in-post/2020/2020-09-28/mirroring.png)
 <center>Mirroring 예시</center>
 
 이미지의 경계부분을 예측할 때에는 Padding을 넣어 활용하는 경우가 일반적입니다.
-본 논문에서는 이미지 경계에 위치한 이미지를 복사하고 좌우 반전을 통해 Mirror 이미지를 생성한 후 원본 이미지의 주변에 붙여 Input으로 사용합니다.
+본 논문에서는 이미지 경계에 위치한 이미지를 복사하고 좌우 반전을 통해 **Mirror 이미지를 생성한 후 원본 이미지의 주변에 붙여** Input으로 사용합니다.
 >본 논문의 실험분야인 biomedical 에서는 세포가 주로 등장하고, 세포는 상하 좌우 대칭구도를 이루는 경우가 많기 때문에 Mirroring 전략을 사용했을 것이라고 추측합니다.
 
 #### Weight Loss
 ![](/img/in-post/2020/2020-09-28/boundary_target.png)
 <center>Bio-Medical Image Segmentation 예시</center>
 
-모델은 위 그림처럼 작은 경계를 분리할 수 있도록 학습되어야 합니다. 
-따라서 논문에서는 각 픽셀이 경계와 얼마나 가까운지에 따른 Weight-Map을 만들고 학습할 때 가까운 경계에 있는 픽셀의 Loss를 Weight-Map에 비례하게 증가 시킴으로써 경계를 잘 학습하도록 설계하였습니다.
+모델은 위 그림처럼 <u>작은 경계를 분리</u>할 수 있도록 학습되어야 합니다. 
+따라서 논문에서는 각 픽셀이 경계와 얼마나 가까운지에 따른 Weight-Map을 만들고 학습할 때 경계에 가까운 픽셀의 Loss를 Weight-Map에 비례하게 증가 시킴으로써 **경계를 잘 학습**하도록 설계하였습니다.
 
 <center>$Loss=\sum_{x} w(x)log(p_{l(x)}(x))$</center>
 <center>$p_k(x)=exp(a_k(x))/(\sum^K_i exp(a_i(x)))$</center>
@@ -130,7 +129,7 @@ $\sigma$ : 논문의 Weight hyper-parameter, 논문에서 5로 설정.
 $d_1(x)$ : 픽셀 x의 위치로부터 가장 가까운 경계와 거리
 $d_2(x)$ :  픽셀 x의 위치로부터 두번째로 가까운 경계와 거리
 
-$w(x)$는 픽셀 x와 경계의 거리가 가까우면 큰 값을 갖게 되므로 해당 픽셀의 Loss 비중이 커지게 됩니다.
+$w(x)$는 <u>픽셀 x와 경계의 거리가 가까우면</u> 큰 값을 갖게 되므로 **해당 픽셀의 Loss 비중이 커지**게 됩니다.
 즉 학습 시 경계에 해당하는 픽셀을 잘 학습하게 됩니다.      
 
 ![](/img/in-post/2020/2020-09-28/weight_map.png)
@@ -144,7 +143,7 @@ $w(x)$는 객체의 경계 부분에서 큰 값을 갖는 것을 확인할 수 �
 #### Data Augmentation
 
 데이터의 양이 적기 때문에 데이터 증강을 통해 모델이 Noise에 강건하도록 학습시킵니다.
-데이터 증강 방법으로 *Rotation(회전), Shift(이동), Elastic distortion* 등이 있습니다.
+데이터 증강 방법으로 **Rotation(회전), Shift(이동), Elastic distortion** 등이 있습니다.
 >본 논문에서는 자세하게 데이터 증강방법을 묘사하지 않습니다.
 >이미지를 활용하여 데이터 증강하는 방법은 [[Elastic distortion]](https://hj-harry.github.io/HJ-blog/2019/01/30/Elastic-distortion.html) 에서 참고바랍니다.  
 
@@ -159,15 +158,26 @@ EM Segmentation challenge Dataset은 30개의 Training 데이터를 제공합니
 
 ![](/img/in-post/2020/2020-09-28/em_result.png)
 
+[Warping Error](https://imagej.net/Topology_preserving_warping_error) : 객체 분할 및 병합이 잘 되었는지 세크멘테이션과 관련된 에러
+Warping Error를 기준으로 "EM Segmentation" 데이터에서 U-Net 모델이 가장 좋은 성능을 보이고 있습니다.
 
+세포 분류 대회인 **ISBI cell tracking challeng** 에서 모델의 성능을 평가한 표는 아래와 같습니다.
+"PhC-U373" 데이터는 위상차 현미경으로 기록한 35개의 이미지를 Training 데이터로 제공합니다.
+“DIC-HeLa” 데이터는 HeLa 세포를 현미경을 통해 기록하고 20개의 이미지를 Training 데이터로 제공합니다.
 
+![](/img/in-post/2020/2020-09-28/cell_result.png)
 
+U-Net 모델은 "PhC-U373" 데이터에서 92% IOU Score를 획득하였으며 2등 모델이 획득한 점수 83% 와 현격한 차이를 보이고 있습니다.
+U-Net 모델은 “DIC-HeLa” 데이터에서 77.5% IOU Score를 획득하였으며 2등 모델이 획득한 점수 46% 와 현격한 차이를 보이고 있습니다.
 
-
-
-
-
-
+## 결론 및 개인적인 생각
+매우 효과적이고 실용적인 논문입니다.
+Skip Architecture는 Layer를 깊게 쌓을수 있게 하여 복잡한 Task를 잘 수행할 수 있게 합니다.
+또한 Bottle Neck에서 생기는 정보의 손실을 줄이는 역할을 합니다. 
+Weighted Loss는 근거리에 있는 이미지를 효과적으로 분리하여 학습하는 좋은 방법입니다.
+모델의 구조가 간단하여 구현이 쉽고 다양한 구현체 및 튜토리얼을 웹에서 검색할 수 있어 활용하기 좋습니다.
+>최근에 Kaggle 대회에서 U-Net 모델이 활용되어 좋은 점수를 받은 것을 보았습니다.
+>다양한 구조의 모델들이 고안되고 있지만 지금도 U-Net 모델의 구조는 Image Segmentation에 가장 효과적인 모델 중 하나인 것 같습니다. 
  
 
 ## Reference
