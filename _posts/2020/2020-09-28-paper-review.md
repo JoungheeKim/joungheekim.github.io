@@ -54,7 +54,7 @@ $Input(Width × Height × RGB) -> Model -> Output(Width × Height × Class)$
 수축경로는 주변 픽셀들을 <u>참조하는 범위를 넓혀</u>가며 이미지로부터 **Contextual 정보를 추출**하는 역할을 합니다. 
 3×3 Convolution을 수행할 때 <u>패딩을 하지 않으므로 특징맵(Feature Map)의 크기가 감소</u>합니다.
 Downsampling 할 때 마다 채널(Channel)의 수를 2배 증가시키면서 진행합니다.
-즉 처음 Input Channel(1)을 64개로 증가시키는 부분을 제외하면 채널은 1>64>128>256>512>1024 개로 Downsampling 진행할 때마다 증가합니다.
+즉 처음 Input Channel(1)을 64개로 증가시키는 부분을 제외하면 채널은 $1->64->128->256->512->1024$ 개로 Downsampling 진행할 때마다 증가합니다.
 >논문에서는 Batch-Normalization이 언급되지 않았으나 구현체 및 다수의 리뷰에서 Batch-Normalization을 사용하는 것을 확인하였습니다.
 >[[참고자료]](https://github.com/milesial/Pytorch-UNet)
 
