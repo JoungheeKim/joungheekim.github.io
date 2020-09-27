@@ -26,7 +26,7 @@ tags:
 이 논문의 큰 특징 2가지는 아래와 같습니다.
 
 1. 넓은 범위의 이미지 픽셀로부터 의미정보를 추출하고 의미정보를 기반으로 각 픽셀마다 객체를 분류하는 **U 모양의 아키텍처**를 제시합니다.
-2. 서로 근접한 객체 경계를 잘 구분하도록 학습하기 위하여 Weighted Loss를 제시합니다.
+2. 서로 근접한 **객체 경계를 잘 구분**하도록 학습하기 위하여 Weighted Loss를 제시합니다.
 
 ## 모델 구조
 ![](/img/in-post/2020/2020-09-28/model_structure.gif)
@@ -41,7 +41,7 @@ tags:
 모델의 Input은 이미지의 픽셀별 RGB 데이터이고 모델의 Output은 이미지의 각 픽셀별 객체 구분 정보(Class)입니다.
 Convolution 연산과정에서 패딩을 사용하지 않으므로 **모델의 Output Size는 Input Size보다 작습니다.**
 예를들어 572×572×(RGB) 크기의 이미지를 Input으로 사용하면 Output으로 388×388×(Class) 이미지가 생성됩니다.  
-Input(Width × Height × RGB) -> Model -> Output(Width × Height × Class)
+$Input(Width × Height × RGB) -> Model -> Output(Width × Height × Class)$
 
 ### 1) 수축 경로(Contracting Path)
 
