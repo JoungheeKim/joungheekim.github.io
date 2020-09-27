@@ -47,8 +47,8 @@ Input(Width × Height × RGB) -> Model -> Output(Width × Height × Class)
 
 수축 경로에서 아래와 같은 **Downsampling 과정**을 반복하여 특징맵(Feature Map)을 생성합니다.
 
-1. 3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)
-2. 3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)
+1. <span style="color:blue">3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)</span>
+2. <span style="color:blue">3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)</span>
 3. 2×2 Max-polling Layer (Stride 2)
 
 수축경로는 주변 픽셀들을 <u>참조하는 범위를 넓혀</u>가며 이미지로부터 **Contextual 정보를 추출**하는 역할을 합니다. 
@@ -157,7 +157,7 @@ EM Segmentation challenge Dataset은 30개의 Training 데이터를 제공합니
 
 ![](/img/in-post/2020/2020-09-28/em_result.png)
 
-[Warping Error](https://imagej.net/Topology_preserving_warping_error) : 객체 분할 및 병합이 잘 되었는지 세크멘테이션과 관련된 에러
+[Warping Error](https://imagej.net/Topology_preserving_warping_error) : 객체 분할 및 병합이 잘 되었는지 세크멘테이션과 관련된 에러  
 Warping Error를 기준으로 "EM Segmentation" 데이터에서 U-Net 모델이 가장 좋은 성능을 보이고 있습니다.
 
 세포 분류 대회인 **ISBI cell tracking challeng** 에서 모델의 성능을 평가한 표는 아래와 같습니다.
@@ -166,14 +166,14 @@ Warping Error를 기준으로 "EM Segmentation" 데이터에서 U-Net 모델이 
 
 ![](/img/in-post/2020/2020-09-28/cell_result.png)
 
-U-Net 모델은 "PhC-U373" 데이터에서 92% IOU Score를 획득하였으며 2등 모델이 획득한 점수 83% 와 현격한 차이를 보이고 있습니다.
-U-Net 모델은 “DIC-HeLa” 데이터에서 77.5% IOU Score를 획득하였으며 2등 모델이 획득한 점수 46% 와 현격한 차이를 보이고 있습니다.
+U-Net 모델은 "PhC-U373" 데이터에서 <u>92% IOU Score</u>를 획득하였으며 2등 모델이 획득한 점수 83% 와 현격한 차이를 보이고 있습니다.
+U-Net 모델은 “DIC-HeLa” 데이터에서 <u>77.5% IOU Score</u>를 획득하였으며 2등 모델이 획득한 점수 46% 와 현격한 차이를 보이고 있습니다.
 
 ## 결론 및 개인적인 생각
 매우 효과적이고 실용적인 논문입니다.
-Skip Architecture는 Layer를 깊게 쌓을수 있게 하여 복잡한 Task를 잘 수행할 수 있게 합니다.
-또한 Bottle Neck에서 생기는 정보의 손실을 줄이는 역할을 합니다. 
-Weighted Loss는 근거리에 있는 이미지를 효과적으로 분리하여 학습하는 좋은 방법입니다.
+**Skip Architecture**는 Layer를 깊게 쌓을수 있게 하여 <u>복잡한 Task를 잘 수행</u>할 수 있게 합니다.
+또한 Bottle Neck에서 생기는 <u>정보의 손실을 줄이는 역할</u>을 합니다. 
+**Weighted Loss**는 근거리에 있는 <u>객체를 효과적으로 분리</u>하여 학습하는 좋은 방법입니다.
 모델의 구조가 간단하여 구현이 쉽고 다양한 구현체 및 튜토리얼을 웹에서 검색할 수 있어 활용하기 좋습니다.
 >최근에 Kaggle 대회에서 U-Net 모델이 활용되어 좋은 점수를 받은 것을 보았습니다.
 >다양한 구조의 모델들이 고안되고 있지만 지금도 U-Net 모델의 구조는 Image Segmentation에 가장 효과적인 모델 중 하나인 것 같습니다. 
