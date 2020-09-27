@@ -47,9 +47,9 @@ $Input(Width × Height × RGB) -> Model -> Output(Width × Height × Class)$
 
 수축 경로에서 아래와 같은 **Downsampling 과정**을 반복하여 특징맵(Feature Map)을 생성합니다.
 
-1. <span style="color:#072F5F">**3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)**</span>
-2. <span style="color:#072F5F">**3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)**</span>
-3. <span style="color:#960019">**2×2 Max-polling Layer (Stride 2)**</span>
+1. <span style="color:#1520A6">**3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)**</span>
+2. <span style="color:#1520A6">**3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)**</span>
+3. <span style="color:#FF0800">**2×2 Max-polling Layer (Stride 2)**</span>
 
 수축경로는 주변 픽셀들을 <u>참조하는 범위를 넓혀</u>가며 이미지로부터 **Contextual 정보를 추출**하는 역할을 합니다. 
 3×3 Convolution을 수행할 때 <u>패딩을 하지 않으므로 특징맵(Feature Map)의 크기가 감소</u>합니다.
@@ -62,8 +62,8 @@ Downsampling 할 때 마다 채널(Channel)의 수를 2배 증가시키면서 �
 
 수축 경로에서 확장 경로로 **전환되는 구간**입니다.
 
-1. <span style="color:#072F5F">**3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)**</span>
-2. <span style="color:#072F5F">**3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)**</span>
+1. <span style="color:#1520A6">**3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)**</span>
+2. <span style="color:#1520A6">**3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)**</span>
 3. **Dropout Layer**
 
 마지막에 적용된 Dropout Layer는 모델을 **일반화하고 노이즈에 견고하게(Robust)** 만드는 장치입니다.
@@ -74,8 +74,8 @@ Downsampling 할 때 마다 채널(Channel)의 수를 2배 증가시키면서 �
 
 1. <span style="color:#006A4E">**2×2 Deconvolution layer (Stride 2)**</span>
 2. 수축 경로에서 동일한 Level의 특징맵(Feature Map)을 추출하고 크기를 맞추기 위하여 <u>자른 후(Cropping)</u> 이전 Layer에서 생성된 특징맵(Feature Map)과 **연결(Concatenation)**합니다.
-3. <span style="color:#072F5F">**3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)**</span>
-4. <span style="color:#072F5F">**3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)**</span>
+3. <span style="color:#1520A6">**3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)**</span>
+4. <span style="color:#1520A6">**3×3 Convolution Layer + ReLu + BatchNorm (No Padding, Stride 1)**</span>
 
 확장경로는 2)Skip Connection을 통해 수축 경로에서 생성된 **Contextual 정보와 위치정보 결합**하는 역할을 합니다.
 동일한 Level에서 수축경로의 특징맵과 확장경로의 특징맵의 크기가 다른 이유는 여러번의 패딩이 없는 3×3 Convolution Layer를 지나면서 특징맵의 크기가 줄어들기 때문입니다.
