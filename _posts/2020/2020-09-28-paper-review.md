@@ -8,15 +8,16 @@ tags:
   - Vision
   - Deep Learning
 ---
+# [논문리뷰] - [U-Net : Convolutional Networks for Biomedical Image Segmentation](https://arxiv.org/abs/1505.04597), MICCAI 2015
 
-이미지로부터 객체(Object)를 추출하는 것은 컴퓨터 비전 분야에서 매우 중요한 Task 중 하나입니다.
-예를들어 의료분야에서 종양 및 세포를 구분하고 표시하는 것은 의사들이 병을 진단을 할 때 큰 도움을 줄 수 있습니다.
-또한 자율주행과 같이 Task에서는 물체를 구분하는 기능이 선 수행되어야 가능합니다.
+**이미지로부터 객체(Object)를 추출**하는 것은 컴퓨터 비전 분야에서 매우 중요한 Task 중 하나입니다.
+예를들어 의료분야에서 종양 및 세포를 구분하고 표시하는 것은 의사들이 <u>병을 진단</u>을 할 때 큰 도움을 줄 수 있습니다.
+또한 <u>자율주행</u>과 같이 Task에서는 물체를 구분하는 기능이 선 수행되어야 가능합니다.
 
 ![](https://divamgupta.com/assets/images/posts/imgseg/image14.png?style=centerme)
 <center>Image Segmentation 예시<a href="https://divamgupta.com/image-segmentation/2019/06/06/deep-learning-semantic-segmentation-keras.html">(출처)</a></center>
 
-오늘 포스팅은 객체를 인식하고 분류하는 다양한 방법 중에서 **픽셀 기반으로 이미지를 분할**하여 구분하는 모델인 `U-net` `UNet` 에 대해 상세하게 리뷰하도록 하겠습니다.
+오늘 포스팅은 객체를 인식하고 분류하는 다양한 방법 중에서 **픽셀 기반으로 이미지를 분할**하여 구분하는 모델인 `U-net` or `UNet` 에 대해 상세하게 리뷰하도록 하겠습니다.
 이 글은 [U-net 논문](https://arxiv.org/abs/1505.04597)과 [MEDIUM](https://medium.com/@msmapark2/u-net-%EB%85%BC%EB%AC%B8-%EB%A6%AC%EB%B7%B0-u-net-convolutional-networks-for-biomedical-image-segmentation-456d6901b28a) 을 참고하여 정리하였음을 먼저 밝힙니다.
 논문 그대로를 리뷰하기보다는 *생각을 정리하는 목적으로 제작*하고 있기 때문에 실제 내용과 다른점이 존재할 수 있습니다. 
 혹시 제가 잘못 알고 있는 점이나 보안할 점이 있다면 댓글 부탁드립니다.
@@ -24,7 +25,7 @@ tags:
 #### Short Summary
 이 논문의 큰 특징 3가지는 아래와 같습니다.
 
-1. 넓은 범위의 이미지 픽셀로부터 의미정보를 추출하고 의미정보를 기반으로 각 픽셀마다 객체를 분류하는 U 모양의 아키텍처를 제시합니다.
+1. 넓은 범위의 이미지 픽셀로부터 의미정보를 추출하고 의미정보를 기반으로 각 픽셀마다 객체를 분류하는 **U 모양의 아키텍처**를 제시합니다.
 2. 적은 학습 데이터로 모델의 성능을 올리기 위하여 생물 의학분야에서 효과적인 이미지 데이터 증가 방법을 제시합니다. 
 3. 서로 근접한 객체 경계를 잘 구분하도록 학습하기 위하여 Weighted Loss를 제시합니다.
 
@@ -39,7 +40,7 @@ tags:
 3. 수축 경로에서 확장 경로로 전환되는 **Bottle Neck**
 
 모델의 Input은 이미지의 픽셀별 RGB 데이터이고 모델의 Output은 이미지의 각 픽셀별 객체 구분 정보(Class)입니다.
-Convolution 연산과정에서 패딩을 사용하지 않으므로 모델의 Output Size는 Input Size보다 작습니다.
+Convolution 연산과정에서 패딩을 사용하지 않으므로 **모델의 Output Size는 Input Size보다 작습니다.**
 예를들어 572×572×(RGB) 크기의 이미지를 Input으로 사용하면 Output으로 388×388×(Class) 이미지가 생성됩니다.  
 Input(Width × Height × RGB) -> Model -> Output(Width × Height × Class)
 
@@ -52,12 +53,11 @@ Input(Width × Height × RGB) -> Model -> Output(Width × Height × Class)
 3. 2×2 Max-polling Layer (Stride 2)
 
 수축경로는 주변 픽셀들을 참조하는 범위를 넓혀가며 **이미지로부터 Contextual 정보를 추출**하는 역할을 합니다. 
-3×3 Convolution을 수행할 때 패딩을 하지 않으므로 특징맵(Feature Map)의 크기가 감소합니다.
+3×3 Convolution을 수행할 때 <u>패딩을 하지 않으므로 특징맵(Feature Map)의 크기가 감소</u>합니다.
 Downsampling 할 때 마다 채널(Channel)의 수를 2배 증가시키면서 진행합니다.
 즉 처음 Input Channel(1)을 64개로 증가시키는 부분을 제외하면 채널은 1->64->128->256->512->1024 개로 Downsampling 진행할 때마다 증가합니다.
-
-> 논문에서는 Batch-Normalization이 언급되지 않았으나 구현체 및 다수의 리뷰에서 Batch-Normalization을 사용하는 것을 확인하였습니다.
-> [참고자료](https://github.com/milesial/Pytorch-UNet)
+>논문에서는 Batch-Normalization이 언급되지 않았으나 구현체 및 다수의 리뷰에서 Batch-Normalization을 사용하는 것을 확인하였습니다.
+>[참고자료](https://github.com/milesial/Pytorch-UNet)
 
 ### 2) Bottle Neck
 
@@ -87,13 +87,13 @@ Downsampling 할 때 마다 채널(Channel)의 수를 2배 증가시키면서 �
 ## 학습
 
 본 논문에서 다양한 학습 장치들을 통해 모델의 성능을 향상시킵니다.
-모델이 잘 학습할 수 있도록 논문에서는 학습단계에서 몇가지
 
-1. **Overlap-tile strategy** : 큰 이미지를 겹치는 부분이 있도록 일정크기로 나누고 모델의 Input으로 활용합니다. 
-2. **Mirroring Extrapolate** : 이미지의 경계(Border)부분을 거울이 반사된 것처럼 확장하여 Input으로 활용합니다. 
-3. **Weight Loss** :    
+- **Overlap-tile strategy** : 큰 이미지를 겹치는 부분이 있도록 일정크기로 나누고 모델의 Input으로 활용합니다. 
+- **Mirroring Extrapolate** : 이미지의 경계(Border)부분을 거울이 반사된 것처럼 확장하여 Input으로 활용합니다. 
+- **Weight Loss** : 모델이 객체간 경계를 구분할 수 있도록 Weight Loss를 구성하고 학습합니다.
+- **Data Augmentation** : 적은 데이터로 모델을 잘 학습할 수 있도록 데이터 증강 방법을 활용합니다.
 
-### 1) Overlap-tile strategy
+#### Overlap-tile strategy
 ![](/img/in-post/2020/2020-09-28/overlap_tile.png)
 <center>Overlap-tile 예시</center>
 
@@ -103,16 +103,17 @@ U-Net은 Input과 Output의 이미지 크기가 다르기 때문에 위 그림�
 동일하게 초록색 영역을 Segmenation하기 위해서는 빨간색 영역을 모델의 Input으로 사용해야 합니다.
 즉 겹치는 부분이 존재하는데 이 때문에 Overlap Tile 전략이라고 논문에서는 지칭합니다.
 
-### 2) Mirroring Extrapolate
+#### Mirroring Extrapolate
 ![](/img/in-post/2020/2020-09-28/mirroring.png)
 <center>Mirroring 예시</center>
 
 이미지의 경계부분을 예측할 때에는 Padding을 넣어 활용하는 경우가 일반적입니다.
 본 논문에서는 이미지 경계에 위치한 이미지를 복사하고 좌우 반전을 통해 Mirror 이미지를 생성한 후 원본 이미지의 주변에 붙여 Input으로 사용합니다.
-> 본 논문의 실험분야인 biomedical 에서는 세포가 주로 등장하고, 세포는 상하 좌우 대칭구도를 이루는 경우가 많기 때문에 Mirroring 전략을 사용했을 것이라고 추측합니다.
+>본 논문의 실험분야인 biomedical 에서는 세포가 주로 등장하고, 세포는 상하 좌우 대칭구도를 이루는 경우가 많기 때문에 Mirroring 전략을 사용했을 것이라고 추측합니다.
 
-### 3) Weight Loss
-
+#### Weight Loss
+![](/img/in-post/2020/2020-09-28/boundary_target.png)
+<center>Bio-Medical Image Segmentation 예시</center>
 
 모델은 위 그림처럼 작은 경계를 분리할 수 있도록 학습되어야 합니다. 
 따라서 논문에서는 각 픽셀이 경계와 얼마나 가까운지에 따른 Weight-Map을 만들고 학습할 때 가까운 경계에 있는 픽셀의 Loss를 Weight-Map에 비례하게 증가 시킴으로써 경계를 잘 학습하도록 설계하였습니다.
@@ -121,9 +122,42 @@ U-Net은 Input과 Output의 이미지 크기가 다르기 때문에 위 그림�
 <center>$p_k(x)=exp(a_k(x))/(\sum^K_i exp(a_i(x)))$</center>
 <center>$w(x)=w_c(x)+w_0 \cdot exp(-\frac{(d_1(x)+d_2(x))^2}{2\sigma^2})$</center> 
 
-     
+$a_k(x)$ : 픽셀 x가 Class k일 값(픽셀 별 모델의 Output) 
+$p_k(x)$ : 픽셀 x가 Class k일 확률(0~1)
+$l(x)$ : 픽셀 x의 실제 Label
+$w_0$ : 논문의 Weight hyper-parameter, 논문에서 10으로 설정.
+$\sigma$ : 논문의 Weight hyper-parameter, 논문에서 5로 설정.
+$d_1(x)$ : 픽셀 x의 위치로부터 가장 가까운 경계와 거리
+$d_2(x)$ :  픽셀 x의 위치로부터 두번째로 가까운 경계와 거리
 
+$w(x)$는 픽셀 x와 경계의 거리가 가까우면 큰 값을 갖게 되므로 해당 픽셀의 Loss 비중이 커지게 됩니다.
+즉 학습 시 경계에 해당하는 픽셀을 잘 학습하게 됩니다.      
 
+![](/img/in-post/2020/2020-09-28/weight_map.png)
+<center>Weight Map 예시</center>
+
+위 그림은 이미지의 픽셀 위치에 따른 Weight $w(x)$를 시각화한 것입니다.
+$w(x)$는 객체의 경계 부분에서 큰 값을 갖는 것을 확인할 수 있습니다.
+>객체간 경계가 전체 픽셀에 차지하는 비중은 매우 작습니다. 
+>따라서 Weight Loss를 이용하지 않을 경우 경계가 잘 학습되지 않아 여러개의 객체가 한개의 객체로 표시 될 가능성이 높아 보입니다. 
+
+#### Data Augmentation
+
+데이터의 양이 적기 때문에 데이터 증강을 통해 모델이 Noise에 강건하도록 학습시킵니다.
+데이터 증강 방법으로 *Rotation(회전), Shift(이동), Elastic distortion* 등이 있습니다.
+>본 논문에서는 자세하게 데이터 증강방법을 묘사하지 않습니다.
+>이미지를 활용하여 데이터 증강하는 방법은 [[Elastic distortion]](https://hj-harry.github.io/HJ-blog/2019/01/30/Elastic-distortion.html) 에서 참고바랍니다.  
+
+#### Others
+- Gaussian Distribution 을 이용하여 모델의 파라미터를 초기화하고 학습합니다.
+- 이미지를 최대한 크게 사용하고 Optimizer에 Momentum(0.99)를 부여하여 일관적이게 학습하도록 조절합니다.
+
+## 실험 및 결과
+모델의 성능을 평가하기 위하여 **EM Segmentation challenge**의 Dataset을 활용합니다. 
+EM Segmentation challenge Dataset은 30개의 Training 데이터를 제공합니다.
+각 데이터는 이미지와 함께 객체와 배경이 구분된(0 or 1) Ground Truth Segmentation Map을 포함하고 있습니다.
+
+![](/img/in-post/2020/2020-09-28/em_result.png)
 
 
 
@@ -137,8 +171,9 @@ U-Net은 Input과 Output의 이미지 크기가 다르기 때문에 위 그림�
  
 
 ## Reference
-- [[BLOG]]([https://kuklife.tistory.com/118?category=872136) [Semantic Segmentation] Semantic Segmentation 목적
+- [[BLOG]]([https://kuklife.tistory.com/118?category=872136) Semantic Segmentation 목적
 - [[BLOG]](https://medium.com/@msmapark2/u-net-%EB%85%BC%EB%AC%B8-%EB%A6%AC%EB%B7%B0-u-net-convolutional-networks-for-biomedical-image-segmentation-456d6901b28an)U-Net 논문 리뷰 — U-Net: Convolutional Networks for Biomedical Image Segmentation, 강준영
 - [[BLOG]](http://deeplearning.net/tutorial/unet.html) U-Net Tutorial
+- [[BLOG]](https://hj-harry.github.io/HJ-blog/2019/01/30/Elastic-distortion.html) Elastic distortion, HJ harry
 - [[PAPER]](https://arxiv.org/abs/1505.04597) U-Net: Convolutional Networks for Biomedical Image Segmentation(2015), Olaf Ronneberger
 - [[GITHUB]](https://github.com/milesial/Pytorch-UNet) UNet: semantic segmentation with PyTorch
