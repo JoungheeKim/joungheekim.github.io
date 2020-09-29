@@ -160,7 +160,8 @@ ResNet의 경우 논문에서 제안한 구조로 구성되어 있어 **이미 �
 
 ## 구현
 ResNet은 Global Average Pooling 구조가 반영된 이미지 분류기 입니다.
-Pytorch 기본 라이브러리에서 ImageNet을 이용하여 Pre-trained ResNet을 제공하고 있으므로 추가 학습 없이 바로 CAM을 적용할 수 있습니다.    
+Pytorch 기본 라이브러리에서 ImageNet을 이용하여 Pre-trained ResNet을 제공하고 있으므로 추가 학습 없이 바로 CAM(Class Activation Mapping)을 적용할 수 있습니다.
+[[TUTORIAL 파일]](/img/in-post/2020/2020-09-29/cam_tutorial.ipynb) 은 해당 링크에서 다운받을 수 있습니다.    
 
 ``` python
 import torch
@@ -270,6 +271,7 @@ show_CAM(numpy_img, feature_maps, activation_weights, classes, class_id)
 ![](/img/in-post/2020/2020-09-29/code_result.png)    
 <center>CAM 구현 결과</center>
 
-
+## Reference
 - [[PAPER]](https://arxiv.org/abs/1512.04150) Learning Deep Features for Discriminative Localization, CVPR 2016
 - [[BLOG]](https://youngerous.github.io/paper/2020/09/22/cam/) Learning Deep Features for Discriminative Localization, Youngerous
+- [[GITHUB]](https://github.com/zhoubolei/CAM) Sample code for the Class Activation Mapping, zhoubolei
