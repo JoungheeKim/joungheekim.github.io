@@ -16,7 +16,7 @@ tags:
 그 이유는 CNN이 이미지의 **지역적 특징**을 잘 포착하기 때문입니다.
 
 ![](/img/in-post/2020/2020-09-29/cam_example.png)
-<center>이미지에서 지역적 특징 시각화 예시(Feat. 고양이 줄리)</center>
+<center>이미지에서 객체 추출(Feat. 고양이 줄리)</center>
 
 오늘 포스팅은 CNN을 이용하여 지역적 특징을 잘 포착하는지 여부에 대해 **해석(시각화)이 가능한 방법** 를 제시한 논문을 리뷰하도록 하겠습니다.
 이 글은 [Learning Deep Features for Discriminative Localization 논문](https://arxiv.org/abs/1512.04150) [MEDIUM 글](https://towardsdatascience.com/learning-deep-features-for-discriminative-localization-class-activation-mapping-2a653572be7f?gi=f6a5717f2f12) 을 참고하여 정리하였음을 먼저 밝힙니다.
@@ -26,9 +26,9 @@ tags:
 #### Short Summary
 이 논문의 큰 특징 3가지는 아래와 같습니다.
 
-1. **Global Average Pooling layer**를 적용하여 <u>객체의 위치를 추출(Localization Ability)</u> 할 수 있는 구조를 제시합니다.
-2. <u>객체의 위치를 포착하는 방법</u> **Class Activation Mapping(CAM)** 을 제시합니다.
-3. 객체 위치정보 없이 <u>카테고리 정보<u/>만으로 좋은 **위치 추출 평가점수**를 획득하였습니다.
+1. **Global Average Pooling layer(GAP)**를 적용하여 <u>해석(시각화)가 가능한 구조</u>를 제시합니다.
+2. <u>객체의 위치를 추출하는 방법</u>인 **Class Activation Mapping(CAM)** 을 제시합니다.
+3. 객체의 위치정보 없이 <u>카테고리 정보<u/>만을 학습한 후 객체 위치를 추출하여 **Localization Test**에서 좋은 평가점수를 획득하였습니다.
 
 ## 모델 구조
 
@@ -49,7 +49,53 @@ Feature Extraction 단계에서 추출한 Feature Map은 <u>여러층의 FC Laye
 
 카테고리 정보만을 학습하여 모델이 객체의 위치 추출 능력을 갖추기 위하여 본 논문에서는 Flatten 단계에서 Global Average Pooling(GAP) 방법을 사용해야 한다고 주장합니다.
 또한 Fully Connected Layer의 수를 줄이고 마지막 Classification Layer 하나만을 이용하여 모델을 구성합니다.
-위 구조에서는 
+위 구조에서는 Global Average Pooling을 이용하여 각 Feature Map($f_k(x,y)$)의 가로 세로 값을 평균하여 특징변수($F_k) k개를 생성합니다.
+예를들어 위 그림에서는 총 4개의 Feature Map이 존재하므로 총 4개의 특징변수가 생성됩니다.
+
+<center>$\sum_{x,y} f_k(x,y) = F_k$</center>
+<center>$S_c=\sum_k w_k^c F_k$</center>
+<center>$P_c=\frac{exp(S_c)}{\sum_c exp(S_c)}$</center>
+$f_k(x,y)$ : Feature Map k의 가로(x), 세로(y)에 해당하는 값  
+$F_k$ : 특징변수 k  
+$k$ : Feature Map의 index  
+$x, y$ : Featrue Map의 가로, 세로 위치  
+$w_k^c$ 특징변수 k가 클래스 c에 기여하는 Weight  
+
+이 특징변수($F_k$)와 FC Layer의 Weight($w_k^c$)를 곱하여 더하면 각 클래스의 점수($S_c$)를 계산할 수 있습니다.
+각 특징변수에 곱해진 Weight는 각 Feature Map이 해당 클래스에 얼마나 기여하는 지를 나타냅니다.
+마지막으로 클래스 점수에 SoftMax 함수를 취하면 각 클래스로 분류될 확률($P_c$)을 계산할 수 있습니다.
+
+#### Class Activation Mapping(CAM)
+위 식을 응용하면 각 클래스 분류될 확률에 영향을 미친 객체의 위치 위치(x,y)를 추출할 수 있습니다.
+
+<center>$S_c=\sum_k w_k^c F_k$</center>
+<center>$S_c=\sum_k w_k^c \sum_{x,y} f_k(x,y)$</center>
+<center>$S_c=\sum_k w_k^c \sum_{x,y} f_k(x,y)$</center>
+<center>$S_c=\sum_{x,y} \sum_k w_k^c f_k(x,y)$</center>
+
+
+
+
+
+
+식을 이용하여 표현하면 위의 내용과 동일합니다.
+
+
+
+
+
+
+
+  
+
+
+
+#### Global Average Pooling
+<center>$S_c &=& \sum_k w_k^c F_k$</center>
+<center>$&=& \sum_k w_c^k \sum_{x, y}f_k(x,y)$</center>
+<center>$&=& \sum_{x, y} \sum_k w_k^c f_k(x,y)$</center>
+ 
+ 
   
 
 
