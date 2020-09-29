@@ -111,21 +111,21 @@ GAP(Global Average Pooling)를 적용한 모델과 GMP(Global Max Pooling) 적�
 
 **분류 실험(Classification)**
 ![](/img/in-post/2020/2020-09-29/ilsvrc_classification_result.png)
-논문에서 제시한 구조를 사용했을 때 각 분류 모델의 정확도가 1%~2% 미미하게 하락하는 것을 확인할 수 있습니다.
+논문에서 제시한 구조를 사용했을 때 각 분류 모델의 정확도가 1%~2% <u>미미하게 하락</u>하는 것을 확인할 수 있습니다.
 
 **객체 추출 실험(Localization)**
 객체 추출 평가점수는 Ground Truth Bounding Box와 모델에서 추출된 [Bounding Box의 IOU(Intersection over Union)](https://www.kaggle.com/c/imagenet-object-localization-challenge/overview/evaluation)를 통해 계산됩니다.
 실험모델은 CAM을 통해 각 좌표의 값을 추출할 수 있습니다.
-특정 Threshold를 정하고 Threshold를 넘는 좌표 중 연결된 부분이 모두 포함될 수 있도록 Bounding Box를 만들어 객체 추출 실험에 활용합니다.
+따라서 특정 Threshold를 정하고 Threshold를 넘는 좌표 중 연결된 부분이 모두 포함될 수 있도록 <u>Bounding Box를 만들어 객체 추출 실험에 활용</u>합니다.
 
 ![](/img/in-post/2020/2020-09-29/ilsvrc_localization_result.png)
 실험결과 제시한 모델은 다양한 Fully-supervised 방법보다 낮은 성능을 보이고 있습니다.
-다만 제시한 모델은 Bounding Box 없이 학습했다는 점을 고려하면 좋은 성능을 보이고 있다고 평가할 수 있습니다.
+다만 제시한 모델은 <u>Bounding Box 없이 학습</u>했다는 점을 고려하면 좋은 성능을 보이고 있다고 평가할 수 있습니다.
 게다가 휴리스틱 방법을 통해 더 높은 성능을 획득한 것을 통해 다양한 후처리 방법을 통해 실험모델의 성능을 끌어올릴 수 있는 여지가 있습니다.     
 
 ### 2. Pattern Discovery
 #### 실험내용
-이미지에서 물체를 추출하는 것 이외에 행위와 같은 모호한 패턴에 대한 개념도 잘 추출하는지에 대해 실험을 진행합니다.
+이미지에서 물체를 추출하는 것 이외에 행위와 같은 **모호한 패턴에 대한 개념**도 잘 추출하는지에 대해 실험을 진행합니다.
 
 1. 다양한 객체가 포함된 20개의 카테고리 이미지를 학습하고 각 카테고리로 부터 비슷한 객체가 추출되는지를 확인합니다. 
 2. 추상적인 설명과 이미지로부터 패턴을 추출할 수 있는지 여부를 확인합니다. 
@@ -155,8 +155,8 @@ Bounding Box를 이용하지 않았음에도 글자 부분을 잘 포착하는 �
 
 ## 결론 및 개인적인 생각
 간단한 구조 변경으로 다양한 TASk(Classification, Localization)를 수행할 수 있는 방법을 제시한 효과적인 논문입니다.
-다양한 실험을 통해 논문에서 주장한 구조의 장점을 명료하게 파악할 수 있으며, 부가적으로 CNN(Convolution Neural Network)의 작동 방식을 직관적으로 이해할 수 있었습니다.
-ResNet의 경우 논문에서 제안한 구조로 구성되어 있어 이미 학습된 모델을 이용하여 실험해 볼 수 있어서 CAM을 바로 활용할 수 있는 장점을 갖고 있습니다.
+다양한 실험을 통해 논문에서 주장한 구조의 장점을 명료하게 파악할 수 있으며, 부가적으로 <u>CNN(Convolution Neural Network)의 작동 방식을 직관적으로 이해</u>할 수 있었습니다.
+ResNet의 경우 논문에서 제안한 구조로 구성되어 있어 **이미 학습된 모델을 이용하여 실험**해 볼 수 있어서 CAM을 바로 활용할 수 있는 장점을 갖고 있습니다.
 
 ## 구현
 ResNet은 Global Average Pooling 구조가 반영된 이미지 분류기 입니다.
@@ -172,7 +172,6 @@ import urllib.request
 import ast
 import numpy as np
 import cv2
-
 
 ## 이미지 경로 설정
 img_path = 'cat.jpg'
@@ -267,6 +266,9 @@ def show_CAM(numpy_img, feature_maps, activation_weights, classes, class_id):
 
 show_CAM(numpy_img, feature_maps, activation_weights, classes, class_id)
 ```
+
+![](/img/in-post/2020/2020-09-29/code_result.png)    
+<center>CAM 구현 결과</center>
 
 
 - [[PAPER]](https://arxiv.org/abs/1512.04150) Learning Deep Features for Discriminative Localization, CVPR 2016
