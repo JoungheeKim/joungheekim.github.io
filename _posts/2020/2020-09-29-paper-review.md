@@ -19,16 +19,16 @@ tags:
 <center>이미지에서 객체 추출(feat. 고양이 줄리)</center>
 
 오늘 포스팅은 CNN을 이용하여 지역적 특징을 잘 포착하는지 여부에 대해 **해석(시각화)이 가능한 방법** 를 제시한 논문을 리뷰하도록 하겠습니다.
-이 글은 [Learning Deep Features for Discriminative Localization 논문](https://arxiv.org/abs/1512.04150)과 [MEDIUM 글](https://towardsdatascience.com/learning-deep-features-for-discriminative-localization-class-activation-mapping-2a653572be7f?gi=f6a5717f2f12) 을 참고하여 정리하였음을 먼저 밝힙니다.
+이 글은 [Learning Deep Features for Discriminative Localization 논문](https://arxiv.org/abs/1512.04150) 을 참고하여 정리하였음을 먼저 밝힙니다.
 논문 그대로를 리뷰하기보다는 *생각을 정리하는 목적으로 제작*하고 있기 때문에 실제 내용과 다른점이 존재할 수 있습니다. 
 혹시 제가 잘못 알고 있는 점이나 보안할 점이 있다면 댓글 부탁드립니다.
 
 #### Short Summary
 이 논문의 큰 특징 3가지는 아래와 같습니다.
 
-1. **Global Average Pooling layer(GAP)**를 적용하여 <u>해석(시각화)가 가능한 구조</u>를 제시합니다.
-2. <u>객체의 위치를 추출하는 방법</u>인 **Class Activation Mapping(CAM)** 을 제시합니다.
-3. 객체의 위치정보 없이 <u>카테고리 정보</u>만을 학습한 후 객체 위치를 추출하여 **Localization Test**에서 좋은 평가점수를 획득하였습니다.
+1. **Global Average Pooling(GAP)** 를 적용하여 <u>해석(시각화)가 가능한 구조</u>를 제시합니다.
+2. Feature Map에서 <u>객체의 위치를 추출하는 방법</u>인 **Class Activation Mapping(CAM)** 을 제시합니다.
+4. <u>다양할 실험</u>을 통해 논문에서 주장하는 구조와 객체 추출 방법이 **객체 인식**에 좋은 성능을 갖고 있음을 증명합니다.
 
 ## 모델 구조
 
@@ -108,11 +108,12 @@ GMP, GAP 두 방법을 적용했을 때 분류(Classification) 정확도 비슷�
 GAP(Global Average Pooling)를 적용한 모델과 GMP(Global Max Pooling) 적용한 모델도 함꼐 비교하며 Pooling 방법에 대한 성능을 비교실험으로 확인합니다.
  
 #### 실험결과 
-##### [1]분류 실험(Classification)
+
+**분류 실험(Classification)**
 ![](/img/in-post/2020/2020-09-29/ilsvrc_classification_result.png)
 논문에서 제시한 구조를 사용했을 때 각 분류 모델의 정확도가 1%~2% 미미하게 하락하는 것을 확인할 수 있습니다.
 
-##### [2]객체 추출 실험(Localization)
+**객체 추출 실험(Localization)**
 객체 추출 평가점수는 Ground Truth Bounding Box와 모델에서 추출된 [Bounding Box의 IOU(Intersection over Union)](https://www.kaggle.com/c/imagenet-object-localization-challenge/overview/evaluation)를 통해 계산됩니다.
 실험모델은 CAM을 통해 각 좌표의 값을 추출할 수 있습니다.
 특정 Threshold를 정하고 Threshold를 넘는 좌표 중 연결된 부분이 모두 포함될 수 있도록 Bounding Box를 만들어 객체 추출 실험에 활용합니다.
@@ -130,81 +131,143 @@ GAP(Global Average Pooling)를 적용한 모델과 GMP(Global Max Pooling) 적�
 2. 추상적인 설명과 이미지로부터 패턴을 추출할 수 있는지 여부를 확인합니다. 
 3. CAM 방법을 이용하여 텍스트를 포착할 수 있는지 여부를 확인합니다.
 4. 질문과 대답을 이용하여 학습한 후 CAM을 통해 시각화 하였을 때 대답이 있는 부분을 잘 포착하는지 확인합니다.
- 
+
+#### 실험결과
+
+**Discovering informative objects in the scenes**
 ![](/img/in-post/2020/2020-09-29/informative_result.png)
 비슷한 카테고리를 갖고 있는 이미지에서는 비슷한 객체가 주로 추출됩니다.
 예를 들어 화장실 이미지에서 실험모델의 분류확률이 높은 객체 TOP6를 나열하면 실크, 욕탕 등이 일관적으로 주로 추출됩니다. 
 
+**Concept localization in weakly labeled images**
 ![](/img/in-post/2020/2020-09-29/abstractive_result.png)
 추상적인 설명이 제공된 이미지로 학습한 모델도 해당 정보가 포함된 위치를 잘 포착합니다.
 
+**Weakly supervised text detector**
 ![](/img/in-post/2020/2020-09-29/text_mining_result.png)
 글자가 있는 이미지를 Positive, 글자가 없는 이미지를 Negative로 설정하고 학습시켰을 때 CAM 방법을 이용하여 이미지로부터 글자를 추출할 수 있는지를 확인하는 실험입니다.
 Bounding Box를 이용하지 않았음에도 글자 부분을 잘 포착하는 것을 확인할 수 있습니다.
 
+**Interpreting visual question answering**
 ![](/img/in-post/2020/2020-09-29/question_result.png)    
 질문과 이미지를 넣고 대답을 예측하도록 모델을 학습한 뒤 CAM 방법을 이용하여 이미지로부터 대답에 해당하는 물체의 위치를 추출할 수 있는지를 확인하는 실험입니다.
 대답에 해당하는 물체의 위치를 잘 포착하는 것을 확인할 수 있습니다.
 
+## 결론 및 개인적인 생각
+간단한 구조 변경으로 다양한 TASk(Classification, Localization)를 수행할 수 있는 방법을 제시한 효과적인 논문입니다.
+다양한 실험을 통해 논문에서 주장한 구조의 장점을 명료하게 파악할 수 있으며, 부가적으로 CNN(Convolution Neural Network)의 작동 방식을 직관적으로 이해할 수 있었습니다.
+ResNet의 경우 논문에서 제안한 구조로 구성되어 있어 이미 학습된 모델을 이용하여 실험해 볼 수 있어서 CAM을 바로 활용할 수 있는 장점을 갖고 있습니다.
+
+## 구현
+ResNet은 Global Average Pooling 구조가 반영된 이미지 분류기 입니다.
+Pytorch 기본 라이브러리에서 ImageNet을 이용하여 Pre-trained ResNet을 제공하고 있으므로 추가 학습 없이 바로 CAM을 적용할 수 있습니다.    
+
+``` python
+import torch
+from torchvision import datasets, models, transforms
+import torch.nn.functional as F
+from PIL import Image
+from matplotlib import pyplot as plt
+import urllib.request
+import ast
+import numpy as np
+import cv2
 
 
+## 이미지 경로 설정
+img_path = 'cat.jpg'
 
- 
+## Resnet은 ImageNet에서 Training 되었으므로 image Net의 class 정보를 가져옵니다.
+classes_url = 'https://gist.githubusercontent.com/yrevar/942d3a0ac09ec9e5eb3a/raw/238f720ff059c1f82f368259d1ca4ffa5dd8f9f5/imagenet1000_clsidx_to_labels.txt'
+
+## class 정보 불러오기
+with urllib.request.urlopen(classes_url) as handler:
+    data = handler.read().decode()
+    classes = ast.literal_eval(data)
+
+## Resnet 불러오기
+model_ft = models.resnet18(pretrained=True)
+model_ft.eval()
+
+## Imagenet Transformation 참조
+## https://github.com/pytorch/examples/blob/42e5b996718797e45c46a25c55b031e6768f8440/imagenet/main.py#L89-L101
+
+normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+preprocess = transforms.Compose([
+    ## Resize는 사용하지 않고 원본을 추출
+   transforms.Resize((224,224)),
+   transforms.ToTensor(),
+   normalize
+])
+
+## 그림을 불러옵니다.
+raw_img = Image.open(img_path)
+
+## 이미지를 전처리 및 변형
+img_input = preprocess(raw_img)
+
+## 모델 결과 추출
+output = model_ft(img_input.unsqueeze(0))
+
+## 클래스 추출
+softmaxValue = F.softmax(output)
+class_id=int(softmaxValue.argmax().numpy())
+
+## Resnet 구조 참고
+## https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
+def get_activation_info(self, x):
+    # See note [TorchScript super()]
+    x = self.conv1(x)
+    x = self.bn1(x)
+    x = self.relu(x)
+    x = self.maxpool(x)
+
+    x = self.layer1(x)
+    x = self.layer2(x)
+    x = self.layer3(x)
+    x = self.layer4(x)
+
+    return x
+
+## Feature Map 추출
+feature_maps = get_activation_info(model_ft, img_input.unsqueeze(0)).squeeze().detach().numpy()
+## Weights 추출
+activation_weights = list(model_ft.parameters())[-2].data.numpy()
+
+## numpy로 이미지 변경
+numpy_img = np.asarray(raw_img)
+
+def show_CAM(numpy_img, feature_maps, activation_weights, classes, class_id):
+    ## CAM 추출
+    cam_img = np.matmul(activation_weights[class_id], feature_maps.reshape(feature_maps.shape[0], -1)).reshape(feature_maps.shape[1:])
+    cam_img = cam_img - np.min(cam_img)
+    cam_img = cam_img/np.max(cam_img)
+    cam_img = np.uint8(255 * cam_img)
+    
+    ## Heat Map으로 변경
+    heatmap = cv2.applyColorMap(cv2.resize(255-cam_img, (numpy_img.shape[1], numpy_img.shape[0])), cv2.COLORMAP_JET)
+    
+    ## 합치기
+    result = numpy_img * 0.5 + heatmap * 0.3
+    result = np.uint8(result)
+    
+    fig=plt.figure(figsize=(16, 8))
+        
+    ## 원본 이미지
+    ax1 = fig.add_subplot(1, 2, 1)
+    ax1.imshow(numpy_img)
+       
+    ## CAM 이미지
+    ax2 = fig.add_subplot(1, 2, 2)
+    ax2.imshow(result)
+    
+    plt.suptitle("[{}] CAM Image".format(classes[class_id]), fontsize=30)
+    
+    plt.show()  
+
+show_CAM(numpy_img, feature_maps, activation_weights, classes, class_id)
+```
 
 
-
-
-
-[ILSVRC 2014 Benchmark 데이터](http://image-net.org/challenges/LSVRC/) 로 각 실험모델을 테스트 했을 때 결과입니다.
-
-importance of the activation at spatial grid
-(x, y) leading to the classification of an image to class c.
-
-
-
-
-식을 이용하여 표현하면 위의 내용과 동일합니다.
-
-
-
-
-
-
-
-  
-
-
-
-#### Global Average Pooling
-<center>$S_c &=& \sum_k w_k^c F_k$</center>
-<center>$&=& \sum_k w_c^k \sum_{x, y}f_k(x,y)$</center>
-<center>$&=& \sum_{x, y} \sum_k w_k^c f_k(x,y)$</center>
- 
- 
-  
-
-
-위 그림은 일반적인 이미지 인식 모델(AlexNet, AGGnet, GoogLeNet)에서 Feature를 추출하는 부분에 Global Average Pooling Layer를 적용한 모습을 설명한 것입니다.
-전반부는 여러 층의 Conv Layer로 이루어진 이미지 인식 모델이 Feature Map을 추출하는 부분입니다.
-추출한 여러층의 Feature Map을 Global Average Pooling Layer를 이용하여 한 층마다  
- 모형이고 Global Average Pooling Layer를 적용한 후 Fully Connected Layer를 적용합니다. 
- 
- Max pooling도 위치정보를 보존하면서 특징정보를 추출할 수 있지만 모든 Feature Map의 정보를 활용하지 않으므로 객체의 Boundary에 집중하여 정보를 추출한다
- 반면에 Global Average Pooling은 Feature Map의 모든정보를 포함하여 정보를 추출하기 때문에 객체의 위치정보를 더 명확히 구분할 수 있는 능력을 부여합니다.
-  
-  방법이지만 Global Average Pooling
-
-
-
-
-
-
- 직역적 특징을 잘 포착하는지 여부를 확인할 수 있는   
-
-이 꾸준히 발전하였고 CNN의 기능에 대해   
-
-딥러닝을 공부하는 
-
-
-
-해석이 가능한 AI를 Explainable AI 라고 부릅니다. Neural Network 
+- [[PAPER]](https://arxiv.org/abs/1512.04150) Learning Deep Features for Discriminative Localization, CVPR 2016
+- [[BLOG]](https://youngerous.github.io/paper/2020/09/22/cam/) Learning Deep Features for Discriminative Localization, Youngerous

@@ -180,7 +180,7 @@ U-Net 모델은 “DIC-HeLa” 데이터에서 <u>77.5% IOU Score</u>를 획득�
  
 
 ## Reference
-- [[BLOG]]([https://kuklife.tistory.com/118?category=872136) Semantic Segmentation 목적
+- [[BLOG]](https://kuklife.tistory.com/118?category=872136) Semantic Segmentation 목적
 - [[BLOG]](https://medium.com/@msmapark2/u-net-%EB%85%BC%EB%AC%B8-%EB%A6%AC%EB%B7%B0-u-net-convolutional-networks-for-biomedical-image-segmentation-456d6901b28an)U-Net 논문 리뷰 — U-Net: Convolutional Networks for Biomedical Image Segmentation, 강준영
 - [[BLOG]](http://deeplearning.net/tutorial/unet.html) U-Net Tutorial
 - [[BLOG]](https://hj-harry.github.io/HJ-blog/2019/01/30/Elastic-distortion.html) Elastic distortion, HJ harry
