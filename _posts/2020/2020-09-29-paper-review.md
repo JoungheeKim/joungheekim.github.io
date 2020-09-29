@@ -58,11 +58,11 @@ Global Average Pooling(GAP)은 각 Feature Map($f_k(x,y)$)의 가로 세로 값�
 $f_k(x,y)$ : Feature Map k의 가로($x$), 세로($y$)에 해당하는 값  
 $F_k$ : 특징변수 $k$  
 $k$ : Feature Map의 index  
-$x, y$ : Featrue Map의 가로, 세로 좌표  
-$w_k^c$ 특징변수 $k$가 클래스 $c$에 기여하는 Weight  
+$x, y$ : Feature Map의 가로, 세로 좌표  
+$w_k^c$ 특징변수 $k$가 클래스 $c$에 기여하는 weight  
 
 이 특징변수($F_k$)와 FC Layer의 Weight($w_k^c$)를 곱하여 더하면 각 클래스의 점수($S_c$)를 계산할 수 있습니다.
-각 특징변수에 곱해진 Weight는 각 Feature Map이 해당 클래스에 얼마나 기여하는 지를 나타냅니다.
+각 특징변수에 곱해진 **Weight**는 각 <u>Feature Map이 해당 클래스에 얼마나 기여</u>하는 지를 나타냅니다.
 마지막으로 클래스 점수에 SoftMax 함수를 취하면 각 클래스로 분류될 확률($P_c$)을 계산할 수 있습니다.
 
 #### Class Activation Mapping(CAM)
@@ -79,7 +79,7 @@ $w_k^c$ 특징변수 $k$가 클래스 $c$에 기여하는 Weight
 $M_c(x,y)$ : 클래스 $c$에 대하여 좌표 $x$, $y$에 대한 영향력(Activation Value)
 
 각 Feature Map($f_k(x,y)$)과 Feature Map이 특정 클래스 $c$로 분류될 가중치($w_k^c$)를 곱하여 합하면 좌표 별($x,y$) 특정 클래스에 대한 영향력(Class Activation)인 $M_c(x,y)$를 계산할 수 있습니다.
-이를 Class Activation Mapping(CAM)이라고 부릅니다. 각 클래스에 대해 CAM을 적용하면 이미지에서 클래스에 영향을 주는 부분을 추출할 수 있습니다.
+이를 Class Activation Mapping(CAM)이라고 부릅니다. 각 **클래스에 대해 CAM을 적용**하면 <u>이미지에서 클래스에 영향을 주는 좌표</u>을 추출할 수 있습니다.
 
 ![](/img/in-post/2020/2020-09-29/class_cam_compare.png)
 <center>클래스별 CAM 이미지 예시</center>
@@ -87,11 +87,11 @@ $M_c(x,y)$ : 클래스 $c$에 대하여 좌표 $x$, $y$에 대한 영향력(Acti
 고양이 줄리 사진을 모델로 분류하면 '이집트 고양이'일 확률이 0.98, '타이거 상어'일 확률이 0.01 입니다.
 고양이 줄리 사진을 '이집트 고양이' 클래스에 대한 CAM과 '타이거 상어' 클래스에 대한 CAM을 만들어 시각화하면 위 그림과 같습니다.
 '이집트 고양이'에 대한 객체의 좌표를 잘 찾는 반면 '타이거 상어' 클래스에 대한 개체의 좌표는 또렷히 표시되지 않습니다.
-즉 CAM 시각화를 통해 알 수 있는 사실은 본 논문에서 제안한 구조는 각 클래스에 대한 객체의 좌표를 추출하고 그 객체가 뚜렷이 추출된 클래스를 높은 확률로 분류하는 기능을 갖고 있다는 것 입니다.
+즉 CAM 시각화를 통해 알 수 있는 사실은 본 논문에서 제안한 구조는 각 클래스에 대해 **객체의 좌표를 추출**할 수 있으며 <u>객체가 뚜렷이 추출된 클래스를 분류</u>하는 기능을 갖고 있다는 것 입니다.
 
 #### Global Average Pooling(GAP)
 [[이전 논문(CVPR 2015)]](https://ieeexplore.ieee.org/document/8285410) 에서 Global Max Pooling(GMP) 가 제시 되었습니다.
-Global Max Pooling(GMP)은 각 Feature Map 에서 가장 값이 큰 값을 추출하는 방법입니다.
+**Global Max Pooling(GMP)**은 각 Feature Map 에서 <u>가장 값이 큰 값</u>을 추출하는 방법입니다.
 GMP, GAP 두 방법을 적용했을 때 분류(Classification) 정확도 비슷합니다.
 하지만 Feature Map에서 하나의 뚜렷한 특징을 찾아내는 GMP를 적용했을 때와 전체적으로 뚜렷한 특징이 있는지를 확인할 수 있는 GAP를 적용했을 때 객체 추출(Localization) 능력은 크게 차이가 난다고 논문에서 실험적으로 증명합니다.
 
