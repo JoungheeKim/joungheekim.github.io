@@ -96,7 +96,7 @@ GMP, GAP 두 방법을 적용했을 때 분류(Classification) 정확도 비슷�
 하지만 Feature Map에서 하나의 뚜렷한 특징을 찾아내는 GMP를 적용했을 때와 전체적으로 뚜렷한 특징이 있는지를 확인할 수 있는 GAP를 적용했을 때 객체 추출(Localization) 능력은 크게 차이가 난다고 논문에서 실험적으로 증명합니다.
 
 ## 실험 및 결과
-### 1. Weakly-supervised Object Localization
+### [1] Weakly-supervised Object Localization
 #### 실험내용
 본 논문에서는 [ILSVRC 2014 Benchmark 데이터](http://image-net.org/challenges/LSVRC/)에서 모델의 성능을 평가하기 위하여 총 2가지 실험을 진행합니다.
 
@@ -109,11 +109,11 @@ GAP(Global Average Pooling)를 적용한 모델과 GMP(Global Max Pooling) 적�
  
 #### 실험결과 
 
-**분류 실험(Classification)**
+###### 분류 실험(Classification)
 ![](/img/in-post/2020/2020-09-29/ilsvrc_classification_result.png)
 논문에서 제시한 구조를 사용했을 때 각 분류 모델의 정확도가 1%~2% <u>미미하게 하락</u>하는 것을 확인할 수 있습니다.
 
-**객체 추출 실험(Localization)**
+###### 객체 추출 실험(Localization)  
 객체 추출 평가점수는 Ground Truth Bounding Box와 모델에서 추출된 [Bounding Box의 IOU(Intersection over Union)](https://www.kaggle.com/c/imagenet-object-localization-challenge/overview/evaluation)를 통해 계산됩니다.
 실험모델은 CAM을 통해 각 좌표의 값을 추출할 수 있습니다.
 따라서 특정 Threshold를 정하고 Threshold를 넘는 좌표 중 연결된 부분이 모두 포함될 수 있도록 <u>Bounding Box를 만들어 객체 추출 실험에 활용</u>합니다.
@@ -123,7 +123,7 @@ GAP(Global Average Pooling)를 적용한 모델과 GMP(Global Max Pooling) 적�
 다만 제시한 모델은 <u>Bounding Box 없이 학습</u>했다는 점을 고려하면 좋은 성능을 보이고 있다고 평가할 수 있습니다.
 게다가 휴리스틱 방법을 통해 더 높은 성능을 획득한 것을 통해 다양한 후처리 방법을 통해 실험모델의 성능을 끌어올릴 수 있는 여지가 있습니다.     
 
-### 2. Pattern Discovery
+### [2] Pattern Discovery
 #### 실험내용
 이미지에서 물체를 추출하는 것 이외에 행위와 같은 **모호한 패턴에 대한 개념**도 잘 추출하는지에 대해 실험을 진행합니다.
 
@@ -134,21 +134,21 @@ GAP(Global Average Pooling)를 적용한 모델과 GMP(Global Max Pooling) 적�
 
 #### 실험결과
 
-**Discovering informative objects in the scenes**
+###### Discovering informative objects in the scenes
 ![](/img/in-post/2020/2020-09-29/informative_result.png)
 비슷한 카테고리를 갖고 있는 이미지에서는 비슷한 객체가 주로 추출됩니다.
 예를 들어 화장실 이미지에서 실험모델의 분류확률이 높은 객체 TOP6를 나열하면 실크, 욕탕 등이 일관적으로 주로 추출됩니다. 
 
-**Concept localization in weakly labeled images**
+###### Concept localization in weakly labeled images
 ![](/img/in-post/2020/2020-09-29/abstractive_result.png)
 추상적인 설명이 제공된 이미지로 학습한 모델도 해당 정보가 포함된 위치를 잘 포착합니다.
 
-**Weakly supervised text detector**
+###### Weakly supervised text detector
 ![](/img/in-post/2020/2020-09-29/text_mining_result.png)
 글자가 있는 이미지를 Positive, 글자가 없는 이미지를 Negative로 설정하고 학습시켰을 때 CAM 방법을 이용하여 이미지로부터 글자를 추출할 수 있는지를 확인하는 실험입니다.
 Bounding Box를 이용하지 않았음에도 글자 부분을 잘 포착하는 것을 확인할 수 있습니다.
 
-**Interpreting visual question answering**
+###### Interpreting visual question answering
 ![](/img/in-post/2020/2020-09-29/question_result.png)    
 질문과 이미지를 넣고 대답을 예측하도록 모델을 학습한 뒤 CAM 방법을 이용하여 이미지로부터 대답에 해당하는 물체의 위치를 추출할 수 있는지를 확인하는 실험입니다.
 대답에 해당하는 물체의 위치를 잘 포착하는 것을 확인할 수 있습니다.
