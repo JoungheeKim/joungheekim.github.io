@@ -55,10 +55,10 @@ Global Average Pooling(GAP)은 각 Feature Map($f_k(x,y)$)의 가로 세로 값�
 <center>$\sum_{x,y} f_k(x,y) = F_k$</center>
 <center>$S_c = \sum_k w_k^c F_k$</center>
 <center>$P_c =\frac{exp(S_c)}{\sum_c exp(S_c)}$</center>
-$f_k(x,y)$ : Feature Map k의 가로($x$), 세로($$)에 해당하는 값  
+$f_k(x,y)$ : Feature Map k의 가로($x$), 세로($y$)에 해당하는 값  
 $F_k$ : 특징변수 $k$  
 $k$ : Feature Map의 index  
-$x, y$ : Featrue Map의 가로, 세로 위치  
+$x, y$ : Featrue Map의 가로, 세로 좌표  
 $w_k^c$ 특징변수 $k$가 클래스 $c$에 기여하는 Weight  
 
 이 특징변수($F_k$)와 FC Layer의 Weight($w_k^c$)를 곱하여 더하면 각 클래스의 점수($S_c$)를 계산할 수 있습니다.
@@ -69,16 +69,16 @@ $w_k^c$ 특징변수 $k$가 클래스 $c$에 기여하는 Weight
 ![](/img/in-post/2020/2020-09-29/cam_adaptation.png)
 <center>CAM 적용 방법 예시</center>
 
-위 식을 응용하면 각 클래스로 분류될 확률에 영향을 미친 객체의 위치($x,y$)를 추출할 수 있습니다.
+위 식을 응용하면 각 클래스로 분류될 확률에 영향을 미친 객체의 좌표($x,y$)를 추출할 수 있습니다.
 
 <center>$S_c = \sum_k w_k^c F_k$</center>
 <center>$S_c = \sum_k w_k^c \sum_{x,y} f_k(x,y)$</center>
 <center>$S_c = \sum_{x,y} \sum_k w_k^c f_k(x,y)$</center>
 <center>$S_c = \sum_{x,y} M_c(x,y)$</center>
-<center>M_c(x,y) = \sum_k w_k^c f_k(x,y)$</center>
-$M_c(x,y)$ : 클래스 $c$에
+<center>$M_c(x,y) = \sum_k w_k^c f_k(x,y)$</center>
+$M_c(x,y)$ : 클래스 $c$에 대하여 좌표 $x$, $y$에 대한 영향력(Activation Value)
 
-각 Feature Map($f_k(x,y)$)과 Feature Map이 특정 클래스 $c$로 분류될 가중치($w_k^c$)를 곱하여 합하면 위치 별($x,y$) 특정 클래스에 대한 영향력(Class Activation)인 $M_c(x,y)$를 계산할 수 있습니다.
+각 Feature Map($f_k(x,y)$)과 Feature Map이 특정 클래스 $c$로 분류될 가중치($w_k^c$)를 곱하여 합하면 좌표 별($x,y$) 특정 클래스에 대한 영향력(Class Activation)인 $M_c(x,y)$를 계산할 수 있습니다.
 이를 Class Activation Mapping(CAM)이라고 부릅니다. 각 클래스에 대해 CAM을 적용하면 이미지에서 클래스에 영향을 주는 부분을 추출할 수 있습니다.
 
 ![](/img/in-post/2020/2020-09-29/class_cam_compare.png)
@@ -86,8 +86,8 @@ $M_c(x,y)$ : 클래스 $c$에
 
 고양이 줄리 사진을 모델로 분류하면 '이집트 고양이'일 확률이 0.98, '타이거 상어'일 확률이 0.01 입니다.
 고양이 줄리 사진을 '이집트 고양이' 클래스에 대한 CAM과 '타이거 상어' 클래스에 대한 CAM을 만들어 시각화하면 위 그림과 같습니다.
-'이집트 고양이'에 대한 객체의 위치를 잘 찾는 반면 '타이거 상어' 클래스에 대한 개체의 위치는 또렷히 표시되지 않습니다.
-즉 CAM 시각화를 통해 알 수 있는 사실은 본 논문에서 제안한 구조는 각 클래스에 대한 객체의 위치를 추출하고 그 객체가 뚜렷이 추출된 클래스를 높은 확률로 분류하는 기능을 갖고 있다는 것 입니다.
+'이집트 고양이'에 대한 객체의 좌표를 잘 찾는 반면 '타이거 상어' 클래스에 대한 개체의 좌표는 또렷히 표시되지 않습니다.
+즉 CAM 시각화를 통해 알 수 있는 사실은 본 논문에서 제안한 구조는 각 클래스에 대한 객체의 좌표를 추출하고 그 객체가 뚜렷이 추출된 클래스를 높은 확률로 분류하는 기능을 갖고 있다는 것 입니다.
 
 #### Global Average Pooling(GAP)
 [[이전 논문(CVPR 2015)]](https://ieeexplore.ieee.org/document/8285410) 에서 Global Max Pooling(GMP) 가 제시 되었습니다.
@@ -100,22 +100,25 @@ GMP, GAP 두 방법을 적용했을 때 분류(Classification) 정확도 비슷�
 ### 실험내용
 본 논문에서는 총 2가지 실험을 진행합니다.
 
-1. 논문에서 제시한 구조를 적용할 때 기존 모델의 분류(Classification) 정확도의 하락 여부를 확인합니다.
-2. 분류문제를 학습한 모델로 MAP를 활용하여 Bounding Box를 만들고 객체를 추출(Localization) 정확도를 확인합니다.  
+1. 논문에서 제시한 구조를 적용할 때 기존 모델의 **분류(Classification) 정확도의 하락 여부**를 확인합니다.
+2. 분류문제를 학습한 모델로 MAP를 활용하여 Bounding Box를 만들고 **객체를 추출(Localization) 정확도**를 확인합니다.  
 
-### 실험모델
-AlexNet, VGGnet, GoogLeNet의 구조를 변경하여 실험 모델로 활용합니다.
+### 실험환경
+성능이 검증된 모델 AlexNet, VGGnet, GoogLeNet의 구조를 변경하여 실험 모델로 활용합니다.
 GAP(Global Average Pooling)를 적용한 모델과 GMP(Global Max Pooling) 적용한 모델도 함꼐 비교하며 Pooling 방법에 대한 성능을 비교실험으로 확인합니다.
+[ILSVRC 2014 Benchmark 데이터](http://image-net.org/challenges/LSVRC/)로 각 실험모델을 학습하고 테스트합니다.
  
 ### 실험결과 
 #### 분류 실험(Classification)
 ![](/img/in-post/2020/2020-09-29/ilsvrc_classification_result.png)
-[ILSVRC 2014 Benchmark 데이터](http://image-net.org/challenges/LSVRC/) 로 각 실험모델을 테스트 했을 때 결과입니다.
 논문에서 제시한 구조를 사용했을 때 각 분류 모델의 정확도가 1%~2% 미미하게 하락하는 것을 확인할 수 있습니다.
 
 #### 객체 추출 실험(Localization)
 CAM을 통해 각 좌표의 값을 추출할 수 있습니다.
-특정 Threshold를 정하고 Threshold를 넘는 좌표 값이 모두 포함될 수 있도록 Bounding Box를 만들어 객체 추출 실험에 활용합니다.  
+특정 Threshold를 정하고 Threshold를 넘는 좌표 중 연결된 부분이 모두 포함될 수 있도록 Bounding Box를 만들어 객체 추출 실험에 활용합니다.
+
+
+실험결과   
 
 
 
@@ -125,9 +128,9 @@ CAM을 통해 각 좌표의 값을 추출할 수 있습니다.
 
 
 
-$M_c(x,y)$이 큰 ㄱ
 
 
+[ILSVRC 2014 Benchmark 데이터](http://image-net.org/challenges/LSVRC/) 로 각 실험모델을 테스트 했을 때 결과입니다.
 
 importance of the activation at spatial grid
 (x, y) leading to the classification of an image to class c.
