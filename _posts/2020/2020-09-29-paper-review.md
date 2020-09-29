@@ -47,33 +47,45 @@ Feature Extraction 단계에서 추출한 Feature Map은 <u>여러층의 FC Laye
 ![](/img/in-post/2020/2020-09-29/suggest_structure.png)
 <center>GAP가 적용된 이미지 분류 모델 구조 예시</center>
 
-카테고리 정보만을 학습하여 모델이 객체의 위치 추출 능력을 갖추기 위하여 본 논문에서는 Flatten 단계에서 Global Average Pooling(GAP) 방법을 사용해야 한다고 주장합니다.
-또한 Fully Connected Layer의 수를 줄이고 마지막 Classification Layer 하나만을 이용하여 모델을 구성합니다.
-위 구조에서는 Global Average Pooling을 이용하여 각 Feature Map($f_k(x,y)$)의 가로 세로 값을 평균하여 특징변수($F_k) k개를 생성합니다.
+카테고리 정보만을 학습하여 모델이 객체의 위치 추출 능력을 갖추기 위하여 본 논문에서는 Flatten 단계에서 **Global Average Pooling(GAP) 방법을 사용**해야 한다고 주장합니다.
+또한 Fully Connected Layer의 수를 줄이고 마지막 </u>Classification Layer 하나만을 이용<u>하여 모델을 구성합니다.
+위 구조에서는 Global Average Pooling을 통해 각 Feature Map($f_k(x,y)$)의 가로 세로 값을 평균하여 특징변수($F_k$) $k$개를 생성합니다.
 예를들어 위 그림에서는 총 4개의 Feature Map이 존재하므로 총 4개의 특징변수가 생성됩니다.
 
 <center>$\sum_{x,y} f_k(x,y) = F_k$</center>
-<center>$S_c=\sum_k w_k^c F_k$</center>
-<center>$P_c=\frac{exp(S_c)}{\sum_c exp(S_c)}$</center>
-$f_k(x,y)$ : Feature Map k의 가로(x), 세로(y)에 해당하는 값  
-$F_k$ : 특징변수 k  
+<center>$S_c = \sum_k w_k^c F_k$</center>
+<center>$P_c =\frac{exp(S_c)}{\sum_c exp(S_c)}$</center>
+$f_k(x,y)$ : Feature Map k의 가로($x$), 세로($$)에 해당하는 값  
+$F_k$ : 특징변수 $k$  
 $k$ : Feature Map의 index  
 $x, y$ : Featrue Map의 가로, 세로 위치  
-$w_k^c$ 특징변수 k가 클래스 c에 기여하는 Weight  
+$w_k^c$ 특징변수 $k$가 클래스 $c$에 기여하는 Weight  
 
 이 특징변수($F_k$)와 FC Layer의 Weight($w_k^c$)를 곱하여 더하면 각 클래스의 점수($S_c$)를 계산할 수 있습니다.
 각 특징변수에 곱해진 Weight는 각 Feature Map이 해당 클래스에 얼마나 기여하는 지를 나타냅니다.
 마지막으로 클래스 점수에 SoftMax 함수를 취하면 각 클래스로 분류될 확률($P_c$)을 계산할 수 있습니다.
 
 #### Class Activation Mapping(CAM)
-위 식을 응용하면 각 클래스 분류될 확률에 영향을 미친 객체의 위치 위치(x,y)를 추출할 수 있습니다.
+위 식을 응용하면 각 클래스로 분류될 확률에 영향을 미친 객체의 위치($x,y$)를 추출할 수 있습니다.
 
-<center>$S_c=\sum_k w_k^c F_k$</center>
-<center>$S_c=\sum_k w_k^c \sum_{x,y} f_k(x,y)$</center>
-<center>$S_c=\sum_k w_k^c \sum_{x,y} f_k(x,y)$</center>
-<center>$S_c=\sum_{x,y} \sum_k w_k^c f_k(x,y)$</center>
+<center>$S_c = \sum_k w_k^c F_k$</center>
+<center>$S_c = \sum_k w_k^c \sum_{x,y} f_k(x,y)$</center>
+<center>$S_c = \sum_{x,y} \sum_k w_k^c f_k(x,y)$</center>
+<center>$S_c = \sum_{x,y} M_c(x,y)$</center>
+<center>M_c(x,y) = \sum_k w_k^c f_k(x,y)$</center>
+$M_c(x,y)$ : 클래스 $c$에
+
+각 Feature Map($f_k(x,y)$)과 Feature Map이 특정 클래스 $c$로 분류될 가중치($w_k^c$)를 곱하여 합하면 위치 별($x,y$) 특정 클래스에 영향력(Class Activation)인 $M_c(x,y)$를 계산할 수 있습니다.
+이를 Class Activation Mapping이라고 부릅니다. 이 CAM을 각 클래스에 따라 구하여 이미지에서 각 클래스에 
 
 
+
+$M_c(x,y)$이 큰 ㄱ
+
+
+
+importance of the activation at spatial grid
+(x, y) leading to the classification of an image to class c.
 
 
 
