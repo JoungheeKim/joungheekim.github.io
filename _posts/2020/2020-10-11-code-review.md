@@ -11,11 +11,11 @@ tags:
 
 # [코드리뷰] - [Unsupervised Learning of Video Representations using LSTMs](https://arxiv.org/abs/1502.04681), ICML 2015
 
-비디오는 여러개의 이미지 프레임으로 이루어진 Sequence 데이터 입니다.
+비디오는 여러개의 이미지 프레임으로 이루어진 sequence 데이터 입니다.
 따라서 비디오 데이터는 한개의 이미지로 이루어진 데이터보다 큰 차원을 다루므로 <u>학습에 많은 비용이 필요</u>하며 한정적인 labeled 데이터만으로 학습하기 어렵습니다.
 이를 해결하기 위하여 unlabeled 데이터를 활용하여 일련의 데이터를 학습하는 **unsupervised** 방법이 필요합니다.
 
-**AutoEncoder**는 원본데이터를 특징백터(feature)로 인코딩하고 재구성(reconstruction)하는 방법으로 학습하기 때문에 <u>labeled 데이터 없이 학습이 가능</u>한 unsupervised 방법입니다.
+**AutoEncoder**는 원본데이터를 특징백터(feature)로 인코딩하고 복원(reconstruction)하는 방법으로 학습하기 때문에 <u>labeled 데이터 없이 학습이 가능</u>한 unsupervised 방법입니다.
 오늘 포스팅할 논문은 **AutoEncoder에 LSTM 구조를 추가**하여 sequence 데이터를 Self-Supervised 방법으로 학습하는 `LSTM AutoEncoder` 입니다.
 
 이 글은 [Unsupervised Learning of Video Representations using LSTMs 논문](https://arxiv.org/abs/1502.04681) 을 참고하여 정리하였음을 먼저 밝힙니다.
@@ -27,74 +27,74 @@ tags:
 
 1. 비디오와 같은 sequence 데이터를 학습할 수 있는 **Self-Supervised 방법**을 제시합니다.
 2. 비디오 데이터로부터 **이미지의 모습**과 **이미지의 이동 방향** 등의 정보를 담고 있는 feature 벡터를 추출할 수 있습니다.
-3. 이미지 재구성(reconstruction) 문제와 이미지를 예측(prediction) 문제를 함께 수행하여 **sequence 데이터를 효율적으로 활용**하는 구조를 제시합니다. 
+3. 이미지 복원(reconstruction) 문제와 이미지를 예측(prediction) 문제를 함께 수행하여 **sequence 데이터를 효율적으로 활용**하는 구조를 제시합니다.
 
 ## 모델 구조
 ![](/img/in-post/2020/2020-10-11/model_structure.gif)
 <center><b>모델 상세 구조 예시</b></center>
 
 모델은 **Encoder, Reconstruction Decoder, Predict Decoder** 로 구성됩니다.
-Encoder에서 <u>이미지 sequence를 압축</u>하고 Reconstruction Decoder에서 <u>이미지 sequence를 재구성</u>하는 **AutoEncoder의 형태**를 띄고 있습니다.
-Prediction Decoder는 Encoder에서 압축된 feature를 이용하여 이후에 나올 <u>이미지 sequence를 생성</u>합니다.
+Encoder에서 <u>이미지 sequence를 압축</u>하고 Reconstruction Decoder에서 <u>이미지 sequence를 복원</u>하는 방식으로 **AutoEncoder**의 학습방법과 유사합니다.
+Prediction Decoder는 Encoder에서 압축된 feature를 이용하여 이후에 나올 <u>이미지 sequence를 생성</u>하는 방식으로 학습합니다.
 
 ### [1] Encoder
 
 Encoder는 **sequence 데이터를 압축**하는 LSTM 모듈입니다. 
 sequence 데이터는 차례대로 LSTM 모듈의 input으로 사용되어 feature 벡터로 변환됩니다.
-Feature 벡터는 sequence 데이터를 압축한 형태로 <u>이미지의 모습</u>과 <u>이미지의 이동방향</u> 등의 정보가 포함되어 있습니다.
+feature 벡터는 sequence 데이터를 압축한 형태로 <u>이미지의 모습</u>과 <u>이미지의 이동방향</u> 등의 정보가 포함되어 있습니다.
 
 ### [2] Reconstruction Decoder
 
-Reconstruction Decoder는 Encoder에서 생성된 feature 벡터를 이용하여 input Sequence 데이터를 복원하는 LSTM 모듈입니다.
-복원 순서는 input Sequence의 반대 방향으로 진행합니다.
-즉 input sequence가 $v_1, v_2, ..., v_n$ 이었다면 Reconstruction Decoder에서는 $v_n, v_{n-1}, ..., v_1$ 순으로 복원합니다.
+Reconstruction Decoder는 Encoder에서 생성된 feature 벡터를 이용하여 input sequence **데이터를 복원**하는 LSTM 모듈입니다.
+복원 순서는 input sequence의 반대 방향으로 진행합니다.
+즉 input sequence가 $v_1, v_2, ..., v_n$ 순서라면 Reconstruction Decoder에서는 $v_n, v_{n-1}, ..., v_1$ 순으로 복원합니다.
 >복원 순서를 input sequence의 반대방향으로 하는 것이 생성 상관관계를 줄이는 역할을 하여 모델이 잘 학습되도록 한다고 논문에서 주장합니다.
 
 복원 과정의 첫번째 hidden 벡터는 앞서 Encoder에서 만든 feature 벡터입니다.
 복원 과정의 매 $t$ 시점에서 사용하는 hidden 벡터는 이전 시점 $t-1$에서 Reconstruction Deocder에서 생성된 hidden 벡터 $h_{t-1}^r$ 입니다.
-복원 과정의 첫번째 input은 임의로 생성한 0으로 구성된 벡터를 사용합니다.
-복원 과정의 매 $t$ 시점에서 사용하는 input은 이전 시점 $t-1$에서 Reconstruction Deocder에서 생성된 이미지인 $\hat{v^r_{t-1}}$ 입니다.
+복원 과정의 첫번째 input은 0으로 구성된 임시 벡터를 사용합니다.
+복원 과정의 매 $t$ 시점에서 사용하는 input은 이전 시점 $t-1$에서 Reconstruction Deocder에서 생성된 이미지인 $\hat{ v^r_{t-1} }$ 입니다.
 
 ### [3] Prediction Decoder
 
-Prediction Decoder는 Encoder에서 생성된 feature 벡터를 이용하여 input sequence 데이터 이후 이미지를 생성하는 LSTM 모듈입니다.
-input sequence가 $v_1, v_2, ..., v_n$ 이었다면 Prediction Decoder에서는 $k$개의 sequence, 즉 $v_{n+1}, v_{n+2}, ..., v_{n+k}$ 를 생성합니다.
+Prediction Decoder는 Encoder에서 생성된 feature 벡터를 이용하여 input sequence 이후 나올 **미래의 이미지 sequence를 생성**하는 LSTM 모듈입니다.
+input sequence가 $v_1, v_2, ..., v_n$ 이라면 Prediction Decoder에서는 $k$개의 sequence, 즉 $v_{n+1}, v_{n+2}, ..., v_{n+k}$ 를 생성합니다.
 
 생성 과정의 첫번째 hidden 벡터는 앞서 Encoder에서 만든 feature 벡터입니다.
 생성 과정의 매 $t$ 시점에서 사용하는 hidden 벡터는 이전 시점 $t-1$에서 Prediction Decoder에서 생성된 hidden 벡터 $h_{t-1}^p$ 입니다.
-생성 과정의 첫번째 input은 임의로 생성한 0으로 구성된 벡터를 사용합니다.
-생성 과정의 매 $t$ 시점에서 사용하는 input은 이전 시점 $t-1$에서 Prediction Decoder에서 생성된 이미지인 $\hat{v^p_{t-1}}$ 입니다.
+생성 과정의 첫번째 input은 0으로 구성된 임시 벡터를 사용합니다.
+생성 과정의 매 $t$ 시점에서 사용하는 input은 이전 시점 $t-1$에서 Prediction Decoder에서 생성된 이미지인 $\hat{ v^p_{t-1} }$ 입니다.
 
-### 구조적 장점
+#### 모델 구조적 장점
 
-LSTM AutoEncoder는 reconstruction task와 prediction task를 함께 학습함으로써 각각의 task만을 학습할 경우 발생하는 단점을 극복할 수 있습니다.
+LSTM AutoEncoder는 reconstruction task와 prediction task를 함께 학습함으로써 각각의 task만을 학습할 경우 발생하는 <u>단점을 극복</u>할 수 있습니다.
 
-reconstruction task만을 수행하여 모델을 학습할 경우 모델은 input의 사소한 정보까지 보존하여 Feature 벡터를 생성합니다.
-즉 사소한 정보가 저장될 수 없게 Feature 벡터의 크기를 작게 설정하지 않으면 과적합(overfitting)이 발생하는 단점이 존재합니다.
+reconstruction task만을 수행하여 모델을 학습할 경우 모델은 input의 <u>사소한 정보까지 보존하여 Feature 벡터를 생성</u>합니다.
+즉 사소한 정보가 저장될 수 없게 Feature 벡터의 크기를 작게 설정하지 않으면 **과적합(overfitting)이 발생하는 단점**이 존재합니다.
 
 prediction task만을 수행하여 모델을 학습할 경우 모델은 input의 최근 sequence 정보만을 이용하여 학습합니다.
-일반적으로 prediction에 필요한 정보는 예측하기 전 시점에 가까울수록 상관관계가 높기 때문입니다.
-따라서 과거 시점의 정보를 활용하지 못하는 단점이 존재합니다.
+일반적으로 prediction에 필요한 정보는 <u>예측하기 전 시점에 가까울수록 상관관계가 높기</u> 때문입니다.
+따라서 **과거 시점의 정보를 활용하지 못하는 단점**이 존재합니다.
 
-두가지 task를 함께 학습함으로써 모델이 모든 정보를 저장하지 않고 중요정보(이미지 모습, 이동방향 등)를 feature에 저장하도록 유도할 수 있습니다.
-또한 Sequence 데이터의 모든 시점 정보를 활용하여 학습함으로써 모델이 쉽게 학습할 수 있도록 돕는 역할을 합니다.
+두가지 task를 함께 학습함으로써 모델이 모든 정보를 저장하지 않고 **중요정보(이미지 모습, 이동방향 등)**를 feature에 저장하도록 유도할 수 있습니다.
+또한 Sequence 데이터의 **모든 시점 정보를 활용**하여 학습함으로써 모델이 쉽게 학습할 수 있도록 돕는 역할을 합니다.
 
 ## 코드 구현
 
-<center><b style="color:red">주의</b></center> 
-Tutorial은 pytorch, numpy, torchvision, easydict, tqdm, matplotlib, celluloid, tqdm 라이브러리가 필요합니다.
-<u>Jupyter로 구현한 코드를 기반</u>으로 글을 작성하고 있습니다. 따라서 tqdm 라이브러리를 python 코드로 옮길때 주의가 필요합니다.
+**<i class="fa fa-exclamation-triangle" aria-hidden="true"></i> 주의**
+튜토리얼은 pytorch, numpy, torchvision, easydict, tqdm, matplotlib, celluloid, tqdm 라이브러리가 필요합니다.
 2020.10.11 기준 최신 버전의 라이브러리를 이용하여 구현하였고 이후 **업데이트 버전에 따른 변경은 고려하고 있지 않습니다.**
+<u>Jupyter로 구현한 코드를 기반</u>으로 글을 작성하고 있습니다. 따라서 tqdm 라이브러리를 python 코드로 옮길때 주의가 필요합니다.
 
 #### 데이터
 ![](/img/in-post/2020/2020-10-11/data_description.gif)
 <center><b>Moving MNIST 데이터 예시</b></center>
 
-Tutorial에서 사용하는 데이터는 [Moving MNIST](http://www.cs.toronto.edu/~nitish/unsupervised_video/) 입니다.
+튜토리얼에서 사용하는 데이터는 [Moving MNIST](http://www.cs.toronto.edu/~nitish/unsupervised_video/) 입니다.
 이 데이터는 9000개의 학습 비디오 데이터와 1000개의 평가 비디오 데이터로 구성되어 있습니다. 
 비디오는 20개의 이미지 frame으로 구성되어 있습니다.
-각 이미지는 64×64 픽셀 크기와 1개의 channel로 구성되어 있고, 이미지 내에 두개의 숫자가 임의의 좌표에 위치해 있습니다.
-각 비디오는 두개의 임의의 숫자가 원을 그리며 각각 다른 속도를 갖고 움직이고 있습니다.
+각 이미지는 64×64 픽셀, 1개의 channel로 구성되어 있고 이미지 내에 두개의 숫자가 임의의 좌표에 위치해 있습니다.
+각 비디오는 두개의 임의의 숫자가 원을 그리며 각각 다른 속도로 움직이고 있습니다.
 
 ![](/img/in-post/2020/2020-10-11/data_download.gif)
 <center><b>데이터 모듈 다운로드 예시</b></center>
@@ -102,9 +102,9 @@ Tutorial에서 사용하는 데이터는 [Moving MNIST](http://www.cs.toronto.ed
 ![](/img/in-post/2020/2020-10-11/data_module.png)
 <center><b>작업 폴더 예시</b></center>
 
-해당 데이터는 직접 다운로드할 수 있고, 데이터 제공 모듈을 이용하여 다운받을 수 있습니다.
+해당 데이터는 직접 다운로드 할 수 있고, 데이터 제공 모듈을 이용하여 다운받을 수 있습니다.
 편의상 데이터 제공 모듈을 활용합니다.
-데이터 제공 모듈을 [[MovingMNIST GITHUB]](https://github.com/tychovdo/MovingMNIST) 에서 다운 받아 압축을 풀고 작업하고 있는 폴더에 `MovingMNIST.py`를 위치시킵니다.
+데이터 제공 모듈을 [[MovingMNIST GITHUB]](https://github.com/tychovdo/MovingMNIST) 에서 다운 받고 압축을 풀어 작업하고 있는 폴더에 `MovingMNIST.py`를 위치시킵니다.
 
 ##### 1. 라이브러리 Import
 ``` python
@@ -121,7 +121,7 @@ import torch.utils.data as data
 from celluloid import Camera
 ```
 모델을 구현하는데 필요한 라이브러리를 Import 합니다.
-Import 에러가 발생하면 해당 라이브러리를 설치한 후 진행해야 합니다.
+Import 에러가 발생하면 해당 **라이브러리를 설치한 후 진행**해야 합니다.
 
 ##### 2. 데이터 불러오기
 ``` python
@@ -156,9 +156,9 @@ imshow(past_data, title='input')
 ![](/img/in-post/2020/2020-10-11/past_data_visualization.png)
 <center><b>데이터 시각화 결과</b></center>
 
-데이터 모듈은 Tuple 형태로 데이터를 제공합니다.
-테이터는 과거 데이터와 미래 데이터로 구성됩니다.
-데이터 모듈로부터 데이터를 로드하고 시각화하여 잘 다운로드 되었는지 확인합니다.
+데이터 모듈은 tuple 형태로 데이터를 제공합니다.
+데이터는 가운데 시점을 기준으로 과거 sequence 데이터와 미래 sequence 데이터로 구성됩니다.
+데이터 모듈로부터 데이터를 로드하고 시각화하여 잘 데이터가 다운로드 되었는지 확인합니다.
 
 ##### 3. 모델 구성하기
 ``` python 
@@ -196,7 +196,7 @@ class Decoder(nn.Module):
 ```
 
 논문에서 제시한 모델은 `Encoder`와 `Decoder` 모듈로 구성됩니다.
-Deocder는 쓰임세에 따라 Reconstruction Decoder, Prediction Decoder로 나뉩니다.
+Deocder는 쓰임세에 따라 **Reconstruction Decoder**와 **Prediction Decoder**로 나뉩니다.
 
 ``` python
 class Seq2Seq(nn.Module):
@@ -295,14 +295,15 @@ class Seq2Seq(nn.Module):
 ```
 앞서 구성한 Encoder, Decoder 모듈을 이용하여 `Seq2Seq`를 구성합니다.
 Seq2Seq 모듈에 3가지 함수을 구현하였습니다.
-`def forward` 는 과거이미지와 미래이미지를 받아 Loss를 계산하는 함수입니다.
-`def generate` 는 과거이미지를 이용하여 미래이미지를 생성하는 함수입니다.
-`def reconstruct` 는 과거이미지를 encoding한 다음 다시 복구하는 함수입니다.
+`def forward` 는 과거 sequence 이미지와 미래 sequence 이미지를 받아 Loss를 계산하는 함수입니다.
+`def generate` 는 과거 sequence 이미지를 이용하여 미래 sequence 이미지를 생성하는 함수입니다.
+`def reconstruct` 는 과거 sequence 이미지를 Encoder를 이용하여 feature 벡터로 압축한 후 다시 복구하는 함수입니다.
 
 >Loss를 계산하기 위한 함수로 Mean Squared Loss Function을 사용하였습니다.
->논문에서는 Binary Entropy Loss를 사용하였으나 개인적으로 실험을 했을 때 MSE를 사용한 모델이 이미지를 더 명확하게 추출합니다.    
+>논문에서는 Binary Entropy Loss를 사용하였으나 개인적으로 실험을 했을 때 <u>MSE를 사용한 모델이 이미지를 더 명확하게 추출</u>합니다.
 >Decoder의 input으로 이전 시점 Decoder에서 생성한 output을 사용하지 않고 원본데이터를 넣는 **Teacher Forcing** 방법을 이용하여 학습할 수 있습니다.
->개인적으로 실험했을 때 Teacher Forcing을 이용하여 학습하였을 때 모델이 이미지를 흐리게 생성하는 경향이 있어 위 모델은 Teacher Forcing을 사용하지 않았습니다. 
+>개인적으로 실험했을 때 Teacher Forcing을 이용하여 학습하였을 때 모델이 <u>이미지를 흐리게 생성하는 경향</u>이 있어 위 모델은 Teacher Forcing을 사용하지 않았습니다.
+>Teacher Forcing 과 관련된 자세한 사항은 [[관련문서]](https://kh-kim.gitbook.io/natural-language-processing-with-pytorch/00-cover-9/05-teacher-forcing) 를 참고 부탁드립니다.
 
 ##### 4. 학습 구성
 ``` python
@@ -412,8 +413,8 @@ test_loader = torch.utils.data.DataLoader(
                 batch_size=args.batch_size,
                 shuffle=False)
 ```
-데이터를 배치 형태로 로드하기 위하여 pytorch 라이브러리에서 제공하고 있는 Loader를 이용합니다.
-옵션으로 `shuffle`을 True로 넣어야 shuffling된 데이터를 이용하여 학습이 가능합니다.
+데이터를 배치 형태로 불러오기 위하여 pytorch 라이브러리에서 제공하는 `DataLoader`를 이용합니다.
+옵션으로 `shuffle` **True**로 설정해야 섞인 데이터를 이용하여 학습이 가능합니다.
 
 ``` python
 ## 모델 구성
@@ -452,7 +453,7 @@ def animation_show(original_data, generated_data, title, save_path):
     
     animation = camera.animate(500, blit=True)
     
-    # .mp4 파일로 저장하면 끝!
+    # .gif 파일로 저장하면 끝!
     animation.save(
         save_path,
         dpi=300,
@@ -477,7 +478,7 @@ animation_show(original_data, generated_data, "Prediction", 'prediction.gif')
 ```
 결과를 출력하기 위해서 모델의 `generate` 함수를 사용합니다.
 `generate` 함수는 과거 이미지 sequence를 이용하여 미래 이미지 sequence를 생성하는 함수입니다.
-함수를 통해 생성된 `generated_data` 와 `original_data`를 비교하고 얼마나 비슷한 이미지를 생성하는지를 비교합니다.
+함수를 통해 생성된 `generated_data` 와 `original_data`를 시각화하고 얼마나 비슷한 이미지를 생성하는지를 비교합니다.
 학습 결과를 이미지로 보기 보다는 에니메이션을 통해 확인하기 위하여 `celluloid` 라이브러리를 활용합니다.
 >에니메이션의 자세한 사용방법은 [[블로그]](https://jsideas.net/matplotlibGIF/) 에서 참고하시기 바랍니다.
 
@@ -487,8 +488,11 @@ animation_show(original_data, generated_data, "Prediction", 'prediction.gif')
 ![](/img/in-post/2020/2020-10-11/reconstruction.gif)
 <center><b>모델 복원 결과 시각화</b></center>
 
+>[[GITHUB]]()에서 튜토리얼 전체 파일을 제공하고 있습니다.
+
 ## Reference
 - [[PAPER]](https://arxiv.org/abs/1502.04681) Unsupervised Learning of Video Representations using LSTMs, Srivastava at el
 - [[GITHUB]](https://github.com/tychovdo/MovingMNIST) Moving MNIST Auto Download Module, tychovdo
 - [[GITHUB]](https://github.com/bentrevett/pytorch-seq2seq) PyTorch Seq2Seq Sample, bentrevett
 - [[DATASET]](http://www.cs.toronto.edu/~nitish/unsupervised_video/) Moving MNIST Dataset
+- [[BLOG]](https://kh-kim.gitbook.io/natural-language-processing-with-pytorch/00-cover-9/05-teacher-forcing) Teacher Forcing 이란, 김기현
