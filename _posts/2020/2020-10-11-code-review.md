@@ -121,7 +121,7 @@ import torch.utils.data as data
 from celluloid import Camera
 ```
 모델을 구현하는데 필요한 라이브러리를 Import 합니다.
-Import 에러가 발생하면 해당 라이브러리를 설치한 후 진행합니다.
+Import 에러가 발생하면 해당 라이브러리를 설치한 후 진행해야 합니다.
 
 ##### 2. 데이터 불러오기
 ``` python
@@ -153,7 +153,7 @@ def imshow(past_data, title='없음'):
 past_data, future_data = train_set[0]
 imshow(past_data, title='input')
 ```
-![](/img/in-post/2020/2020-10-11/past_data_visualization.png)
+|![](/img/in-post/2020/2020-10-11/past_data_visualization.png)|
 
 데이터 모듈은 Tuple 형태로 데이터를 제공합니다.
 테이터는 과거 데이터와 미래 데이터로 구성됩니다.
