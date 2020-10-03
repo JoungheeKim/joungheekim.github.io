@@ -294,20 +294,87 @@ class Seq2Seq(nn.Module):
 ```
 앞서 구성한 Encoder, Decoder 모듈을 이용하여 `Seq2Seq`를 구성합니다.
 Seq2Seq 모듈에 3가지 함수을 구현하였습니다.
-```python def forward``` 는 과거이미지와 미래이미지를 받아 Loss를 계산하는 함수입니다.
+``` python def forward``` 는 과거이미지와 미래이미지를 받아 Loss를 계산하는 함수입니다.
 `def generate` 는 과거이미지를 이용하여 미래이미지를 생성하는 함수입니다.
 `def reconstruct` 는 과거이미지를 encoding한 다음 다시 복구하는 함수입니다.
 
 >Loss를 계산하기 위한 함수로 Mean Squared Loss Function을 사용하였습니다.
->논문에서는 Binary Entropy Loss를 사용하였으나 개인적으로 실험을 했을 때 MSE를 사용한 모델이 이미지를 더 명확하게 추출합니다.
->     
-
-
-
-
+>논문에서는 Binary Entropy Loss를 사용하였으나 개인적으로 실험을 했을 때 MSE를 사용한 모델이 이미지를 더 명확하게 추출합니다.    
+>Decoder의 input으로 이전 시점 Decoder에서 생성한 output을 사용하지 않고 원본데이터를 넣는 **Teacher Forcing** 방법을 이용하여 학습할 수 있습니다.
+>개인적으로 실험했을 때 Teacher Forcing을 이용하여 학습하였을 때 모델이 이미지를 흐리게 생성하는 경향이 있어 위 모델은 Teacher Forcing을 사용하지 않았습니다. 
 
 ##### 4. 학습 구성
+``` python
+def run(args, model, train_loader, test_loader):
+    # optimizer 설정
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
 
+    ## 반복 횟수 Setting
+    epochs = tqdm(range(args.max_iter//len(train_loader)+1))
+    
+    ## 학습하기
+    count = 0
+    for epoch in epochs:
+        model.train()
+        optimizer.zero_grad()
+        train_iterator = tqdm(enumerate(train_loader), total=len(train_loader), desc="training")
+
+        for i, batch_data in train_iterator:
+            
+            if count > args.max_iter:
+                return model
+            count += 1
+            
+            future_data, past_data = batch_data
+
+            ## 데이터 GPU 설정 및 사이즈 조절
+            batch_size = past_data.size(0)
+            example_size = past_data.size(1)
+            past_data = past_data.view(batch_size, example_size, -1).float().to(args.device)
+            future_data = future_data.view(batch_size, example_size, -1).float().to(args.device)
+
+            reconstruct_loss, predict_loss = model(past_data, future_data)
+
+            ## Composite Loss
+            loss = reconstruct_loss + predict_loss
+
+            # Backward and optimize
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            train_iterator.set_postfix({
+                "train_loss": float(loss),
+            })
+
+        model.eval()
+        eval_loss = 0
+        test_iterator = tqdm(enumerate(test_loader), total=len(test_loader), desc="testing")
+        with torch.no_grad():
+            for i, batch_data in test_iterator:
+                future_data, past_data = batch_data
+
+                ## 데이터 GPU 설정 및 사이즈 조절
+                batch_size = past_data.size(0)
+                example_size = past_data.size(1)
+                past_data = past_data.view(batch_size, example_size, -1).float().to(args.device)
+                future_data = future_data.view(batch_size, example_size, -1).float().to(args.device)
+
+                reconstruct_loss, predict_loss = model(past_data, future_data)
+
+                ## Composite Loss
+                loss = reconstruct_loss + predict_loss
+
+                eval_loss += loss.mean().item()
+
+                test_iterator.set_postfix({
+                    "eval_loss": float(loss),
+                })
+        eval_loss = eval_loss / len(test_loader)
+        print("Evaluation Score : [{}]".format(eval_loss))
+    return model
+
+```
 
 총 9개의 숫자로 구성된 손글씨(MNIST) 데이터를 임의로 2개 추출한 다음 Velocity 
 
