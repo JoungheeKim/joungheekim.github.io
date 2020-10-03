@@ -378,26 +378,113 @@ def run(args, model, train_loader, test_loader):
 모델을 안정적이게 학습하기 위하여 `SGD optimizer` 대신 `Adam optimizer` 을 사용합니다.
 총 반복할 횟수(max iteration)를 설정하고 반복횟수를 만족할 때까지 계속 학습을 진행합니다.
 
+##### 5. 모델 & 학습 파라미터 설정
+``` python
+## 설정 폴더
+args = easydict.EasyDict({
+    "batch_size": 128, ## 배치 사이즈 설정
+    "device": torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'), ## GPU 사용 여부 설정
+    "input_size": 4096, ## 입력 차원 설정
+    "hidden_size": 2048, ## Hidden 차원 설정
+    "output_size": 4096, ## 출력 차원 설정
+    "num_layers": 2,     ## LSTM layer 갯수 설정
+    "learning_rate" : 0.0005, ## learning rate 설정
+    "max_iter" : 10000, ## 총 반복 횟수 설정
+})
+```
+모델과 학습 하이퍼파라미터를 설정합니다.
+논문에서 설정한 것과 같도록 hidden 차원은 2048로 설정합니다.
+LSTM layer 갯수도 2개로 고정합니다.
+>논문에서 정확한 반복횟수를 언급하지 않습니다. 따라서 10000번을 설정합니다.
+>2080ti GPU로 학습하는데 약 1시간 정도 소요됩니다.
+>자원이 넉넉하지 않다면 early stop을 이용하여 모델의 학습 종료 조건을 설정하는 것을 추천드립니다.
 
-총 9개의 숫자로 구성된 손글씨(MNIST) 데이터를 임의로 2개 추출한 다음 Velocity 
+##### 6. 학습하기
+``` python
+## Data Loader 형태로 변환
+train_loader = torch.utils.data.DataLoader(
+                 dataset=train_set,
+                 batch_size=args.batch_size,
+                 shuffle=True)
+test_loader = torch.utils.data.DataLoader(
+                dataset=test_set,
+                batch_size=args.batch_size,
+                shuffle=False)
+```
+데이터를 배치 형태로 로드하기 위하여 pytorch 라이브러리에서 제공하고 있는 Loader를 이용합니다.
+옵션으로 `shuffle`을 True로 넣어야 shuffling된 데이터를 이용하여 학습이 가능합니다.
 
+``` python
+## 모델 구성
+model = Seq2Seq(args)
+model.to(args.device)
 
+## 모델 학습
+model = run(args, model, train_loader, test_loader)
 
+save_path = 'result'
+if not os.path.isdir(save_path):
+    os.mkdir(save_path)
+model_path = os.path.join(save_path, 'model.bin')    
+torch.save(model.state_dict(), model_path)
+```
+설정한 옵션으로 모델을 학습합니다.
+학습이 완료되면 학습된 모델을 pytorch 라이브러리를 이용하여 저장합니다.
 
-#### Summary
-이 튜토리얼은 간략하게 LSTM AutoEncoder 구조를 설명하기 위하여 이용하여 제작되었습니다.
-LSTM AutoEncoder는 비디오와 같이 여러개의 이미지 프레임으로 이루어진 데이터를 학습하는 모듈입니다.
-LSTM AutoEncoder의 목표는 연속된 이미지로부터 이미지의 변동(Velocity)과 이미지의 모습을 학습하는 것 입니다.
+##### 7. 결과 출력
+``` python
+from celluloid import Camera
 
+## 에니메이션 데이터 시각화
+def animation_show(original_data, generated_data, title, save_path):
+    fig = plt.figure(figsize=(8, 4))
+    camera = Camera(fig)
+    for i in range(len(original_data)):
+        ax=fig.add_subplot(121)
+        ax.imshow(original_data[i])
+        ax.set_title('original')
+        ax2=fig.add_subplot(122)
+        ax2.imshow(generated_data[i])
+        ax2.set_title('generated')
+        plt.suptitle(title, fontsize=20)
+        camera.snap()
+    
+    animation = camera.animate(500, blit=True)
+    
+    # .mp4 파일로 저장하면 끝!
+    animation.save(
+        save_path,
+        dpi=300,
+        savefig_kwargs={
+            'frameon': False,
+            'pad_inches': 'tight'
+        }
+    )
 
-### 데이터
-실험데이터로 [Moving MNIST](http://www.cs.toronto.edu/~nitish/unsupervised_video/) 를 사용합니다.
-Moving MNIST 데이터는 MNIST 데이터를 
+## 결과 출력
+future_data, past_data = test_set[1]
+model.eval()
+with torch.no_grad():
+    future_data = future_data.to(args.device).view(1, 10, -1).float()
+    past_data = past_data.to(args.device).view(1, 10, -1).float()
+    outputs = model.generate(past_data)
 
+original_data = future_data.reshape(-1, 64, 64).cpu().squeeze().numpy()
+generated_data = outputs.reshape(-1, 64, 64).cpu().squeeze().numpy()
 
+animation_show(original_data, generated_data, "Prediction", 'prediction.gif')
+```
+결과를 출력하기 위해서 모델의 `generate` 함수를 사용합니다.
+`generate` 함수는 과거 이미지 sequence를 이용하여 미래 이미지 sequence를 생성하는 함수입니다.
+함수를 통해 생성된 `generated_data` 와 `original_data`를 비교하고 얼마나 비슷한 이미지를 생성하는지를 비교합니다.
+학습 결과를 이미지로 보기 보다는 에니메이션을 통해 확인하기 위하여 `celluloid` 라이브러리를 활용합니다.
+>에니메이션의 자세한 사용방법은 [[블로그]](https://jsideas.net/matplotlibGIF/) 에서 참고하시기 바랍니다.
 
-Pytorch를 이용하여 
-This tutorial provides a brief explanation of the U-Net architecture as well as a way to implement it using Theano and Lasagne. 
-U-Net is a Fully Convolutional Network (FCN) that does image segmentation. 
-Its goal is then to predict each pixel’s class. 
-See Fully Convolutional Networks (FCN) for 2D segmentation for differences between network architecture for classification and segmentation tasks.
+![](/img/in-post/2020/2020-10-11/prediction.gif)
+![](/img/in-post/2020/2020-10-11/reconstruction.gif)
+
+## Reference
+- [[PAPER]](https://arxiv.org/abs/1502.04681) Unsupervised Learning of Video Representations using LSTMs, Srivastava at el
+- [[GITHUB]](https://github.com/tychovdo/MovingMNIST) Moving MNIST Auto Download Module, tychovdo
+- [[GITHUB]](https://github.com/bentrevett/pytorch-seq2seq) PyTorch Seq2Seq Sample, bentrevett
+- [[DATASET]](http://www.cs.toronto.edu/~nitish/unsupervised_video/) Moving MNIST Dataset
