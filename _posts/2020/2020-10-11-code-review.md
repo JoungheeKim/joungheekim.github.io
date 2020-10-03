@@ -153,7 +153,8 @@ def imshow(past_data, title='없음'):
 future_data, past_data = train_set[0]
 imshow(past_data, title='input')
 ```
-|![](/img/in-post/2020/2020-10-11/past_data_visualization.png)|
+![](/img/in-post/2020/2020-10-11/past_data_visualization.png)
+<center><b>데이터 시각화 결과</b></center>
 
 데이터 모듈은 Tuple 형태로 데이터를 제공합니다.
 테이터는 과거 데이터와 미래 데이터로 구성됩니다.
@@ -294,7 +295,7 @@ class Seq2Seq(nn.Module):
 ```
 앞서 구성한 Encoder, Decoder 모듈을 이용하여 `Seq2Seq`를 구성합니다.
 Seq2Seq 모듈에 3가지 함수을 구현하였습니다.
-``` python def forward``` 는 과거이미지와 미래이미지를 받아 Loss를 계산하는 함수입니다.
+`def forward` 는 과거이미지와 미래이미지를 받아 Loss를 계산하는 함수입니다.
 `def generate` 는 과거이미지를 이용하여 미래이미지를 생성하는 함수입니다.
 `def reconstruct` 는 과거이미지를 encoding한 다음 다시 복구하는 함수입니다.
 
@@ -376,7 +377,7 @@ def run(args, model, train_loader, test_loader):
 
 ```
 모델을 안정적이게 학습하기 위하여 `SGD optimizer` 대신 `Adam optimizer` 을 사용합니다.
-총 반복할 횟수(max iteration)를 설정하고 반복횟수를 만족할 때까지 계속 학습을 진행합니다.
+총 반복할 횟수(**max iteration**)를 설정하고 반복횟수를 만족할 때까지 계속 학습을 진행합니다.
 
 ##### 5. 모델 & 학습 파라미터 설정
 ``` python
@@ -394,7 +395,7 @@ args = easydict.EasyDict({
 ```
 모델과 학습 하이퍼파라미터를 설정합니다.
 논문에서 설정한 것과 같도록 hidden 차원은 2048로 설정합니다.
-LSTM layer 갯수도 2개로 고정합니다.
+LSTM layer 갯수를 2개로 고정합니다.
 >논문에서 정확한 반복횟수를 언급하지 않습니다. 따라서 10000번을 설정합니다.
 >2080ti GPU로 학습하는데 약 1시간 정도 소요됩니다.
 >자원이 넉넉하지 않다면 early stop을 이용하여 모델의 학습 종료 조건을 설정하는 것을 추천드립니다.
@@ -481,7 +482,10 @@ animation_show(original_data, generated_data, "Prediction", 'prediction.gif')
 >에니메이션의 자세한 사용방법은 [[블로그]](https://jsideas.net/matplotlibGIF/) 에서 참고하시기 바랍니다.
 
 ![](/img/in-post/2020/2020-10-11/prediction.gif)
+<center><b>모델 예측 결과 시각화</b></center>
+
 ![](/img/in-post/2020/2020-10-11/reconstruction.gif)
+<center><b>모델 복원 결과 시각화</b></center>
 
 ## Reference
 - [[PAPER]](https://arxiv.org/abs/1502.04681) Unsupervised Learning of Video Representations using LSTMs, Srivastava at el
