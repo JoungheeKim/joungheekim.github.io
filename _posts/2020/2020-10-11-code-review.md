@@ -98,8 +98,9 @@ Tutorial에서 사용하는 데이터는 [Moving MNIST](http://www.cs.toronto.ed
 ![](/img/in-post/2020/2020-10-11/data_download.gif)
 <center><b>데이터 모듈 다운로드 예시</b></center>
 
-![](/img/in-post/2020/2020-10-11/data_module.png)
-<center><b>MovingMNIST.py 파일 위치 예시</b></center>
+|![](/img/in-post/2020/2020-10-11/data_module.png)|
+|:--:|
+|*MovingMNIST.py 파일 위치 예시*|
 
 데이터 제공 모듈(**MovingMNIST.py**)을 [[MovingMNIST GITHUB]](https://github.com/tychovdo/MovingMNIST) 에서 다운 받아 작업하고 있는 폴더에 위치시킵니다.
 
