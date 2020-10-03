@@ -150,7 +150,7 @@ def imshow(past_data, title='없음'):
 
 ## 데이터는 Tuple 형태로 되어 있음.
 ## past_data 10개, future_data 10개로 구성
-past_data, future_data = train_set[0]
+future_data, past_data = train_set[0]
 imshow(past_data, title='input')
 ```
 |![](/img/in-post/2020/2020-10-11/past_data_visualization.png)|
@@ -375,6 +375,9 @@ def run(args, model, train_loader, test_loader):
     return model
 
 ```
+모델을 안정적이게 학습하기 위하여 `SGD optimizer` 대신 `Adam optimizer` 을 사용합니다.
+총 반복할 횟수(max iteration)를 설정하고 반복횟수를 만족할 때까지 계속 학습을 진행합니다.
+
 
 총 9개의 숫자로 구성된 손글씨(MNIST) 데이터를 임의로 2개 추출한 다음 Velocity 
 
