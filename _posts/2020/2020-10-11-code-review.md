@@ -80,11 +80,11 @@ prediction task만을 수행하여 모델을 학습할 경우 모델은 input의
 또한 Sequence 데이터의 모든 시점 정보를 활용하여 학습함으로써 모델이 쉽게 학습할 수 있도록 돕는 역할을 합니다.
 
 ### 코드 구현
----
-**NOTE**  
+
+| :exclamation:  주의   |
+|-----------------------| 
 Tutorial은 pytorch, numpy, torchvision, easydict, tqdm, matplotlib, celluloid 라이브러리가 필요합니다.
 2020.10.11 기준 최신 버전의 라이브러리를 이용하여 구현하였고 이후 업데이트 버전에 따른 변경은 고려하고 있지 않습니다.
----
 
 #### 데이터
 ![](/img/in-post/2020/2020-10-11/data_description.gif)*Moving MNIST 데이터 예시*
