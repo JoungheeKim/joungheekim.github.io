@@ -79,7 +79,7 @@ prediction task만을 수행하여 모델을 학습할 경우 모델은 input의
 두가지 task를 함께 학습함으로써 모델이 모든 정보를 저장하지 않고 중요정보(이미지 모습, 이동방향 등)를 feature에 저장하도록 유도할 수 있습니다.
 또한 Sequence 데이터의 모든 시점 정보를 활용하여 학습함으로써 모델이 쉽게 학습할 수 있도록 돕는 역할을 합니다.
 
-### 코드 구현
+## 코드 구현
 
 :warning: **주의** :warning: 
  
@@ -105,7 +105,7 @@ Tutorial에서 사용하는 데이터는 [Moving MNIST](http://www.cs.toronto.ed
 
 해당 데이터는 직접 다운로드할 수 있고, 데이터 제공 모듈을 이용하여 다운받을 수 있습니다.
 편의상 데이터 제공 모듈을 활용합니다.
-데이터 제공 모듈을 [[MovingMNIST GITHUB]](https://github.com/tychovdo/MovingMNIST) 에서 다운 받아 압축을 풀고 작업하고 있는 폴더 `MovingMNIST.py`를 위치시킵니다.
+데이터 제공 모듈을 [[MovingMNIST GITHUB]](https://github.com/tychovdo/MovingMNIST) 에서 다운 받아 압축을 풀고 작업하고 있는 폴더에 `MovingMNIST.py`를 위치시킵니다.
 
 ##### 1. 라이브러리 Import
 ``` python
@@ -135,7 +135,7 @@ train_set = MovingMNIST(root='.data/mnist', train=True, download=True, transform
 test_set = MovingMNIST(root='.data/mnist', train=False, download=True, transform=transforms.ToTensor(), target_transform=transforms.ToTensor())
 ```
 데이터 모듈 `MovingMNIST.py` 을 Import 하고 데이터 모듈을 이용하여 데이터를 다운받습니다.
-MovingMNIST 옵션으로 transform, target_transform을 설정하여 다운 받은 파일을 불러올 때 전처리를 할 수 있습니다.
+옵션으로 transform, target_transform을 설정하여 다운 받은 파일을 불러올 때 전처리를 할 수 있습니다.
 숫자열로 구성된 이미지 데이터를 pytorch의 tensor로 변형하기 위하여 `transforms.ToTensor()` 를 옵션으로 넣어줍니다.
 
 ``` python 
@@ -152,15 +152,23 @@ def imshow(past_data, title='없음'):
 ## 데이터는 Tuple 형태로 되어 있음.
 ## past_data 10개, future_data 10개로 구성
 past_data, future_data = train_set[0]
-imshow(past_data, title='past data')
+imshow(past_data, title='input')
 ```
-데이터 모듈은 Tuple 형태로  
+![](/img/in-post/2020/2020-10-11/past_data_visualization.png)
 
+데이터 모듈은 Tuple 형태로 데이터를 제공합니다.
+데이터 모듈로부터 데이터를 로드하고 시각화하여 잘 다운로드 되었는지 확인합니다.
+
+##### 3. 모델 구성하기
+논문에서 제시한 Composite Model을 구성합니다.
+Composite Model은 Encoder와 Decoder 모듈로 구성됩니다.
+Deocder는 쓰임세에 따라 Reconstruction Decoder, Prediction Decoder로 나뉩니다.
+
+``` python 
  
 
 
-
-
+```
 
 
 
