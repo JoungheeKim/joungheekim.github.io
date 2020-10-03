@@ -87,8 +87,7 @@ Tutorial은 pytorch, numpy, torchvision, easydict, tqdm, matplotlib, celluloid �
 ---
 
 #### 데이터
-![](/img/in-post/2020/2020-10-11/data_description.gif)
-*Moving MNIST 데이터 예시*
+![](/img/in-post/2020/2020-10-11/data_description.gif)*Moving MNIST 데이터 예시*
 
 Tutorial에서 사용하는 데이터는 [Moving MNIST](http://www.cs.toronto.edu/~nitish/unsupervised_video/) 입니다.
 이 데이터는 9000개의 학습 비디오 데이터와 1000개의 평가 비디오 데이터로 구성되어 있습니다. 
