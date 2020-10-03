@@ -84,6 +84,9 @@ prediction task만을 수행하여 모델을 학습할 경우 모델은 input의
 
 | :exclamation:  주의   |
 |-----------------------|
+
+| :memo:        | Take note of this       |
+|---------------|:------------------------|
  
 Tutorial은 pytorch, numpy, torchvision, easydict, tqdm, matplotlib, celluloid 라이브러리가 필요합니다.
 2020.10.11 기준 최신 버전의 라이브러리를 이용하여 구현하였고 이후 업데이트 버전에 따른 변경은 고려하고 있지 않습니다.
@@ -104,10 +107,11 @@ Tutorial에서 사용하는 데이터는 [Moving MNIST](http://www.cs.toronto.ed
 ![](/img/in-post/2020/2020-10-11/data_module.png)
 <center><b>MovingMNIST.py 파일 위치 예시</b></center>
 
+해당 데이터는 직접 다운로드할 수 있고, 데이터 제공 모듈을 이용하여 다운받을 수 있습니다.
+편의상 데이터 제공 모듈을 활용합니다.
+데이터 제공 모듈을 [[MovingMNIST GITHUB]](https://github.com/tychovdo/MovingMNIST) 에서 다운 받아 압축을 풀고 작업하고 있는 폴더 `MovingMNIST.py`를 위치시킵니다.
 
-데이터 제공 모듈(**MovingMNIST.py**)을 [[MovingMNIST GITHUB]](https://github.com/tychovdo/MovingMNIST) 에서 다운 받아 작업하고 있는 폴더에 위치시킵니다.
-
-####
+#### 
 
  
 
