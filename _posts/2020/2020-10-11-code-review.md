@@ -157,19 +157,157 @@ imshow(past_data, title='input')
 ![](/img/in-post/2020/2020-10-11/past_data_visualization.png)
 
 데이터 모듈은 Tuple 형태로 데이터를 제공합니다.
+테이터는 과거 데이터와 미래 데이터로 구성됩니다.
 데이터 모듈로부터 데이터를 로드하고 시각화하여 잘 다운로드 되었는지 확인합니다.
 
 ##### 3. 모델 구성하기
-논문에서 제시한 Composite Model을 구성합니다.
-Composite Model은 Encoder와 Decoder 모듈로 구성됩니다.
-Deocder는 쓰임세에 따라 Reconstruction Decoder, Prediction Decoder로 나뉩니다.
-
 ``` python 
- 
+class Encoder(nn.Module):
 
+    def __init__(self, input_size=4096, hidden_size=1024, num_layers=2):
+        super(Encoder, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, 
+                            dropout=0.1, bidirectional=False)
 
+    def forward(self, x):
+        # x: tensor of shape (batch_size, seq_length, hidden_size)
+        outputs, (hidden, cell) = self.lstm(x)
+        return (hidden, cell)
+
+class Decoder(nn.Module):
+
+    def __init__(self, input_size=4096, hidden_size=1024, output_size=4096, num_layers=2):
+        super(Decoder, self).__init__()
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+        self.num_layers = num_layers
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True,
+                            dropout=0.1, bidirectional=False)        
+        self.fc = nn.Linear(hidden_size, output_size)
+   
+        
+    def forward(self, x, hidden):
+        # x: tensor of shape (batch_size, seq_length, hidden_size)
+        output, (hidden, cell) = self.lstm(x, hidden)
+        prediction = self.fc(output)
+        return prediction, (hidden, cell)
 ```
 
+논문에서 제시한 모델은 `Encoder`와 `Decoder` 모듈로 구성됩니다.
+Deocder는 쓰임세에 따라 Reconstruction Decoder, Prediction Decoder로 나뉩니다.
+
+``` python
+class Seq2Seq(nn.Module):
+    def __init__(self, args):
+        super().__init__()
+        
+        hidden_size = args.hidden_size
+        input_size = args.input_size
+        output_size = args.output_size
+        num_layers = args.num_layers
+        
+        self.encoder = Encoder(
+            input_size=input_size,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+        )
+        self.reconstruct_decoder = Decoder(
+            input_size=input_size,
+            output_size=output_size,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+        )
+        
+        self.predict_decoder = Decoder(
+            input_size=input_size,
+            output_size=output_size,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+        )
+        
+        self.criterion = nn.MSELoss()
+    
+    ## Loss 출력
+    def forward(self, src, trg):
+        # src: tensor of shape (batch_size, seq_length, hidden_size)
+        # trg: tensor of shape (batch_size, seq_length, hidden_size)
+
+        batch_size, sequence_length, img_size = src.size()
+        
+        ## Encoder 넣기
+        encoder_hidden = self.encoder(src)
+        
+        ## Prediction Loss 계산 
+        predict_output = []
+        temp_input = torch.zeros((batch_size,1,img_size), dtype=torch.float).to(src.device)
+        hidden = encoder_hidden
+        for t in range(sequence_length):
+            temp_input, hidden = self.predict_decoder(temp_input, hidden)
+            predict_output.append(temp_input)
+            
+        predict_output = torch.cat(predict_output, dim=1)
+        predict_loss = self.criterion(predict_output, trg)
+        
+        ## Reconstruction Loss 계산
+        inv_idx = torch.arange(sequence_length - 1, -1, -1).long()
+        reconstruct_output = []
+        temp_input = torch.zeros((batch_size,1,img_size), dtype=torch.float).to(src.device)
+        hidden = encoder_hidden
+        for t in range(sequence_length):
+            temp_input, hidden = self.reconstruct_decoder(temp_input, hidden)
+            reconstruct_output.append(temp_input)
+        reconstruct_output = torch.cat(reconstruct_output, dim=1)
+        reconstruct_loss = self.criterion(reconstruct_output, src[:, inv_idx, :])
+            
+        return reconstruct_loss, predict_loss
+    
+    ## 이미지 생성(Prediction)
+    def generate(self, src):
+        batch_size, sequence_length, img_size = src.size()
+        
+        ## Encoder 넣기
+        hidden = self.encoder(src)
+        
+        outputs = []
+        temp_input = torch.zeros((batch_size,1,img_size), dtype=torch.float).to(src.device)
+        for t in range(sequence_length):
+            temp_input, hidden = self.predict_decoder(temp_input, hidden)
+            outputs.append(temp_input)
+        
+        return torch.cat(outputs, dim=1)
+    
+    ## 이미지 복구(Reconstruction) 
+    def reconstruct(self, src):
+        batch_size, sequence_length, img_size = src.size()
+        
+        ## Encoder 넣기
+        hidden = self.encoder(src)
+        
+        outputs = []
+        temp_input = torch.zeros((batch_size,1,img_size), dtype=torch.float).to(src.device)
+        for t in range(sequence_length):
+            temp_input, hidden = self.reconstruct_decoder(temp_input, hidden)
+            outputs.append(temp_input)
+        
+        return torch.cat(outputs, dim=1) 
+```
+앞서 구성한 Encoder, Decoder를 모듈을 이용하여 `Seq2Seq`를 구성합니다.
+Seq2Seq 모듈에 3가지 함수을 구현하였습니다.
+`def forward` 는 과거이미지와 미래이미지를 받아 Loss를 계산하는 함수입니다.
+`def generate` 는 과거이미지를 이용하여 미래이미지를 생성하는 함수입니다.
+`def reconstruct` 는 과거이미지를 encoding한 다음 다시 복구하는 함수입니다.
+
+>Loss를 계산하기 위한 함수로 Mean Squared Loss Function을 사용하였습니다.
+>논문에서는 Binary Entropy Loss를 사용하였으나 개인적으로 실험을 했을 때 MSE를 사용한 모델이 이미지를 더 명확하게 추출합니다.
+>     
+
+
+
+
+
+##### 4. 학습 구성
 
 
 총 9개의 숫자로 구성된 손글씨(MNIST) 데이터를 임의로 2개 추출한 다음 Velocity 
