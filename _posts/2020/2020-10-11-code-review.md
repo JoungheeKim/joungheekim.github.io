@@ -107,7 +107,7 @@ Tutorial에서 사용하는 데이터는 [Moving MNIST](http://www.cs.toronto.ed
 편의상 데이터 제공 모듈을 활용합니다.
 데이터 제공 모듈을 [[MovingMNIST GITHUB]](https://github.com/tychovdo/MovingMNIST) 에서 다운 받아 압축을 풀고 작업하고 있는 폴더 `MovingMNIST.py`를 위치시킵니다.
 
-#### 라이브러리 Import
+##### 1. 라이브러리 Import
 ``` python
 import os
 import matplotlib.pyplot as plt
@@ -124,6 +124,37 @@ from celluloid import Camera
 모델을 구현하는데 필요한 라이브러리를 Import 합니다.
 Import 에러가 발생하면 해당 라이브러리를 설치한 후 진행합니다.
 
+##### 2. 데이터 불러오기
+``` python
+from MovingMNIST import MovingMNIST
+
+## Train Data를 불러오기
+train_set = MovingMNIST(root='.data/mnist', train=True, download=True, transform=transforms.ToTensor(), target_transform=transforms.ToTensor())
+
+## Test Data를 불러오기
+test_set = MovingMNIST(root='.data/mnist', train=False, download=True, transform=transforms.ToTensor(), target_transform=transforms.ToTensor())
+```
+데이터 모듈 `MovingMNIST.py` 을 Import 하고 데이터 모듈을 이용하여 데이터를 다운받습니다.
+MovingMNIST 옵션으로 transform, target_transform을 설정하여 다운 받은 파일을 불러올 때 전처리를 할 수 있습니다.
+숫자열로 구성된 이미지 데이터를 pytorch의 tensor로 변형하기 위하여 `transforms.ToTensor()` 를 옵션으로 넣어줍니다.
+
+``` python 
+## 데이터 시각화
+def imshow(past_data, title='없음'):
+    num_img = len(past_data)
+    fig = fig=plt.figure(figsize=(4*num_img, 4))
+    
+    for idx in range(1, num_img+1):
+        ax = fig.add_subplot(1, num_img+1, idx)
+        ax.imshow(past_data[idx-1])
+    plt.suptitle(title, fontsize=30)
+
+## 데이터는 Tuple 형태로 되어 있음.
+## past_data 10개, future_data 10개로 구성
+past_data, future_data = train_set[0]
+imshow(past_data, title='past data')
+```
+데이터 모듈은 Tuple 형태로  
 
  
 
