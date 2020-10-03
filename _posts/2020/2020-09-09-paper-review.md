@@ -49,7 +49,7 @@ Basic Block은 <u>마지막 Backcast 함수, Forecast 함수가 어떤 것</u>�
 
 Input으로 15개의 관측시점, Output으로 5개의 예측시점, Hidden size는 256, Theta size는 20이라고 가정하여 재구성한 그림을 보면서 상세하게 설명드리겠습니다.   
 
-Input으로 15개의 시점이 Stack1로 들어와 Stack1의 내부 Generic Basic Block$l$에 들어오면 우선 [FC+Relu]로 구성된 4개의 Layer를 통과하여 결과물로 256 차원 벡터가 생성됩니다.
+Input으로 15개의 시점이 Stack1로 들어와 Stack1의 내부 Generic Basic Block $l$에 들어오면 우선 [FC+Relu]로 구성된 4개의 Layer를 통과하여 결과물로 256 차원 벡터가 생성됩니다.
 이 벡터는 각각 Backcast 경로와 Forecast 경로로 다시 분기되고, 분기된 백터는 한번더 FC layer를 거친뒤 경로에 맞는 함수 $g^b$ or $g^f$ 를 거쳐 Backcast 벡터(15차원==Input 크기)와 Forecast 벡터(5차원==Output 크기)가 생성됩니다.
 Generic Basic Block의  $g^b$, $g^f$는 FC layer이므로 Figure 4 에서는 FC layer로 표기되어 있습니다. 
 Forecast 벡터의 의미는 해당 Block에서 생성한 예측값(5개)을 의미하고, Backcast 벡터의 의미는 해당 Block에서 생성한 회귀관측값(15개)을 의미합니다.
