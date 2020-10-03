@@ -81,10 +81,10 @@ prediction task만을 수행하여 모델을 학습할 경우 모델은 input의
 
 ### 코드 구현
 
-> :warning: **If you are using mobile browser**: Be very careful here!
-
+> ⚠ **주의** ⚠
  
-Tutorial은 pytorch, numpy, torchvision, easydict, tqdm, matplotlib, celluloid 라이브러리가 필요합니다.
+Tutorial은 pytorch, numpy, torchvision, easydict, tqdm, matplotlib, celluloid, tqdm 라이브러리가 필요합니다.
+Jupyter로 구현한 코드를 기반으로 글을 작성하고 있습니다. 따라서 tqdm 라이브러리를 python 코드로 옮길때 주의가 필요합니다.
 2020.10.11 기준 최신 버전의 라이브러리를 이용하여 구현하였고 이후 업데이트 버전에 따른 변경은 고려하고 있지 않습니다.
 
 #### 데이터
@@ -107,7 +107,23 @@ Tutorial에서 사용하는 데이터는 [Moving MNIST](http://www.cs.toronto.ed
 편의상 데이터 제공 모듈을 활용합니다.
 데이터 제공 모듈을 [[MovingMNIST GITHUB]](https://github.com/tychovdo/MovingMNIST) 에서 다운 받아 압축을 풀고 작업하고 있는 폴더 `MovingMNIST.py`를 위치시킵니다.
 
-#### 
+#### 라이브러리 Import
+``` python
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+from torch import nn
+from torchvision import transforms, datasets
+import easydict
+from tqdm.notebook import tqdm
+from tqdm.notebook import trange
+import torch.utils.data as data
+from celluloid import Camera
+```
+모델을 구현하는데 필요한 라이브러리를 Import 합니다.
+Import 에러가 발생하면 해당 라이브러리를 설치한 후 진행합니다.
+
 
  
 
