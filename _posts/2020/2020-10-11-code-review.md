@@ -292,9 +292,9 @@ class Seq2Seq(nn.Module):
         
         return torch.cat(outputs, dim=1) 
 ```
-앞서 구성한 Encoder, Decoder를 모듈을 이용하여 `Seq2Seq`를 구성합니다.
+앞서 구성한 Encoder, Decoder 모듈을 이용하여 `Seq2Seq`를 구성합니다.
 Seq2Seq 모듈에 3가지 함수을 구현하였습니다.
-`def forward` 는 과거이미지와 미래이미지를 받아 Loss를 계산하는 함수입니다.
+```python def forward``` 는 과거이미지와 미래이미지를 받아 Loss를 계산하는 함수입니다.
 `def generate` 는 과거이미지를 이용하여 미래이미지를 생성하는 함수입니다.
 `def reconstruct` 는 과거이미지를 encoding한 다음 다시 복구하는 함수입니다.
 
