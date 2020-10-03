@@ -15,11 +15,11 @@ tags:
 따라서 비디오 데이터는 한개의 이미지로 이루어진 데이터보다 큰 차원을 다루므로 <u>학습에 많은 비용이 필요</u>하며 한정적인 labeled 데이터만으로 학습하기 어렵습니다.
 이를 해결하기 위하여 unlabeled 데이터를 활용하여 일련의 데이터를 학습하는 **unsupervised** 방법이 필요합니다.
 
-**AutoEncoder**는 원본데이터를 특징백터(feature)로 인코딩하고 복원(reconstruction)하는 방법으로 학습하기 때문에 <u>labeled 데이터 없이 학습이 가능</u>한 unsupervised 방법입니다.
-오늘 포스팅할 논문은 **AutoEncoder에 LSTM 구조를 추가**하여 sequence 데이터를 Self-Supervised 방법으로 학습하는 `LSTM AutoEncoder` 입니다.
+**AutoEncoder**는 원본데이터를 특징백터(feature)로 압축하고 복원(reconstruction)하는 방법으로 학습하기 때문에 <u>labeled 데이터 없이 학습이 가능</u>한 **unsupervised** 방법입니다.
+오늘 포스팅할 논문은 AutoEncoder에 **LSTM 구조를 추가**하여 sequence 데이터를 **Self-Supervised** 방법으로 학습하는 `LSTM AutoEncoder` 입니다.
 
 이 글은 [Unsupervised Learning of Video Representations using LSTMs 논문](https://arxiv.org/abs/1502.04681) 을 참고하여 정리하였음을 먼저 밝힙니다.
-논문을 간단하게 리뷰하고 **pytorch** 라이브러리를 이용하여 <u>코드를 구현</u>한 후 자세하게 설명드리겠습니다. 
+논문을 간단하게 리뷰하고 pytorch 라이브러리를 이용하여 <u>코드를 구현</u>한 후 자세하게 설명드리겠습니다.
 혹시 제가 잘못 알고 있는 점이나 보안할 점이 있다면 댓글 부탁드립니다.
 
 #### Short Summary
@@ -488,7 +488,7 @@ animation_show(original_data, generated_data, "Prediction", 'prediction.gif')
 ![](/img/in-post/2020/2020-10-11/reconstruction.gif)
 <center><b>모델 복원 결과 시각화</b></center>
 
->[[GITHUB]]()에서 튜토리얼 전체 파일을 제공하고 있습니다.
+>[[GITHUB]]()에서 튜토리얼의 전체 파일을 제공하고 있습니다.
 
 ## Reference
 - [[PAPER]](https://arxiv.org/abs/1502.04681) Unsupervised Learning of Video Representations using LSTMs, Srivastava at el
