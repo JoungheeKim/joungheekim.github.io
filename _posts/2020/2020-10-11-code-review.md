@@ -81,13 +81,16 @@ prediction task만을 수행하여 모델을 학습할 경우 모델은 input의
 
 ### 코드 구현
 
+
 | :exclamation:  주의   |
-|-----------------------| 
+|-----------------------|
+ 
 Tutorial은 pytorch, numpy, torchvision, easydict, tqdm, matplotlib, celluloid 라이브러리가 필요합니다.
 2020.10.11 기준 최신 버전의 라이브러리를 이용하여 구현하였고 이후 업데이트 버전에 따른 변경은 고려하고 있지 않습니다.
 
 #### 데이터
-![](/img/in-post/2020/2020-10-11/data_description.gif)*Moving MNIST 데이터 예시*
+![](/img/in-post/2020/2020-10-11/data_description.gif)
+<center><b>Moving MNIST 데이터 예시</b></center>
 
 Tutorial에서 사용하는 데이터는 [Moving MNIST](http://www.cs.toronto.edu/~nitish/unsupervised_video/) 입니다.
 이 데이터는 9000개의 학습 비디오 데이터와 1000개의 평가 비디오 데이터로 구성되어 있습니다. 
@@ -98,9 +101,9 @@ Tutorial에서 사용하는 데이터는 [Moving MNIST](http://www.cs.toronto.ed
 ![](/img/in-post/2020/2020-10-11/data_download.gif)
 <center><b>데이터 모듈 다운로드 예시</b></center>
 
-|![](/img/in-post/2020/2020-10-11/data_module.png)|
-|:--:|
-|*MovingMNIST.py 파일 위치 예시*|
+![](/img/in-post/2020/2020-10-11/data_module.png)
+<center><b>MovingMNIST.py 파일 위치 예시</b></center>
+
 
 데이터 제공 모듈(**MovingMNIST.py**)을 [[MovingMNIST GITHUB]](https://github.com/tychovdo/MovingMNIST) 에서 다운 받아 작업하고 있는 폴더에 위치시킵니다.
 
