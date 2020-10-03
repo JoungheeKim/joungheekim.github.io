@@ -31,7 +31,7 @@ tags:
 
 ## 모델 구조
 ![](/img/in-post/2020/2020-10-11/model_structure.gif)
-<center>모델 상세 구조 예시</center>
+<center><b>모델 상세 구조 예시</b></center>
 
 모델은 **Encoder, Reconstruction Decoder, Predict Decoder** 로 구성됩니다.
 Encoder에서 <u>이미지 sequence를 압축</u>하고 Reconstruction Decoder에서 <u>이미지 sequence를 재구성</u>하는 **AutoEncoder의 형태**를 띄고 있습니다.
@@ -88,7 +88,7 @@ Tutorial은 pytorch, numpy, torchvision, easydict, tqdm, matplotlib, celluloid �
 
 #### 데이터
 ![](/img/in-post/2020/2020-10-11/data_description.gif)
-<center>Moving MNIST 데이터 예시</center>
+<center><b>Moving MNIST 데이터 예시</b></center>
 
 Tutorial에서 사용하는 데이터는 [Moving MNIST](http://www.cs.toronto.edu/~nitish/unsupervised_video/) 입니다.
 이 데이터는 9000개의 학습 비디오 데이터와 1000개의 평가 비디오 데이터로 구성되어 있습니다. 
@@ -97,10 +97,10 @@ Tutorial에서 사용하는 데이터는 [Moving MNIST](http://www.cs.toronto.ed
 각 비디오는 두개의 임의의 숫자가 원을 그리며 각각 다른 속도를 갖고 움직이고 있습니다.
 
 ![](/img/in-post/2020/2020-10-11/data_download.gif)
-<center>데이터 모듈 다운로드 예시</center>
+<center><b>데이터 모듈 다운로드 예시</b></center>
 
 ![](/img/in-post/2020/2020-10-11/data_module.png)
-<center>MovingMNIST.py 파일 예시</center>
+<center><b>MovingMNIST.py 파일 예시</b></center>
 
 데이터 제공 모듈(**MovingMNIST.py**)을 [[MovingMNIST GITHUB]](https://github.com/tychovdo/MovingMNIST) 에서 다운 받아 작업하고 있는 폴더에 위치시킵니다.
 
