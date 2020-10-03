@@ -12,11 +12,12 @@ tags:
 # [코드리뷰] - [Unsupervised Learning of Video Representations using LSTMs](https://arxiv.org/abs/1502.04681), ICML 2015
 
 비디오는 여러개의 이미지 프레임으로 이루어진 Sequence 데이터 입니다.
-따라서 비디오 데이터는 한개의 이미지로 이루어진 데이터보다 큰 차원을 다루므로 <u>학습에 많은 비용이 필요<u/>하며 한정적인 labeled 데이터만으로 학습하기 어렵습니다.
+따라서 비디오 데이터는 한개의 이미지로 이루어진 데이터보다 큰 차원을 다루므로 <u>학습에 많은 비용이 필요</u>하며 한정적인 labeled 데이터만으로 학습하기 어렵습니다.
 이를 해결하기 위하여 unlabeled 데이터를 활용하여 일련의 데이터를 학습하는 **unsupervised** 방법이 필요합니다.
 
 **AutoEncoder**는 원본데이터를 특징백터(feature)로 인코딩하고 재구성(reconstruction)하는 방법으로 학습하기 때문에 <u>labeled 데이터 없이 학습이 가능</u>한 unsupervised 방법입니다.
 오늘 포스팅할 논문은 **AutoEncoder에 LSTM 구조를 추가**하여 sequence 데이터를 Self-Supervised 방법으로 학습하는 `LSTM AutoEncoder` 입니다.
+
 이 글은 [Unsupervised Learning of Video Representations using LSTMs 논문](https://arxiv.org/abs/1502.04681) 을 참고하여 정리하였음을 먼저 밝힙니다.
 논문을 간단하게 리뷰하고 **pytorch** 라이브러리를 이용하여 <u>코드를 구현</u>한 후 자세하게 설명드리겠습니다. 
 혹시 제가 잘못 알고 있는 점이나 보안할 점이 있다면 댓글 부탁드립니다.
@@ -75,14 +76,13 @@ prediction task만을 수행하여 모델을 학습할 경우 모델은 input의
 일반적으로 prediction에 필요한 정보는 예측하기 전 시점에 가까울수록 상관관계가 높기 때문입니다.
 따라서 과거 시점의 정보를 활용하지 못하는 단점이 존재합니다.
 
-두가지 task를 함께 학습함으로써 모델이 모든 정보를 저장하지 않고 중요정보(이미지 모습, 이동방향 등)를 feature에 저장하도록 유도할 수 있습니다.  
+두가지 task를 함께 학습함으로써 모델이 모든 정보를 저장하지 않고 중요정보(이미지 모습, 이동방향 등)를 feature에 저장하도록 유도할 수 있습니다.
 또한 Sequence 데이터의 모든 시점 정보를 활용하여 학습함으로써 모델이 쉽게 학습할 수 있도록 돕는 역할을 합니다.
 
 ### 코드 구현
-
 ---
 **NOTE**  
-Tutorial은 pytorch, numpy, torchvision, easydict, tqdm, matplotlib, celluloid 라이브러리가 필요합니다.  
+Tutorial은 pytorch, numpy, torchvision, easydict, tqdm, matplotlib, celluloid 라이브러리가 필요합니다.
 2020.10.11 기준 최신 버전의 라이브러리를 이용하여 구현하였고 이후 업데이트 버전에 따른 변경은 고려하고 있지 않습니다.
 ---
 
