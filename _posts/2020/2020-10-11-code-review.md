@@ -489,7 +489,7 @@ animation_show(original_data, generated_data, "Prediction", 'prediction.gif')
 <center><b>모델 복원 결과 시각화</b></center>
 
 시각화 결과를 통해 원본 sequence 이미지와 생성된 sequence 이미지가 매우 흡사한 것을 확인 할 수 있습니다.
-즉 이미지의 모양과 이미지의 움직임 정보가 **feature** 로 잘 압축되었음을 추축할 수 있습니다.
+즉 이미지의 모양과 이미지의 움직임 정보가 **feature** 에 잘 압축되었음을 추축할 수 있습니다.
 >[[GITHUB]]()에서 튜토리얼의 전체 파일을 제공하고 있습니다.
 
 ## Reference
