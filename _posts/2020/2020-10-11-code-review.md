@@ -197,6 +197,7 @@ class Decoder(nn.Module):
 
 논문에서 제시한 모델은 `Encoder`와 `Decoder` 모듈로 구성됩니다.
 Deocder는 쓰임세에 따라 **Reconstruction Decoder**와 **Prediction Decoder**로 나뉩니다.
+pytorch 라이브러리에서 LSTM, Fully connected Layer를 제공하고 있기 때문에 해당 모듈을 이용하여 Decoder와 Encoder를 구성합니다.
 
 ``` python
 class Seq2Seq(nn.Module):
@@ -430,6 +431,7 @@ if not os.path.isdir(save_path):
 model_path = os.path.join(save_path, 'model.bin')    
 torch.save(model.state_dict(), model_path)
 ```
+![](/img/in-post/2020/2020-10-11/training.gif)
 설정한 옵션으로 모델을 학습합니다.
 학습이 완료되면 학습된 모델을 pytorch 라이브러리를 이용하여 저장합니다.
 
@@ -490,7 +492,7 @@ animation_show(original_data, generated_data, "Prediction", 'prediction.gif')
 
 시각화 결과를 통해 원본 sequence 이미지와 생성된 sequence 이미지가 매우 흡사한 것을 확인 할 수 있습니다.
 즉 이미지의 모양과 이미지의 움직임 정보가 **feature** 에 잘 압축되었음을 추축할 수 있습니다.
->[[GITHUB]]()에서 튜토리얼의 전체 파일을 제공하고 있습니다.
+>[[GITHUB]](https://github.com/JoungheeKim/autoencoder-lstm)에서 튜토리얼의 전체 파일을 제공하고 있습니다.
 
 ## Reference
 - [[PAPER]](https://arxiv.org/abs/1502.04681) Unsupervised Learning of Video Representations using LSTMs, Srivastava at el
