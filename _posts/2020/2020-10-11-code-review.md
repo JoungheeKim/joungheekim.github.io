@@ -38,12 +38,14 @@ Encoder에서 <u>이미지 sequence를 압축</u>하고 Reconstruction Decoder�
 Prediction Decoder는 Encoder에서 압축된 feature를 이용하여 이후에 나올 <u>이미지 sequence를 생성</u>하는 방식으로 학습합니다.
 
 ### [1] Encoder
+![](/img/in-post/2020/2020-10-11/encoder.png)
 
 Encoder는 **sequence 데이터를 압축**하는 LSTM 모듈입니다. 
 sequence 데이터는 차례대로 LSTM 모듈의 input으로 사용되어 feature 벡터로 변환됩니다.
 feature 벡터는 sequence 데이터를 압축한 형태로 <u>이미지의 모습</u>과 <u>이미지의 이동방향</u> 등의 정보가 포함되어 있습니다.
 
 ### [2] Reconstruction Decoder
+![](/img/in-post/2020/2020-10-11/reconstruction_decoder.png)
 
 Reconstruction Decoder는 Encoder에서 생성된 feature 벡터를 이용하여 input sequence **데이터를 복원**하는 LSTM 모듈입니다.
 복원 순서는 input sequence의 반대 방향으로 진행합니다.
@@ -56,6 +58,7 @@ Reconstruction Decoder는 Encoder에서 생성된 feature 벡터를 이용하여
 복원 과정의 매 $t$ 시점에서 사용하는 input은 이전 시점 $t-1$에서 Reconstruction Deocder에서 생성된 이미지인 $\hat{ v^r_{t-1} }$ 입니다.
 
 ### [3] Prediction Decoder
+![](/img/in-post/2020/2020-10-11/prediction_decoder.png)
 
 Prediction Decoder는 Encoder에서 생성된 feature 벡터를 이용하여 input sequence 이후 나올 **미래의 이미지 sequence를 생성**하는 LSTM 모듈입니다.
 input sequence가 $v_1, v_2, ..., v_n$ 이라면 Prediction Decoder에서는 $k$개의 sequence, 즉 $v_{n+1}, v_{n+2}, ..., v_{n+k}$ 를 생성합니다.
