@@ -55,7 +55,7 @@ Reconstruction Decoder는 Encoder에서 생성된 feature 벡터를 이용하여
 복원 과정의 첫번째 hidden 벡터는 앞서 Encoder에서 만든 feature 벡터입니다.
 복원 과정의 매 $t$ 시점에서 사용하는 hidden 벡터는 이전 시점 $t-1$에서 Reconstruction Deocder에서 생성된 hidden 벡터 $h_{t-1}^r$ 입니다.
 복원 과정의 첫번째 input은 0으로 구성된 임시 벡터를 사용합니다.
-복원 과정의 매 $t$ 시점에서 사용하는 input은 이전 시점 $t-1$에서 Reconstruction Deocder에서 생성된 이미지인 $\hat{ v^r_{t-1} }$ 입니다.
+복원 과정의 매 $t$ 시점에서 사용하는 input은 이전 시점 $t-1$에서 Reconstruction Deocder에서 생성된 이미지인 $\hat{v}^r_{t-1}$ 입니다.
 
 ### [3] Prediction Decoder
 ![](/img/in-post/2020/2020-10-11/prediction_decoder.png)
@@ -66,7 +66,7 @@ input sequence가 $v_1, v_2, ..., v_n$ 이라면 Prediction Decoder에서는 $k$
 생성 과정의 첫번째 hidden 벡터는 앞서 Encoder에서 만든 feature 벡터입니다.
 생성 과정의 매 $t$ 시점에서 사용하는 hidden 벡터는 이전 시점 $t-1$에서 Prediction Decoder에서 생성된 hidden 벡터 $h_{t-1}^p$ 입니다.
 생성 과정의 첫번째 input은 0으로 구성된 임시 벡터를 사용합니다.
-생성 과정의 매 $t$ 시점에서 사용하는 input은 이전 시점 $t-1$에서 Prediction Decoder에서 생성된 이미지인 $\hat{ v^p_{t-1} }$ 입니다.
+생성 과정의 매 $t$ 시점에서 사용하는 input은 이전 시점 $t-1$에서 Prediction Decoder에서 생성된 이미지인 $\hat{v}^p_{t-1}$ 입니다.
 
 #### 모델 구조적 장점
 
