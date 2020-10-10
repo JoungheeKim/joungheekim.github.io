@@ -12,7 +12,7 @@ tags:
 # [논문리뷰] - [TACOTRON2 : Natural TTS Synthesis By Conditioning WAVENET On Mel Spectrogram Predictions](https://arxiv.org/abs/1712.05884v2), ICASSP 2018
 
 WaveNet, Tacotron 등 딥러닝 방법론이 적용되면서 최근 몇년간 TTS(Text to Speech)은 빠르게 발전하였습니다.
-따라서 이제는 복잡한 작업 절차 없이 데이터를 학습하여 텍스트로부터 고품질의 음성을 생성할 수 있게 되었습니다.
+따라서 이제는 복잡한 작업 절차 없이 데이터를 학습하여 텍스트로부터 **고품질의 음성을 생성**할 수 있게 되었습니다.
 
 그에 따라 오늘날 음성합성은 다양한 방향으로 적용되고 있습니다.
 예를들어 네이버에서는 "유인나가 읽어주는 오디오북" 서비스를 출시하였고 이제는 배우 유인나의 목소리로 다양한 이야기를 들을 수 있게 되었습니다.
@@ -168,19 +168,19 @@ Convolution Layer는 512개의 filter와 5×1 kernel size를 가지고 있습니
 
 **Vocoder**는 mel-spectrogram 으로부터 <u>waveform(음성)을 생성</u>하는 모듈을 의미합니다. 
 타코트론2 논문에서는 WaveNet의 구조를 조금 변경한 모델을 Vocoder로 사용합니다.
-[WaveNet 논문](https://arxiv.org/abs/1609.03499) 에서 제시한 모델은 **Softmax 함수**를 이용하여 매 시점 $-2^7$ ~ $2^7$ 사이의 숫자가 나올 확률을 생성하고 Wave 예측합니다.
+[WaveNet 논문](https://arxiv.org/abs/1609.03499) 에서 제시한 모델은 **Softmax 함수**를 이용하여 매 시점 $-2^7$ ~ $2^7$ 사이의 숫자가 나올 확률을 추출하고 waveform 생성합니다.
 이를 수정하여 PixelCNN++ 처럼 [mixture of logistic distribution(MoL)](https://medium.com/@smallfishbigsea/an-explanation-of-discretized-logistic-mixture-likelihood-bdfe531751f0) 을 이용하여 매 시점 $-2^7$ ~ $2^7$ 사이의 숫자가 나올 확률을 생성합니다.
 
 위 그림에서는 mel-spectrogram을 이용하여 WaveNet은 **MOL에 사용할 paramter를 생성**합니다.
-생성된 paramter를 이용하여 $-2^7$ ~ $2^7$ 사이의 숫자가 나올 확률인 mixture of logistic distribution를 생성하고 가장 큰 확률을 갖고 있는 값을 waveform으로 활용합니다.
+생성된 paramter를 이용하여 $-2^7$ ~ $2^7$ 사이의 숫자가 나올 확률인 mixture of logistic distribution를 생성하고 가장 큰 확률을 갖고 있는 값을 이용하여 waveform을 생성합니다.
 
 #### 2.1 WaveNet Loss
 WaveNet으로부터 생성된 waveform과 실제 waveform의 시점 별 **Negative log-likelihood** Loss를 이용하여 모델을 학습합니다.
 
 ## 학습 설정
-타코트론2, WaveNet(MoL)을 학습할 때 **teacher-forcing**을 사용합니다.  
+타코트론2, WaveNet(MoL)을 학습할 때 **teacher-forcing**을 사용합니다.
 타코트론2은 이전시점 생성된 mel-spectrogram과 encoder featrure를 이용하여 다음 시점 mel-spectrogram을 생성합니다.
-training 단계에는 input을 이전 시점 타코트론2로부터 생성된 mel-spectrogram을 사용하지 않고 **ground-truth mel-spectrogram을 사용**하여 학습 효율을 증가시킵니다.  
+training 단계에는 input을 이전 시점 타코트론2로부터 생성된 mel-spectrogram을 사용하지 않고 **ground-truth mel-spectrogram을 사용**하여 학습 효율을 증가시킵니다.
 WaveNet을 학슬 할 때에도 input으로 WaveNet의 이전단계에서 생성된 waveform을 사용하는 것이 아닌 **ground-truth waveform을 이용**합니다.
 
 ## 평가
@@ -224,7 +224,7 @@ WaveNet은 수용범위(receptive field)를 넓히기 위하여 많은 dilation 
 타코트론1에서는 CBHG가 중요한 역할을 한다고 기술하였지만 타코트론2에서는 해당 구조를 사용하지 않고 더 좋은 성능을 추출하였습니다.
 <u>성능을 향상시킨 가장 큰 요인</u>은 텍스트로부터 mel-spectrogram을 생성하는 단계가 아니라 **Vocoder**에 있습니다.
 <u>WaveNet으로부터 생성된 음성</u>의 품질은 뛰어나나 너무 **느리다는 단점**을 갖고 있습니다.
-따라서 실시간으로 음성을 생성하기에는 적합하지 않은 모델로 보입니다.  
+따라서 실시간으로 음성을 생성하기에는 보안이 필요해 보입니다.  
 
 
 ## Reference
