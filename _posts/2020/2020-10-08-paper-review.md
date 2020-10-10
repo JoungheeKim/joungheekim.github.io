@@ -30,13 +30,12 @@ WaveNet, Tacotron 등 딥러닝 방법론이 적용되면서 최근 몇년간 TT
 2. <문장, 음성> 쌍으로 이루어진 데이터만으로 <u>별도의 작업없이</u> 학습이 가능한 **End-to-End 모델**입니다.  
 3. 음성합성 품질 테스트(MOS)에서 높은 점수를 획득하였습니다. **합성품질**이 뛰어납니다.
 
-
 ## 모델 전체 구조
 ![](/img/in-post/2020/2020-10-08/train_process.png)
 <center><b>모델 학습 단계 예시</b></center>
 
 모델은 텍스트를 받아 음성을 합성합니다. 따라서 최종 Input과 Output은 텍스트와 음성입니다.
-하지만 텍스트로부터 바로 음성을 생성하는 것은 어려운 Task이므로 타코트론2 논문에서는 TTS를 두단계로 나누어 처리합니다.
+하지만 텍스트로부터 바로 음성을 생성하는 것은 어려운 Task이므로 타코트론2 논문에서는 TTS를 <u>두단계로 나누어 처리</u>합니다.
 
 - **Task1** :  텍스트로부터 Mel-spectrogram을 생성하는 단계
 - **Task2** : Mel-spectrogram으로부터 음성을 합성하는 단계
@@ -121,7 +120,7 @@ Addictive Attention 은 Encoder RNN으로부터 생성된 feature($h$)와 Decode
 <center>$s_{t, i} = w^{T}\tanh\left(Wd_{t-1} + Vh_{i} + Uf_{t, i} + b\right)$</center>
 <center>$f_{i} = F ∗ \alpha_{i−1}$</center>
 $U$ : 학습이 가능한 matrix weights  
-$U$
+$F$ : Convolution Filter
 
 Location Sentitive Attention은 이전 시점($t-1$)에서 생성된 attention alignment($\alpah_{t-1}$)를 이용하여 다음 시점($t$) Attention alignment($\alpah_{t}$)를 구할 때 추가로 고려한 형태입니다. 
 k개의 filter를 갖고 있는 1D convolution을 이용하여 Attention alignment($\alpah_{t-1}$)를 확장하여 $f_{i}$ matrix를 생성합니다.
@@ -182,41 +181,59 @@ WaveNet으로부터 생성된 waveform과 실제 waveform의 시점 별 Negative
 타코트론2, WaveNet(MoL)을 학습할 때 teacher-forcing을 사용합니다.  
 타코트론2은 이전시점 생성된 mel-spectrogram과 encoder featrure를 이용하여 다음 시점 mel-spectrogram을 생성합니다.
 training 단계에는 input을 이전 시점 타코트론2로부터 생성된 mel-spectrogram을 사용하지 않고 ground-truth mel-spectrogram을 사용하여 학습 효율을 증가시킵니다.  
-WaveNet을 학슬 할 때에도 input으로 타코트론2에서 생성된 것이 아닌 ground-truth mel-spectrogram을 이용합니다.
+WaveNet을 학슬 할 때에도 input으로 WaveNet의 이전단계에서 생성된 waveform을 사용하는 것이 아닌 ground-truth waveform을 이용합니다.
 
 ## 평가
 모델을 평가하기 위한 데이터로 24.6시간 한 사람의 음성을 담은 US English dataset을 이용합니다.
 피실험자에게 음성을 들려주고 1점에서 5점까지 0.5점씩 증가하여 점수를 매기는 mean opinion score(MOS) 테스트를 진행합니다.
 linguastic feature를 이용하여 음성을 생성하는 WaveNet, 타코트론1, Parametric 모델, Concatenative 모델을 학습하여 비교모델로 활용합니다.
 
-   
- 
+![](/img/in-post/2020/2020-10-08/mos_result.png)
 
+타코트론2로부터 생성된 음성이 실제 음성(ground truth)과 비슷한 평가를 받았습니다.
 
+## Ablation Studies
+### (1) Predicted Features versus Ground Truth
+Task를 2가지로 나누어 서로다른 모델(타코트론2, WaveNet)이 따로따로 해당하는 Task에 분리되어 학습됩니다.
+Vocoder는 inference(synthesis) 단계에서는 타코트론2에서 생성된 mel-spectrogram(predicted)을 활용하여 waverform을 생성해야 합니다.
+하지만 training 단계에서는 input으로 타코트론2로부터 생성된 mel-spectrogram(predicted) 또는 실제 mel-spectrogram(ground truth)를 사용할 수 있습니다.
 
+![](/img/in-post/2020/2020-10-08/synthesis_study.png)
 
->
+WaveNet을 training 단계에서 mel-spectrogram(ground truth)를 사용하여 학습한 후 inference 단계에서 타코트론2로부터 생성된 mel-spectrogram(predicted)을 이용하여 음성을 합성했을 때 안 좋은 성능을 보입니다.
+타코트론2에서 생성된 mel-spectrogram은 ground-truth보다 smmothing되어 생성되므로 ground-truth으로 학습한 WaveNet은 smmothing mel-spectrogram으로부터 품질 좋은 음성을 생성하지 못합니다.
 
+### (2) Linear Spectrograms
+mel-spectrogram 대신 linear-frequency spectrogram을 사용하여 모델을 학습했을 때 성능을 비교합니다.
 
- 
+![](/img/in-post/2020/2020-10-08/linear_frequency_study.png)
 
+mel-spectrogram을 이용하여 학습한 모델이 가장 좋은 성능을 보입니다. 하지만 큰 성능차이를 보이지 않습니다.   
 
+### (3) Simplifying WaveNet
+WaveNet은 수용범위(receptive field)를 넓히기 위하여 많은 dilation conv를 쌓아서 모델을 구성합니다.
+즉 dilation conv 갯수 및 cycle에 따라 수용범위가 변경됩니다.
+이 실험은 Dilation Conv를 포함하고 있는 Residual Layer의 갯수와 Dilation cycle를 조절하며 음성의 품질을 평가합니다.
 
+![](/img/in-post/2020/2020-10-08/simplify_wavenet.png)
 
+비교적 적은 Layer 개수와 수용범위(receptive field)로도 충분히 품질 좋은 음성을 생성할 수 있습니다.
 
+## 결론 및 개인적인 생각
+타코트론1과 매우 흡사한 구조를 갖고 있습니다. 
+타코트론1에서는 CBHG가 중요한 역할을 한다고 기술하였지만 타코트론2에서는 해당 구조를 사용하지 않고 더 좋은 성능을 추출하였습니다.
+성능을 향상시킨 가장 큰 요인은 텍스트로부터 mel-spectrogram을 생성하는 단계가 아니라 Vocoder에 있습니다.
+  
 
 
 ## Reference
+- [[PAPER]](https://arxiv.org/abs/1712.05884v2) Natural TTS Synthesis By Conditioning WAVENET On Mel Spectrogram Predictions, Jonathan Shen at el.
+- [[PAPER]](https://www.dbpia.co.kr/pdf/pdfView.do?nodeId=NODE07614110&mark=0&useDate=&bookmarkCnt=0&ipRange=N&accessgl=Y&language=ko_KR) Tacotron2 기반 한국어 음성 합성 모델 개발과 한국어에 맞는 Hyper-parameter 탐색
 - [[BLOG]](https://medium.com/spoontech/tacotron2-voice-synthesis-model-explanation-experiments-21851442a63c) Tacotron2 voice synthesis model explanation & experiments, Ellie Kang
 - [[BLOG]](https://m.blog.naver.com/PostView.nhn?blogId=designpress2016&logNo=221183754859&proxyReferer=https:%2F%2Fwww.google.com%2F) Tacotron2 Practical Use
-- [[PAPER]](https://www.dbpia.co.kr/pdf/pdfView.do?nodeId=NODE07614110&mark=0&useDate=&bookmarkCnt=0&ipRange=N&accessgl=Y&language=ko_KR) Tacotron2 기반 한국어 음성 합성 모델 개발과 한국어에 맞는 Hyper-parameter 탐색
 - [[BLOG]](https://medium.com/@rajanieprabha/tacotron-2-implementation-and-experiments-832695b1c86e) Tacotron-2 : Implementation and Experiments
-
 - [[BLOG]](https://medium.com/@smallfishbigsea/an-explanation-of-discretized-logistic-mixture-likelihood-bdfe531751f0) An Explanation of Discretized Logistic Mixture Likelihood, Hao Gao
+- [[BLOG]]((https://medium.com/a-paper-a-day-will-have-you-screaming-hurray/day-7-natural-tts-synthesis-by-conditioning-wavenet-on-mel-spectogram-predictions-tacotron-2-bbcce354a3e3)) Natural TTS Synthesis Experiment, Francisco Ingham 
 - [[BLOG]](https://hcnoh.github.io/2018-12-11-bahdanau-attention) Bahdanau Attention 개념 정리
 - [[BLOG]](https://hcnoh.github.io/2019-01-01-luong-attention) Luong Attention 개념 정리
-
 - [[GITHUB]](https://github.com/BogiHsu/Tacotron2-PyTorch) Tacotron2 Pytorch Implementation
-
-
-(https://medium.com/a-paper-a-day-will-have-you-screaming-hurray/day-7-natural-tts-synthesis-by-conditioning-wavenet-on-mel-spectogram-predictions-tacotron-2-bbcce354a3e3)
