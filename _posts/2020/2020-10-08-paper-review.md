@@ -31,7 +31,7 @@ WaveNet, Tacotron 등 딥러닝 방법론이 적용되면서 최근 몇년간 TT
 3. 음성합성 품질 테스트(MOS)에서 높은 점수를 획득하였습니다. **합성품질**이 뛰어납니다.
 
 
-### 모델 전체 구조
+## 모델 전체 구조
 ![](/img/in-post/2020/2020-10-08/train_process.png)
 <center><b>모델 학습 단계 예시</b></center>
 
@@ -127,6 +127,9 @@ Location Sentitive Attention은 이전 시점($t-1$)에서 생성된 attention a
 k개의 filter를 갖고 있는 1D convolution을 이용하여 Attention alignment($\alpah_{t-1}$)를 확장하여 $f_{i}$ matrix를 생성합니다.
 이후 학습이 가능한 weights($U$)와 내적한 후 Addictivae attention의 구성에 포함하여 계산합니다.
 
+>논문에서 Attention과 관련하여 자세한 구조를 설명하고 있지 않습니다.
+>따라서 [구현체](https://github.com/BogiHsu/Tacotron2-PyTorch/blob/master/model/model.py) 를 보고 자료를 구성하였습니다.
+
 #### 1.4 Decoder
 ![](/img/in-post/2020/2020-10-08/decoder.png)
 <center><b>Decoder 상세 구조 예시</b></center>
@@ -157,17 +160,41 @@ Convolution Layer는 512개의 filter와 5×1 kernel size를 가지고 있습니
 이전 단계에서 생성된 mel-vector는 Post-Net을 통과한 뒤 다시 mel-vector와 구조(Residual Connection)로 이루어져 있습니다.
 Post-Net은 mel-vector를 보정하는 역할을 하며 타코트론2 Task1의 최종 결과물인 mel-spectrogram의 품질을 높이는 역할을 합니다.
 
-      
+#### 1.5 타코트론2 Loss
+타코트론2로부터 생성된 mel-spectrogram과 실제 mel-spectrogram의 MSE(mean squared error)를 이용하여 모델을 학습합니다.
 
+### 2 WaveNet Vocoder
+![](/img/in-post/2020/2020-10-08/wavenet.png)
+<center><b>WaveNet(MoL) 상세 구조 예시</b></center>
 
+Vocoder는 mel-spectrogram 으로부터 waveform(음성)을 생성하는 모듈을 의미합니다. 
+타코트론2 논문에서는 WaveNet의 구조를 조금 변경한 모델을 Vocoder로 사용합니다.
+[WaveNet 논문](https://arxiv.org/abs/1609.03499) 에서 제시한 모델은 Softmax 함수를 이용하여 매 시점 $-2^7$ ~ $2^7$ 사이의 숫자가 나올 확률을 생성하고 Wave 예측합니다.
+이를 수정하여 PixelCNN++ 처럼 [mixture of logistic distribution(MoL)](https://medium.com/@smallfishbigsea/an-explanation-of-discretized-logistic-mixture-likelihood-bdfe531751f0) 을 이용하여 매 시점 $-2^7$ ~ $2^7$ 사이의 숫자가 나올 확률을 생성합니다.
+
+위 그림에서는 mel-spectrogram을 이용하여 WaveNet은 MOL에 사용할 paramter를 생성합니다.
+생성된 paramter를 이용하여 $-2^7$ ~ $2^7$ 사이의 숫자가 나올 확률인 mixture of logistic distribution를 생성하고 가장 큰 확률을 갖고 있는 값을 waveform으로 활용합니다.
+
+#### 2.1 WaveNet Loss
+WaveNet으로부터 생성된 waveform과 실제 waveform의 시점 별 Negative log-likelihood Loss를 이용하여 모델을 학습합니다.
+
+## 학습 설정
+타코트론2, WaveNet(MoL)을 학습할 때 teacher-forcing을 사용합니다.  
+타코트론2은 이전시점 생성된 mel-spectrogram과 encoder featrure를 이용하여 다음 시점 mel-spectrogram을 생성합니다.
+training 단계에는 input을 이전 시점 타코트론2로부터 생성된 mel-spectrogram을 사용하지 않고 ground-truth mel-spectrogram을 사용하여 학습 효율을 증가시킵니다.  
+WaveNet을 학슬 할 때에도 input으로 타코트론2에서 생성된 것이 아닌 ground-truth mel-spectrogram을 이용합니다.
+
+## 평가
+모델을 평가하기 위한 데이터로 24.6시간 한 사람의 음성을 담은 US English dataset을 이용합니다.
+피실험자에게 음성을 들려주고 1점에서 5점까지 0.5점씩 증가하여 점수를 매기는 mean opinion score(MOS) 테스트를 진행합니다.
+linguastic feature를 이용하여 음성을 생성하는 WaveNet, 타코트론1, Parametric 모델, Concatenative 모델을 학습하여 비교모델로 활용합니다.
+
+   
  
-  
- 
 
 
 
->논문에서 Attention과 관련하여 자세한 구조를 설명하고 있지 않습니다.
->따라서 [구현체](https://github.com/BogiHsu/Tacotron2-PyTorch/blob/master/model/model.py) 를 보고 자료를 구성하였습니다.
+
 >
 
 
@@ -185,6 +212,7 @@ Post-Net은 mel-vector를 보정하는 역할을 하며 타코트론2 Task1의 �
 - [[PAPER]](https://www.dbpia.co.kr/pdf/pdfView.do?nodeId=NODE07614110&mark=0&useDate=&bookmarkCnt=0&ipRange=N&accessgl=Y&language=ko_KR) Tacotron2 기반 한국어 음성 합성 모델 개발과 한국어에 맞는 Hyper-parameter 탐색
 - [[BLOG]](https://medium.com/@rajanieprabha/tacotron-2-implementation-and-experiments-832695b1c86e) Tacotron-2 : Implementation and Experiments
 
+- [[BLOG]](https://medium.com/@smallfishbigsea/an-explanation-of-discretized-logistic-mixture-likelihood-bdfe531751f0) An Explanation of Discretized Logistic Mixture Likelihood, Hao Gao
 - [[BLOG]](https://hcnoh.github.io/2018-12-11-bahdanau-attention) Bahdanau Attention 개념 정리
 - [[BLOG]](https://hcnoh.github.io/2019-01-01-luong-attention) Luong Attention 개념 정리
 
