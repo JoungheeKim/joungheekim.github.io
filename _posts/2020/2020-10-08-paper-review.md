@@ -97,36 +97,72 @@ embedding vecotor는 3개의 conv-layer(1d convolution layer + batch norm)를 �
 ![](/img/in-post/2020/2020-10-08/attention.png)
 <center><b>Attention 상세 구조 예시</b></center>
 
+Attention은 매 시점 Deocder에서 사용할 정보를 Encoder에서 추출하여 가져오는 역할을 합니다.
+즉 Attention Mechanism은 Encoder의 LSTM에서 생성된 feature와 Decoder의 LSTM에서 전 시점에서 생성된 feature를 이용하여 Encoder로 부터 어떤 정보를 가져올지 alignment하는 과정을 의미합니다.  
 타코트론2 모델은 [Location Sensitive Attention](https://paperswithcode.com/method/location-sensitive-attention#) 을 사용합니다.
-Location Sensitive Attention 이란 additive attention mechanism([Bandau Attetnion]((https://hcnoh.github.io/2018-12-11-bahdanau-attention)))에 attention weights 정보를 추가 한 형태입니다.
+Location Sensitive Attention 이란 Additive attention mechanism([Bandau Attetnion]((https://hcnoh.github.io/2018-12-11-bahdanau-attention)))에 attention alignment 정보를 추가 한 형태입니다.
 
 ##### Additive Attention
 <center>$s_{t, i} = w^{T}\tanh\left(Wd_{t-1} + Vh_{i} + b\right)$</center>
 <center>$\alpha_{t, i} = \frac{exp(s_{t, i})}{\sum_{i=1}^n exp(s_{t, i})}$</center>
 <center>$\alpha_{t} = [\alpha_{t, 1}, \alpha_{t, 2}, ... \alpha_{t, n}]$</center>
 <center>$c_{t} = \sum a_{t, i}h_{i} = \alpha_{t}h$</center>
-$W, V$ : 학습이 가능한 Matrix Weights  
-$w, b$ : 학습이 가능한 Vector Weights    
+$W, V$ : 학습이 가능한 matrix weights  
+$w, b$ : 학습이 가능한 bector weights    
 $h_{i}$ : Encoder bi-LSTM에서 생성된 $i$번째 feature
 $d_{t}$ : Decoder LSTM에서 생성된 $t$번째 feature
 $s_{t, i}$ : $t$ 시점에서 hidden $i$ 에 대한 attention score
 $\alpha_{t, i}$ : $t$ 시점에서 hidden $i$ 에 대한 alignment(0~1)
-$c_{t}$ : $t$시점에서 Attetnion 모듈로 부터 추출한 Context Vector
+$c_{t}$ : $t$시점에서 Attetnion 모듈로 부터 추출한 context vector
 
-Addictive Attention 은 Encoder RNN으로부터 생성된 feature($h$)와 Decoder RNN의 한 step 전 결과물($d_{t-1}$) 을 이용하여 Attention Alignment($\alpha_{t}$)를 구합니다. 
+Addictive Attention 은 Encoder RNN으로부터 생성된 feature($h$)와 Decoder RNN의 한 step 전 결과물($d_{t-1}$) 을 이용하여 attention alignment($\alpha_{t}$)를 구합니다. 
 
 ##### Location Sensitive Attention
 <center>$s_{t, i} = w^{T}\tanh\left(Wd_{t-1} + Vh_{i} + Uf_{t, i} + b\right)$</center>
 <center>$f_{i} = F ∗ \alpha_{i−1}$</center>
-$U$ : 학습이 가능한 Matrix Weights  
+$U$ : 학습이 가능한 matrix weights  
 $U$
 
-Location Sentitive Attention은 이전 시점($t-1$)에서 생성된 Attention alignment($\alpah_{t-1}$)를 이용하여 다음 시점($t$) Attention alignment($\alpah_{t}$)를 구할 때 추가로 고려한 형태입니다. 
-1D convolution을 이용하여 Attention alignment($\alpah_{t-1}$)를 확장하여 k개의 feature를 갖고 있는 $f_{i}$ 벡터를 생성합니다.
-이후 다시 학습이 가능한 Matrix Weights($U$)와 내적한 후 Addictivae Attention 포함하여 계산합니다.
+Location Sentitive Attention은 이전 시점($t-1$)에서 생성된 attention alignment($\alpah_{t-1}$)를 이용하여 다음 시점($t$) Attention alignment($\alpah_{t}$)를 구할 때 추가로 고려한 형태입니다. 
+k개의 filter를 갖고 있는 1D convolution을 이용하여 Attention alignment($\alpah_{t-1}$)를 확장하여 $f_{i}$ matrix를 생성합니다.
+이후 학습이 가능한 weights($U$)와 내적한 후 Addictivae attention의 구성에 포함하여 계산합니다.
 
 #### 1.4 Decoder
+![](/img/in-post/2020/2020-10-08/decoder.png)
+<center><b>Decoder 상세 구조 예시</b></center>
 
+Decoder는 Attention을 통해 얻은 alignment feature와 이전 시점에서 생성된 mel-spectrogram 정보를 이용하여 다음 시점 mel-spectrogram을 생성하는 역할을 합니다.
+Decoder는 Pre-Net, Decoder LSTM, Projection Layer, Post-Net으로 구성됩니다.
+
+Pre-Net은 2개의 Fully Connected Layer(256 dim) + ReLU 으로 구성되어 있습니다.
+이전 시점에서 생성된 mel-spectrogram이 decoder의 input으로 들어오면 가장먼저 Pre-Net을 통과합니다.
+Pre-Net은 bottle-neck 구간으로써 중요 정보를 거르는 역할을 합니다.
+
+Decoder LSTM은 2개의 uni-directional LSTM Layer(1024 dim) 으로 구성되어 있습니다. 
+Pre-Net을 통해 생성된 vector와 이전 시점($t-1$)에서 생성된 context vector($c_{t-1}$)를 합친 후 Decoder LSTM을 통과합니다.
+Decoder LSTM은 Attention Layer의 정보와 Pre-Net으로부터 생성된 정보를 이용하여 특정 시점($t$)에 해당하는 정보를 생성합니다.
+
+Decoder LSTM에서 생성된 매 시점($t$) vector는 두개로 분기되어 처리됩니다.
+1. 종료 조건의 확률을 계산하는 경로
+2. mel-spectrogram을 생성하는 경로
+
+종료 조건의 확률을 계산하는 경로는 Decoder LSTM으로부터 매 시점 생성된 vector를 Fully Connected layer를 통과시킨 후 sigmoid 함수를 취하여 0에서 1사이의 확률로 변환합니다.
+이 확률이 Stop 조건에 해당하며 사용자가 설정한 threshold를 넘을 시 inference 단계에서 mel-spectrogram 생성을 멈추는 역할을 합니다. 
+
+mel-spectrogram을 생성하는 경로는 Decoder LSTM으로부터 매 시점 생성된 vector와 Attention에서 생성된 context vector를 합친 후 Fully Connected Layer를 통과시킵티다.
+이렇게 생성된 mel-vector는 inference 단계에서 Decoder의 다음 시점의 input이 됩니다.
+
+Post-Net은 5개의 1D Convolution Layer로 구성되어 있습니다.
+Convolution Layer는 512개의 filter와 5×1 kernel size를 가지고 있습니다.
+이전 단계에서 생성된 mel-vector는 Post-Net을 통과한 뒤 다시 mel-vector와 구조(Residual Connection)로 이루어져 있습니다.
+Post-Net은 mel-vector를 보정하는 역할을 하며 타코트론2 Task1의 최종 결과물인 mel-spectrogram의 품질을 높이는 역할을 합니다.
+
+      
+
+
+ 
+  
+ 
 
 
 
