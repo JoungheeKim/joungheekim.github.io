@@ -38,8 +38,8 @@ WaveNet, Tacotron 등 딥러닝 방법론이 적용되면서 최근 몇년간 TT
 모델은 텍스트를 받아 음성을 합성합니다. 따라서 최종 Input과 Output은 텍스트와 음성입니다.
 하지만 텍스트로부터 바로 음성을 생성하는 것은 어려운 Task이므로 타코트론2 논문에서는 TTS를 두단계로 나누어 처리합니다.
 
-1. 텍스트로부터 Mel-spectrogram을 생성하는 단계
-2. Mel-spectrogram으로부터 음성을 합성하는 단계
+- **Task1** :  텍스트로부터 Mel-spectrogram을 생성하는 단계
+- **Task2** : Mel-spectrogram으로부터 음성을 합성하는 단계
 
 첫번째 단계는 Sequence to Sequence 딥러닝 구조의 **타코트론2 모델**이 담당하고 있습니다.
 두번째 단계는 Vocoder로 불리며 타코트론2 논문에서는 **WaveNet 모델**을 변형하여 사용합니다.
@@ -97,15 +97,42 @@ embedding vecotor는 3개의 conv-layer(1d convolution layer + batch norm)를 �
 ![](/img/in-post/2020/2020-10-08/attention.png)
 <center><b>Attention 상세 구조 예시</b></center>
 
-Attention 구조는 기본 Bandau Attetnion에 alingment 정보를 추가한 형태입니다.
+타코트론2 모델은 [Location Sensitive Attention](https://paperswithcode.com/method/location-sensitive-attention#) 을 사용합니다.
+Location Sensitive Attention 이란 additive attention mechanism([Bandau Attetnion]((https://hcnoh.github.io/2018-12-11-bahdanau-attention)))에 attention weights 정보를 추가 한 형태입니다.
 
+##### Additive Attention
 <center>$s_{t, i} = w^{T}\tanh\left(Wd_{t-1} + Vh_{i} + b\right)$</center>
-<center>$a_{t, i}=\frac{exp(s_{t, i})}{\sum_{i=1}^n exp(s_{t, i})}$</center>
-<center>$a_{t}=[a_{t, 1}, a_{t, 2}, ... a_{t, n}]$</center>
+<center>$\alpha_{t, i} = \frac{exp(s_{t, i})}{\sum_{i=1}^n exp(s_{t, i})}$</center>
+<center>$\alpha_{t} = [\alpha_{t, 1}, \alpha_{t, 2}, ... \alpha_{t, n}]$</center>
+<center>$c_{t} = \sum a_{t, i}h_{i} = \alpha_{t}h$</center>
 $W, V$ : 학습이 가능한 Matrix Weights  
-$w, b$ : 학습이 가능한 Vector Weights  
-$$
- 
+$w, b$ : 학습이 가능한 Vector Weights    
+$h_{i}$ : Encoder bi-LSTM에서 생성된 $i$번째 feature
+$d_{t}$ : Decoder LSTM에서 생성된 $t$번째 feature
+$s_{t, i}$ : $t$ 시점에서 hidden $i$ 에 대한 attention score
+$\alpha_{t, i}$ : $t$ 시점에서 hidden $i$ 에 대한 alignment(0~1)
+$c_{t}$ : $t$시점에서 Attetnion 모듈로 부터 추출한 Context Vector
+
+Addictive Attention 은 Encoder RNN으로부터 생성된 feature($h$)와 Decoder RNN의 한 step 전 결과물($d_{t-1}$) 을 이용하여 Attention Alignment($\alpha_{t}$)를 구합니다. 
+
+##### Location Sensitive Attention
+<center>$s_{t, i} = w^{T}\tanh\left(Wd_{t-1} + Vh_{i} + Uf_{t, i} + b\right)$</center>
+<center>$f_{i} = F ∗ \alpha_{i−1}$</center>
+$U$ : 학습이 가능한 Matrix Weights  
+$U$
+
+Location Sentitive Attention은 이전 시점($t-1$)에서 생성된 Attention alignment($\alpah_{t-1}$)를 이용하여 다음 시점($t$) Attention alignment($\alpah_{t}$)를 구할 때 추가로 고려한 형태입니다. 
+1D convolution을 이용하여 Attention alignment($\alpah_{t-1}$)를 확장하여 k개의 feature를 갖고 있는 $f_{i}$ 벡터를 생성합니다.
+이후 다시 학습이 가능한 Matrix Weights($U$)와 내적한 후 Addictivae Attention 포함하여 계산합니다.
+
+#### 1.4 Decoder
+
+
+
+
+>논문에서 Attention과 관련하여 자세한 구조를 설명하고 있지 않습니다.
+>따라서 [구현체](https://github.com/BogiHsu/Tacotron2-PyTorch/blob/master/model/model.py) 를 보고 자료를 구성하였습니다.
+>
 
 
  
@@ -124,6 +151,8 @@ $$
 
 - [[BLOG]](https://hcnoh.github.io/2018-12-11-bahdanau-attention) Bahdanau Attention 개념 정리
 - [[BLOG]](https://hcnoh.github.io/2019-01-01-luong-attention) Luong Attention 개념 정리
+
+- [[GITHUB]](https://github.com/BogiHsu/Tacotron2-PyTorch) Tacotron2 Pytorch Implementation
 
 
 (https://medium.com/a-paper-a-day-will-have-you-screaming-hurray/day-7-natural-tts-synthesis-by-conditioning-wavenet-on-mel-spectogram-predictions-tacotron-2-bbcce354a3e3)
