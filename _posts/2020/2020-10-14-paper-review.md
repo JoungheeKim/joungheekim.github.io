@@ -75,13 +75,16 @@ $M_{i,j}^c$ : 좌표 $i$, $j$의 class $c$에 대한 영향력(class activation 
 
 CAM과는 달리 Grad-CAM은 CNN을 사용한 일반적인 모든 구조에서 CAM을 활용할 수 있는 방법을 제시합니다.
 바로 weights에 해당하는 부분을 gradient로 대채함으로써 모든 구조에서 특정 class에 feature map 미치는 영향력를 구할 수 있습니다.
+$w_k^c$를 구하는 과정은 아래와 같습니다.
 
+분류모델의 output인 class score($Y^c$)를 feature의 average pooling 값인 $F^k$로 미분하여 gradint를 나타내면 아래와 같은 $A_{i,j}^k$에 대한 식으로 표현됩니다.
 <center>$\frac{\partial Y^c}{\partial F^k} = \frac{\frac{\partial Y^c}{\partial A_{i,j}^k}}{\frac{\partial F^k}{\partial A_{i,j}^k}}$</center>
+$\frac{\partial F^k}{\partial A_{i,j}^k} = \frac{1}{Z}$ 이고, $\frac{\partial Y^c}{\partial F^k} = w_k^c$ 이므로 아래와 같은 식으로 변형이 가능합니다.
+<center>$\frac{\partial Y^c}{\partial F^k} = \frac{\partial Y^c}{\partial A_{i,j^k} \cdot Z}$</center> 
+$Z$와 $w_k^c$는 pixcel($i, j$)와는 무관하므로 위의 식을 풀어서 쓰면 $w_k^c$와 gradient 사이의 관계로 변형이 가능합니다.
+<center>$\frac{\partial Y^c}{\partial F^k} = \frac{\partial Y^c}{\partial A_{i,j^k} \cdot Z}$</center>
 
-분류모델의 output인 class score($Y^c$)를 feature의 average pooling 값인 $F^k$로 미분하여 gradint를 나타내면 위와 같은 $A_{i,j}^k$에 대한 식으로 표현됩니다.
-$\frac{\partial F^k}{\partial A_{i,j}^k} = \frac{1}{Z}$ 이므로 $Z$와 관련된 식으로 표현할 수 있습니다.
 
-<center>$\frac{\partial Y^c}{\partial F^k} = \frac{\frac{\partial Y^c}{\partial A_{i,j}^k}}{\frac{\partial F^k}{\partial A_{i,j}^k}}$</center> 
 
 
 
