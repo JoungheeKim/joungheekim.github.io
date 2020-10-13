@@ -1,0 +1,91 @@
+---
+layout:     post
+title:      "[논문리뷰]Grad-CAM"
+subtitle:   "Learning Deep Features for Discriminative Localization"
+mathjax: true
+tags:
+  - Image Localization
+  - Vision
+  - Deep Learning
+---
+
+# [논문리뷰] - [Grad-CAM : Visual Explanations from Deep Networks via Gradient-based Localization](https://arxiv.org/abs/1610.02391), ICCV 2017
+
+인공지능은 이미 거의 모든 분야에서 다양한 용도로 사용되고 있습니다.
+대부분 성능이 뛰어나지만 때로는 오작동을 합니다.
+하지만 현재 대부분 AI는 딥러닝 기반 모델이므로 오작동하는 이유에 대해서 파악하기 힘들다는 단점을 갖고 있습니다.
+
+![](/img/in-post/2020/2020-10-14/cam_sample.png)
+<center>CAM 예시</center>
+
+이러한 문제를 해결하고자 이미지 분야에서는 [Class Activation Mapping(CAM)](https://joungheekim.github.io/2020/09/29/paper-review/) 이라는 방법이 고안되었습니다.
+CAM은 이미지 분류 모델로 사진을 분류할 때 사진의 어느 부분이 영향력을 끼치는지를 추출할 수 있는 방법론입니다.
+다만 이 방법론을 사용하기 위해서는 [논문에서 제시한 것](https://arxiv.org/abs/1512.04150)처럼 모델의 구조 변경이 필요하기 때문에 이미 학습한 모델은 구조를 변경한 후 재학습이 필요합니다. 
+또한 이러한 구조는 <u>성능을 희생이 필요</u>하다는 단점이 존재합니다.
+
+다행히 CAM방법론이 제시된 다음해에 모델의 구조를 변경하지 않으면서 CAM을 사용할 수 있는 방법론이 ICCV, 2017 에서 공개되었습니다.
+오늘 포스팅은 모델의 구조를 변경하지 않으면서 CAM을 사용할 수 있는 방법론에 대해 다룬 논문인 `Grad-CAM`을 리뷰하도록 하겠습니다.
+이 글은 [Visual Explanations from Deep Networks via Gradient-based Localization 논문](https://arxiv.org/abs/1610.02391) 을 참고하여 정리하였음을 먼저 밝힙니다.
+논문 그대로를 리뷰하기보다는 *생각을 정리하는 목적으로 제작*하고 있기 때문에 실제 내용과 다른점이 존재할 수 있습니다. 
+혹시 제가 잘못 알고 있는 점이나 보안할 점이 있다면 댓글 부탁드립니다.
+
+
+#### Short Summary
+이 논문의 큰 특징 3가지는 아래와 같습니다.
+
+1. 모델의 구조를 변경하지 않으면서 <u>객체의 위치를 추출하는 방법</u>인 **Grad-CAM(Class Activation Mapping)** 을 제시합니다.
+2. 
+
+### CAM 적용방법
+Grad-CAM에 대해 리뷰하기 전에 기존 CAM의 특징과 적용방법에 대해서 알아 보겠습니다.
+CAM의 목표는 이미지 분류 문제를 학습한 모델을 이용하여 분류를 할 때 모델은 이미지의 어느 부분을 보는지를 표시한 Class Activation MAP을 추출하는 것입니다.
+이는 학습된 모델의 weight($w_k^c$)와 이미지를 모델에 넣어 생성된 feature map($A_{i,j}^k$)을 이용하여 만들 수 있습니다.
+
+![](/img/in-post/2020/2020-10-14/cam_example.png)
+<center>CAM 구조 예시</center>
+
+위 그림에서 처럼 이미지를 넣으면 모델의 forward pass에 따라 feature map($A_{i,j}^k$)이 생성됩니다.
+이 feature map은 **Global Average Pooling(GAP)** layer와 연결되어 있고 이후 한번에 FC layer + softmax함수를 거쳐 각 class 확률을 출력합니다.
+FC layer가 의미하는 것은 각 feature map($A_{i,j}^k$)이 class($c$)에 얼마나 영향을 미치는지를 나타내는 weight($w_k^c$)와 같습니다.
+따라서 feature map($A_{i,j}^k$)와 weight($w_k^c$) 을 이용하여 좌표($i, j$)가 특정 class($c$)에 영향을 미치는 정도($M_{x,y}^c$)를 수식으로 나타내면 아래와 같습니다.
+
+<center>$F_k = \frac{1}{Z} \sum_{x,y} A_{i,j}^k$</center>
+<center>$Y^c = \sum_k w_k^c F_k$</center>
+<center>$Y^c = \sum_k w_k^c \frac{1}{Z} \sum_{x,y} A_{i,j}^k$</center>
+<center>$Y^c = \sum_{x,y} \frac{1}{Z} \sum_k w_k^c A_{i,j}^k$</center>
+<center>$Y_c = \sum_{i,j} M_{x,y}^c$</center>
+
+$A_{i,j}^k$ : feature map k의 가로($x$), 세로($y$)에 해당하는 값  
+$F_k$ : feature $k$의 Global Average Pooling 값 
+$k$ : feature map의 index  
+$i, j$ : feature map의 가로, 세로 좌표  
+$w_k^c$ : feature map $k$가 class $c$에 기여하는 weight
+$M_{x,y}^c$ : 좌표 $i$, $j$의 class $c$에 대한 영향력(class activation value)  
+
+즉 CAM인 $M_{x,y}^c$는 weights($w_k^c$)와 $F_k로 이루어져 있음을 알 수 있습니다.
+
+### Grad-CAM 적용방법
+위 수식처럼 CAM을 구하려면 구조적으로 $w_k^c$가 바로 추출되어야 합니다.
+즉 GAP 이후 FC layer 한개만 연결되어 있는 형태여야만 위 수식을 이용하여 CAM을 추출할 수 있습니다.
+따라서 CAM 논문에서는 CAM을 사용하기 위해서는 모델을 특정구조로 변경해야 한다고 명시합니다.
+
+![](/img/in-post/2020/2020-10-14/cam_example.png)
+<center>CAM 구조 예시</center>
+
+CAM과는 달리 Grad-CAM은 CNN을 사용한 일반적인 모든 구조에서 CAM을 활용할 수 있는 방법을 제시합니다.
+바로 weights에 해당하는 부분을 gradient로 대채함으로써 모든 구조에서 특정 class에 feature map 미치는 영향력를 구할 수 있습니다.
+
+
+
+
+
+
+
+  
+Grad-CAM
+
+
+
+
+Grad-CAM이란 CAM의 일반화 과정으로 이해 할 수 있습니다.
+
