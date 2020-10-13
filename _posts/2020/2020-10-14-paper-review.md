@@ -49,14 +49,15 @@ CAM의 목표는 이미지 분류 문제를 학습한 모델을 이용하여 분
 FC layer가 의미하는 것은 각 feature map($A_{i,j}^k$)이 class($c$)에 얼마나 영향을 미치는지를 나타내는 weight($w_k^c$)와 같습니다.
 따라서 feature map($A_{i,j}^k$)와 weight($w_k^c$) 을 이용하여 좌표($i, j$)가 특정 class($c$)에 영향을 미치는 정도($M_{x,y}^c$)를 수식으로 나타내면 아래와 같습니다.
 
-<center>$F_k = \frac{1}{Z} \sum_{x,y} A_{i,j}^k$</center>
-<center>$Y^c = \sum_k w_k^c F_k$</center>
+<center>$F^k = \frac{1}{Z} \sum_{x,y} A_{i,j}^k$</center>
+<center>$Y^c = \sum_k w_k^c F^k$</center>
 <center>$Y^c = \sum_k w_k^c \frac{1}{Z} \sum_{x,y} A_{i,j}^k$</center>
 <center>$Y^c = \sum_{x,y} \frac{1}{Z} \sum_k w_k^c A_{i,j}^k$</center>
-<center>$Y_c = \sum_{i,j} M_{x,y}^c$</center>
+<center>$Y^c = \sum_{x,y} M_{x,y}^c$</center>
 
 $A_{i,j}^k$ : feature map k의 가로($x$), 세로($y$)에 해당하는 값  
-$F_k$ : feature $k$의 Global Average Pooling 값 
+$F^k$ : feature $k$의 Global Average Pooling 값 
+$Y^c$ : class $c$에 대한 score
 $k$ : feature map의 index  
 $i, j$ : feature map의 가로, 세로 좌표  
 $w_k^c$ : feature map $k$가 class $c$에 기여하는 weight
@@ -65,15 +66,19 @@ $M_{x,y}^c$ : 좌표 $i$, $j$의 class $c$에 대한 영향력(class activation 
 즉 CAM인 $M_{x,y}^c$는 weights($w_k^c$)와 $F_k로 이루어져 있음을 알 수 있습니다.
 
 ### Grad-CAM 적용방법
-위 수식처럼 CAM을 구하려면 구조적으로 $w_k^c$가 바로 추출되어야 합니다.
+위 수식처럼 CAM을 구하려면 특정 구조로부터 $w_k^c$가 추출되어야 합니다.
 즉 GAP 이후 FC layer 한개만 연결되어 있는 형태여야만 위 수식을 이용하여 CAM을 추출할 수 있습니다.
 따라서 CAM 논문에서는 CAM을 사용하기 위해서는 모델을 특정구조로 변경해야 한다고 명시합니다.
 
-![](/img/in-post/2020/2020-10-14/cam_example.png)
+![](/img/in-post/2020/2020-10-14/grad_cam_example.png)
 <center>CAM 구조 예시</center>
 
 CAM과는 달리 Grad-CAM은 CNN을 사용한 일반적인 모든 구조에서 CAM을 활용할 수 있는 방법을 제시합니다.
 바로 weights에 해당하는 부분을 gradient로 대채함으로써 모든 구조에서 특정 class에 feature map 미치는 영향력를 구할 수 있습니다.
+
+<center>$\frac{\dv Y^c}{\dv F^k}$</center>
+
+분류모델의 output인 class score($Y^c$)를 feature의 average pooling 값인 $F^k$로 미분하여 gradint를 추출하면 위와 같이 표현됩니다.
 
 
 
