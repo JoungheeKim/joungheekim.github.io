@@ -80,15 +80,18 @@ Grad-CAM에서는 weights에 해당하는 gradient를 다음과 같이 정의합
 <center>$w_k^c = \sum_{i,j} \frac{\partial Y^c}{\partial A_{i,j}^k}$</center>
  
 $Y^c$는 특정 class c의 score이고 이를 feature map의 각 부분($A_{i,j}^k$)에 대하여 미분한 다음 pixcel($i, j$)에 대하여 모두 더하면 feature map $k$가 class $c$에 미치는 영향인 $w_k^c$를 추출할 수 있습니다.
-따라서 CAM에서 정의한 $M_{i,j}^c$를 다시 풀어쓰면
+따라서 CAM에서 정의한 $M_{i,j}^c$를 다시 풀어쓰면 아래와 같습니다. 
 
 <center>$M_{i,j}^c = \frac{1}{Z} \sum_k w_k^c A_{i,j}^k$</center>
 <center>$M_{i,j}^c = \frac{1}{Z} \sum_k A_{i,j}^k \sum_{i,j} \frac{\partial Y^c}{\partial A_{i,j}^k $</center>
 <center>$M_{i,j}^c = \sum_k a_k^c A_{i,j}^k $</center>
 <center>$a_k^c = \frac{1}{Z} \frac{\partial Y^c}{\partial A_{i,j}^k $</center>
+$a_k^c$ = $w_k^c$를 대채한 backpropagating gradients
 
+논문에서는 이미지에서 특정 클래스에 긍정적인 영향을 미치는 부분에만 관심이 있으므로 ReLU 비선형 함수를 적용하여 Grad-CAM을 구성한다고 합니다.
+따라서 최종적으로 추출된 Grad-CAM의 식은 아래와 같습니다.
 
-
+<center>$L_{Grad_CAM}^c - ReLU(M_{i,j}^c) = ReLU(\sum_k a_k^c A_{i,j}^k)$</center>
 
 
 #### Grad-CAm 증명
