@@ -85,7 +85,7 @@ $Y^c$는 특정 class c의 score이고 이를 feature map의 각 부분($A_{i,j}
 <center>$M_{i,j}^c = \frac{1}{Z} \sum_k w_k^c A_{i,j}^k$</center>
 <center>$M_{i,j}^c = \frac{1}{Z} \sum_k A_{i,j}^k \sum_{i,j} \frac{\partial Y^c}{\partial A_{i,j}^k}$</center>
 <center>$M_{i,j}^c = \sum_k a_k^c A_{i,j}^k $</center>
-<center>$a_k^c = \frac{1}{Z} \frac{\partial Y^c}{\partial A_{i,j}^k} $</center>
+<center>$a_k^c = \frac{1}{Z} \sum_{i,j} \frac{\partial Y^c}{\partial A_{i,j}^k} $</center>
 $a_k^c$ : $w_k^c$를 대채한 gradients
 
 논문에서는 이미지에서 특정 클래스에 긍정적인 영향을 미치는 부분에만 관심이 있으므로 ReLU 비선형 함수를 적용하여 Grad-CAM을 구성한다고 합니다.
@@ -98,7 +98,7 @@ $a_k^c$ : $w_k^c$를 대채한 gradients
 Grad-CAM은 CAM의 일반화한 case입니다. 이를 증명하는 과정은 다음과 같습니다.
 분류모델의 output인 class score($Y^c$)를 feature의 average pooling 값인 $F^k$로 미분하여 gradint를 나타내면 아래와 같은 $A_{i,j}^k$에 대한 식으로 표현됩니다.
 
-<center>$\frac{\partial Y^c}{\partial F^k} = \frac{\frac{\partial Y^c}{\partial A_{i,j}^k}}{\frac{\partial F^k}{\partial A_{i,j}^k}}$</center>
+<center>$\frac{\partial Y^c}{\partial F^k} = \frac{\partial Y^c / \partial A_{i,j}^k}{\partial F^k / \partial A_{i,j}^k}$</center>
 
 $\frac{\partial F^k}{\partial A_{i,j}^k} = \frac{1}{Z}$ 이고, $\frac{\partial Y^c}{\partial F^k} = w_k^c$ 이므로 아래와 같은 식으로 변형이 가능합니다.
 
