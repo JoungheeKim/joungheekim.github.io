@@ -34,9 +34,10 @@ CAM은 이미지 분류 모델로 사진을 분류할 때 사진의 어느 부�
 이 논문의 큰 특징 3가지는 아래와 같습니다.
 
 1. 모델의 구조를 변경하지 않으면서 <u>객체의 위치를 추출하는 방법</u>인 **Grad-CAM** 을 제시합니다.
-2. 이미지와 같은 해상도에서 
+2. 높은 해상도의 이미지에서 <u>분류에 영향을 주는 pixcel을 추출할 수 있는 방법</u>인 **Guided Grad-CAM** 을 제시합니다.
+3. 이미지에서 모델의 score에 영향을 주는 지역을 추출할 수 있는 새로운 해석 방식을 제시합니다.    
 
-### CAM 적용방법
+### [1] CAM 적용방법
 Grad-CAM에 대해 리뷰하기 전에 기존 CAM의 특징과 적용방법에 대해서 알아 보겠습니다.
 CAM의 목표는 이미지 분류 문제를 학습한 모델을 이용하여 분류를 할 때 모델은 이미지의 어느 부분을 보는지를 표시한 Class Activation MAP을 추출하는 것입니다.
 이는 학습된 모델의 weight($w_k^c$)와 이미지를 모델에 넣어 생성된 feature map($A_{i,j}^k$)을 이용하여 만들 수 있습니다.
@@ -68,7 +69,7 @@ $M_{i,j}^c$ : 좌표 $i$, $j$의 class $c$에 대한 영향력(class activation 
 ![](/img/in-post/2020/2020-10-14/cam_detail.png)
 <center><b>CAM 계산 방법 예시</b></center>
 
-### Grad-CAM 적용방법
+### [2] Grad-CAM 적용방법
 위 수식처럼 CAM을 구하려면 특정 구조로부터 $w_k^c$가 추출되어야 합니다.
 즉 GAP 이후 FC layer 한개만 연결되어 있는 형태여야만 위 수식을 이용하여 CAM을 추출할 수 있습니다.
 따라서 CAM 논문에서는 CAM을 사용하기 위해서는 모델을 특정구조로 변경해야 한다고 명시합니다.
@@ -97,7 +98,7 @@ $a_k^c$ : $w_k^c$를 대채한 gradients
 <center>$L_{Grad_CAM}^c = ReLU(M_{i,j}^c) = ReLU(\sum_k a_k^c A_{i,j}^k)$</center>
 
 
-#### Grad-CAM 증명
+##### Grad-CAM 증명
 Grad-CAM은 CAM의 **일반화한 방법**입니다. 이를 증명하는 과정은 다음과 같습니다.
 분류모델의 output인 class score($Y^c$)를 feature의 average pooling 값인 $F^k$로 미분하여 gradint를 나타내면 아래와 같은 $A_{i,j}^k$에 대한 식으로 표현됩니다.
 
@@ -122,7 +123,7 @@ CAM에서 제안한 Global Average Pooling(GAP)가 적용된 구조에서 <u>Gra
 즉 CAM은 특정 구조에서 Grad-CAM을 구하는 방법으로 해석할 수 있으므로 Grad-CAM은 CAM의 **일반화 방법**이라고 논문에서 주장합니다.
 
 
-### Guided Grad-CAM 적용방법
+### [3] Guided Grad-CAM 적용방법
 ![](/img/in-post/2020/2020-10-14/guided_grad_cam_example.png)
 <center><b>Guided Grad-CAM 예시</b></center>
 
@@ -141,6 +142,13 @@ Guided Backpropagation 핵심은 backpropation 하기전에 feature map에서 0 
 Guided Backpropagation에서 추출한 image map과 Grad-CAM에서 추출한 image map은 해상도(크기)가 다르기 때문에 해상도를 맞춰야 합니다.
 Grad-CAM으로부터 추출된 image map의 비율을 증가시켜 원래 이미지만큼 확장합니다.
 그 다음 Guided Backpropagation을 통해 생성된 image map과 element-wise 곱을 통해 Guided Grad-CAM image map을 추출할 수 있습니다.
+
+## 결론 및 개인적인 생각
+CAM 논문은 구조적 변경이 필요하기 때문에 사용하기 껄끄러운 면이 있었습니다.
+ResNet은 바로 적용이 가능하더라도 그 이이외에 GoogleNet, VGG 등은 CAM 논문에서 제시한 구조를 갖고 있지 않았기 때문입니다.
+이러한 문제점을 모두 해결한 재미있는 논문이라고 생각합니다.
+CNN이 들어간 새로운 모델을 개발했을때 모델의 성능 평가 뿐만아니라 시각화를 통해 insight를 얻을 수 있을 것 같아 활용성이 높아보입니다.
+> [뛰어난 구현체](https://github.com/jacobgil/pytorch-grad-cam)가 있으므로 바로 적용하여 시각화 할 수 있는 장점을 갖고 있습니다.
 
 
 ## Reference
