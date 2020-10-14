@@ -131,7 +131,7 @@ Grad-CAM은 이미지에서 클래스에 영향을 미치는 부분을 찾아낼
 이를 Guided Grad-CAM이라고 지칭하며 원래 이미지와 같은 해상도에서 이미지에 영향을 미치는 부분을 시각화 할 수 있습니다.
 
 ![](/img/in-post/2020/2020-10-14/guided_backpropagation.png)
-<center>Guided Backpropagation 예시<a href="https://arxiv.org/abs/1412.6806">(출처)</a></center>
+<center><b>Guided Backpropagation 예시</b><a href="https://arxiv.org/abs/1412.6806">(출처)</a></center>
 
 위 그림은 **[Striving for Simplicity: The All Convolutional Net 논문](https://arxiv.org/abs/1412.6806)** 에서 제시한 Guided Backpropagation 방법론입니다.
 backpropagation을 이용하여 원본 이미지로부터 highlight된 부분을 추출하는 방법에 대해 다루고 있습니다.
