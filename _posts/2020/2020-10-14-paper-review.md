@@ -21,11 +21,11 @@ tags:
 이러한 문제를 해결하고자 이미지 분야에서는 [Class Activation Mapping(CAM)](https://joungheekim.github.io/2020/09/29/paper-review/) 이라는 방법이 고안되었습니다.
 CAM은 이미지 분류 모델로 사진을 분류할 때 사진의 어느 부분이 영향력을 끼치는지를 추출할 수 있는 방법론입니다.
 다만 이 방법론을 사용하기 위해서는 [논문에서 제시한 것](https://arxiv.org/abs/1512.04150)처럼 모델의 구조 변경이 필요하기 때문에 이미 학습한 모델은 구조를 변경한 후 재학습이 필요합니다. 
-또한 이러한 구조는 <u>성능을 희생이 필요</u>하다는 단점이 존재합니다.
+또한 구조를 변경함으로써 <u>성능이 미미하게 하락</u>한다는 단점이 존재합니다.
 
-다행히 CAM방법론이 제시된 다음해에 모델의 구조를 변경하지 않으면서 CAM을 사용할 수 있는 방법론이 ICCV, 2017 에서 공개되었습니다.
+다행히 CAM방법론이 제시된 다음해에 <u>모델의 구조를 변경하지 않으면서 CAM을 사용할 수 있는 방법론</u>이 **ICCV(2017)** 에서 공개되었습니다.
 오늘 포스팅은 모델의 구조를 변경하지 않으면서 CAM을 사용할 수 있는 방법론에 대해 다룬 논문인 `Grad-CAM`을 리뷰하도록 하겠습니다.
-이 글은 [Visual Explanations from Deep Networks via Gradient-based Localization 논문](https://arxiv.org/abs/1610.02391) 을 참고하여 정리하였음을 먼저 밝힙니다.
+이 글은 **[Grad-CAM:Visual Explanations from Deep Networks via Gradient-based Localization 논문](https://arxiv.org/abs/1610.02391)** 을 참고하여 정리하였음을 먼저 밝힙니다.
 논문 그대로를 리뷰하기보다는 *생각을 정리하는 목적으로 제작*하고 있기 때문에 실제 내용과 다른점이 존재할 수 있습니다. 
 혹시 제가 잘못 알고 있는 점이나 보안할 점이 있다면 댓글 부탁드립니다.
 
@@ -63,7 +63,7 @@ $i, j$ : feature map의 가로, 세로 좌표
 $w_k^c$ : feature map $k$가 class $c$에 기여하는 weight  
 $M_{i,j}^c$ : 좌표 $i$, $j$의 class $c$에 대한 영향력(class activation value)    
 
-즉 CAM인 $M_{i,j}^c$는 weights($w_k^c$)와 $F_k$로 이루어져 있음을 알 수 있습니다.
+즉 CAM인 $M_{i,j}^c$는 $w_k^c$와 $A_{i,j}^k$로 이루어져 있음을 알 수 있습니다.
 
 ### Grad-CAM 적용방법
 위 수식처럼 CAM을 구하려면 특정 구조로부터 $w_k^c$가 추출되어야 합니다.
@@ -95,7 +95,7 @@ $a_k^c$ : $w_k^c$를 대채한 gradients
 
 
 #### Grad-CAM 증명
-Grad-CAM은 CAM의 일반화한 case입니다. 이를 증명하는 과정은 다음과 같습니다.
+Grad-CAM은 CAM의 **일반화한 방법**입니다. 이를 증명하는 과정은 다음과 같습니다.
 분류모델의 output인 class score($Y^c$)를 feature의 average pooling 값인 $F^k$로 미분하여 gradint를 나타내면 아래와 같은 $A_{i,j}^k$에 대한 식으로 표현됩니다.
 
 <center>$\frac{\partial Y^c}{\partial F^k} = \frac{\partial Y^c / \partial A_{i,j}^k}{\partial F^k / \partial A_{i,j}^k}$</center>
@@ -110,13 +110,32 @@ $Z$와 $w_k^c$는 pixcel($i, j$)와는 무관하므로 위의 식을 풀어서 �
 <center>$\sum_{i,j} w_k^c = \sum_{i,j} \frac{\partial Y^c}{\partial A_{i,j}^k} \cdot Z $</center>
 <center>$\sum_{i,j} w_k^c = Z \sum_{i,j} \frac{\partial Y^c}{\partial A_{i,j}^k} $</center>
 
-$Z=\sum_{i,j}1$을 이용하여 정리하면 $w_c^k$와 gradient의 관계식을 추출할 수 있습니다.
+($Z=\sum_{i,j}1$)을 이용하여 정리하면 $w_c^k$와 gradient의 관계식을 추출할 수 있습니다.
 
 <center>$Z w_k^c = Z \sum_{i,j} \frac{\partial Y^c}{\partial A_{i,j}^k} $</center>
 <center>$w_k^c = \sum_{i,j} \frac{\partial Y^c}{\partial A_{i,j}^k} $</center>
 
-CAM에서 제안한 Global Average Pooling(GAP)가 적용된 구조에서 Grad-CAM을 구하는 것과 CAM을 구하는 것은 동일하다는 것을 알 수 있습니다.
-즉 CAM은 특정 구조에서 Grad-CAM을 구하는 방법으로 해석할 수 있으므로 Grad-CAM은 CAM의 일반화한 방법이라고 논문에서 주장합니다.
+CAM에서 제안한 Global Average Pooling(GAP)가 적용된 구조에서 <u>Grad-CAM을 구하는 것과 CAM을 구하는 것은 동일</u>하다는 것을 알 수 있습니다.
+즉 CAM은 특정 구조에서 Grad-CAM을 구하는 방법으로 해석할 수 있으므로 Grad-CAM은 CAM의 **일반화 방법**이라고 논문에서 주장합니다.
+
+
+### Guided Grad-CAM 적용방법
+Grad-CAM은 이미지에서 클래스에 영향을 미치는 부분을 찾아낼 수 있지만 CNN layer의 feature map에 기초하여 추출되므로 CAM 이미지는 원래 이미지보다 해상도가 낮다는 단점을 갖고 있습니다.
+따라서 논문에서는 class score($Y^c$)를 이용하여 원래 이미지에 gradient를 시각화 하는 다른 방법론(Guided Backpropagation, Deconvolution)들을 Grad-CAM에 함께 적용합니다.
+이를 Guided Grad-CAM이라고 지칭하며 원래 이미지와 같은 해상도에서 이미지에 영향을 미치는 부분을 시각화 할 수 있습니다.
+
+![](/img/in-post/2020/2020-10-14/guided_backpropagation.png)
+<center>Guided Backpropagation 예시<a href="https://arxiv.org/abs/1412.6806">(출처)</a></center>
+
+위 그림은 **[Striving for Simplicity: The All Convolutional Net 논문](https://arxiv.org/abs/1412.6806)** 에서 제시한 Guided Backpropagation 방법론입니다.
+backpropagation을 이용하여 원본 이미지로부터 highlight된 부분을 추출하는 방법에 대해 다루고 있습니다.
+Guided Backpropagation 핵심은 backpropation 하기전에 feature map에서 0 이하인 부분을 제거 함으로써 positive value만을 이용하여 backpropagation value를 추출합니다.
+즉 음수에 해당하는 gradient를 사용하지 않음으로써 깨끗한 이미지를 추출하는 방법입니다.
+
+Guided Backpropagation에서 추출한 image map과 Grad-CAM에서 추출한 image map은 해상도(크기)가 다르기 때문에 해상도를 맞춰야 합니다.
+Grad-CAM으로부터 추출된 image map의 비율을 증가시켜 원래 이미지만큼 확장합니다.
+그 다음 Guided Backpropagation을 통해 생성된 image map과 element-wise 곱을 통해 Guided Grad-CAM image map을 추출할 수 있습니다.
+
 
 
 
