@@ -75,18 +75,45 @@ $M_{i,j}^c$ : 좌표 $i$, $j$의 class $c$에 대한 영향력(class activation 
 
 CAM과는 달리 Grad-CAM은 CNN을 사용한 일반적인 모든 구조에서 CAM을 활용할 수 있는 방법을 제시합니다.
 바로 weights에 해당하는 부분을 gradient로 대채함으로써 모든 구조에서 특정 class에 feature map 미치는 영향력를 구할 수 있습니다.
+Grad-CAM에서는 weights에 해당하는 gradient를 다음과 같이 정의합니다.
+
+<center>$w_k^c = \sum_{i,j} \frac{\partial Y^c}{\partial A_{i,j}^k}$</center>
+ 
+$Y^c$는 특정 class c의 score이고 이를 feature map의 각 부분($A_{i,j}^k$)에 대하여 미분한 다음 pixcel($i, j$)에 대하여 모두 더하면 feature map $k$가 class $c$에 미치는 영향인 $w_k^c$를 추출할 수 있습니다.
+따라서 CAM에서 정의한 $M_{i,j}^c$를 다시 풀어쓰면
+
+<center>$M_{i,j}^c = \frac{1}{Z} \sum_k w_k^c A_{i,j}^k$</center>
+<center>$M_{i,j}^c = \frac{1}{Z} \sum_k A_{i,j}^k \sum_{i,j} \frac{\partial Y^c}{\partial A_{i,j}^k $</center>
+<center>$M_{i,j}^c = \sum_k a_k^c A_{i,j}^k $</center>
+<center>$a_k^c = \frac{1}{Z} \frac{\partial Y^c}{\partial A_{i,j}^k $</center>
+
+
+
+
+
+#### Grad-CAm 증명
+Grad-CAM은 CAM의 일반화한 case입니다.
+이를 증명하는 과정은 다음과 같습니다.
+
 $w_k^c$를 구하는 과정은 아래와 같습니다.
 
 분류모델의 output인 class score($Y^c$)를 feature의 average pooling 값인 $F^k$로 미분하여 gradint를 나타내면 아래와 같은 $A_{i,j}^k$에 대한 식으로 표현됩니다.
+
 <center>$\frac{\partial Y^c}{\partial F^k} = \frac{\frac{\partial Y^c}{\partial A_{i,j}^k}}{\frac{\partial F^k}{\partial A_{i,j}^k}}$</center>
+
 $\frac{\partial F^k}{\partial A_{i,j}^k} = \frac{1}{Z}$ 이고, $\frac{\partial Y^c}{\partial F^k} = w_k^c$ 이므로 아래와 같은 식으로 변형이 가능합니다.
+
 <center>$\frac{\partial Y^c}{\partial F^k} = \frac{\partial Y^c}{\partial A_{i,j^k} \cdot Z}$</center> 
+
 $Z$와 $w_k^c$는 pixcel($i, j$)와는 무관하므로 위의 식을 풀어서 쓰면 $w_k^c$와 gradient 사이의 관계로 변형이 가능합니다.
+
 <center>$\frac{\partial Y^c}{\partial F^k} = \frac{\partial Y^c}{\partial A_{i,j^k} \cdot Z}$</center>
 
 
 
 
+## REference
+- [[BLOG]](https://github.com/jacobgil/pytorch-grad-cam) Grad-CAM implementation in Pytorch
 
 
 
