@@ -16,7 +16,7 @@ tags:
 하지만 현재 대부분 AI는 딥러닝 기반 모델이므로 오작동하는 이유에 대해서 파악하기 힘들다는 단점을 갖고 있습니다.
 
 ![](/img/in-post/2020/2020-10-14/cam_sample.png)
-<center>CAM 예시</center>
+<center><b>CAM 예시</b></center>
 
 이러한 문제를 해결하고자 이미지 분야에서는 [Class Activation Mapping(CAM)](https://joungheekim.github.io/2020/09/29/paper-review/) 이라는 방법이 고안되었습니다.
 CAM은 이미지 분류 모델로 사진을 분류할 때 사진의 어느 부분이 영향력을 끼치는지를 추출할 수 있는 방법론입니다.
@@ -33,8 +33,8 @@ CAM은 이미지 분류 모델로 사진을 분류할 때 사진의 어느 부�
 #### Short Summary
 이 논문의 큰 특징 3가지는 아래와 같습니다.
 
-1. 모델의 구조를 변경하지 않으면서 <u>객체의 위치를 추출하는 방법</u>인 **Grad-CAM(Class Activation Mapping)** 을 제시합니다.
-2. 
+1. 모델의 구조를 변경하지 않으면서 <u>객체의 위치를 추출하는 방법</u>인 **Grad-CAM** 을 제시합니다.
+2. 이미지와 같은 해상도에서 
 
 ### CAM 적용방법
 Grad-CAM에 대해 리뷰하기 전에 기존 CAM의 특징과 적용방법에 대해서 알아 보겠습니다.
@@ -42,7 +42,7 @@ CAM의 목표는 이미지 분류 문제를 학습한 모델을 이용하여 분
 이는 학습된 모델의 weight($w_k^c$)와 이미지를 모델에 넣어 생성된 feature map($A_{i,j}^k$)을 이용하여 만들 수 있습니다.
 
 ![](/img/in-post/2020/2020-10-14/cam_example.png)
-<center>CAM 구조 예시</center>
+<center><b>CAM 구조 예시</b></center>
 
 위 그림에서 처럼 이미지를 넣으면 모델의 forward pass에 따라 feature map($A_{i,j}^k$)이 생성됩니다.
 이 feature map은 **Global Average Pooling(GAP)** layer와 연결되어 있고 이후 한번에 FC layer + softmax함수를 거쳐 각 class 확률을 출력합니다.
@@ -65,13 +65,16 @@ $M_{i,j}^c$ : 좌표 $i$, $j$의 class $c$에 대한 영향력(class activation 
 
 즉 CAM인 $M_{i,j}^c$는 $w_k^c$와 $A_{i,j}^k$로 이루어져 있음을 알 수 있습니다.
 
+![](/img/in-post/2020/2020-10-14/cam_detail.png)
+<center><b>CAM 계산 방법 예시</b></center>
+
 ### Grad-CAM 적용방법
 위 수식처럼 CAM을 구하려면 특정 구조로부터 $w_k^c$가 추출되어야 합니다.
 즉 GAP 이후 FC layer 한개만 연결되어 있는 형태여야만 위 수식을 이용하여 CAM을 추출할 수 있습니다.
 따라서 CAM 논문에서는 CAM을 사용하기 위해서는 모델을 특정구조로 변경해야 한다고 명시합니다.
 
 ![](/img/in-post/2020/2020-10-14/grad_cam_example.png)
-<center>Grad-CAM 구조 예시</center>
+<center><b>Grad-CAM 구조 예시</b></center>
 
 CAM과는 달리 Grad-CAM은 CNN을 사용한 일반적인 모든 구조에서 CAM을 활용할 수 있는 방법을 제시합니다.
 바로 weights에 해당하는 부분을 gradient로 대채함으로써 모든 구조에서 특정 class에 feature map 미치는 영향력를 구할 수 있습니다.
@@ -120,6 +123,9 @@ CAM에서 제안한 Global Average Pooling(GAP)가 적용된 구조에서 <u>Gra
 
 
 ### Guided Grad-CAM 적용방법
+![](/img/in-post/2020/2020-10-14/guided_grad_cam_example.png)
+<center><b>Guided Grad-CAM 예시</b></center>
+
 Grad-CAM은 이미지에서 클래스에 영향을 미치는 부분을 찾아낼 수 있지만 CNN layer의 feature map에 기초하여 추출되므로 CAM 이미지는 원래 이미지보다 해상도가 낮다는 단점을 갖고 있습니다.
 따라서 논문에서는 class score($Y^c$)를 이용하여 원래 이미지에 gradient를 시각화 하는 다른 방법론(Guided Backpropagation, Deconvolution)들을 Grad-CAM에 함께 적용합니다.
 이를 Guided Grad-CAM이라고 지칭하며 원래 이미지와 같은 해상도에서 이미지에 영향을 미치는 부분을 시각화 할 수 있습니다.
@@ -137,21 +143,9 @@ Grad-CAM으로부터 추출된 image map의 비율을 증가시켜 원래 이미
 그 다음 Guided Backpropagation을 통해 생성된 image map과 element-wise 곱을 통해 Guided Grad-CAM image map을 추출할 수 있습니다.
 
 
-
-
-
 ## Reference
-- [[BLOG]](https://github.com/jacobgil/pytorch-grad-cam) Grad-CAM implementation in Pytorch
-
-
-
-
-
-  
-Grad-CAM
-
-
-
-
-Grad-CAM이란 CAM의 일반화 과정으로 이해 할 수 있습니다.
+- [[PAPER]](https://arxiv.org/abs/1610.02391) Grad-CAM : Visual Explanations from Deep Networks via Gradient-based Localization, ICCV 2017
+- [[PAPER]](https://arxiv.org/abs/1610.02391) Striving for Simplicity: The All Convolutional Net, ICLR 2015
+- [[BLOG]](https://jsideas.net/grad_cam/) Grad-CAM: 대선주자 얼굴 위치 추적기
+- [[GITHUB]](https://github.com/jacobgil/pytorch-grad-cam) Grad-CAM implementation in Pytorch
 
