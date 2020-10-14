@@ -157,7 +157,6 @@ Counterfactual는 Grad-CAM의 식을 변경하여 추출할 수 있습니다.
  
 <center>$L_{Counterfactual}^c = ReLU(-M_{i,j}^c) = ReLU(\sum_k -a_k^c A_{i,j}^k)$</center>
 
-
 ## 결론 및 개인적인 생각
 CAM 논문은 구조적 변경이 필요하기 때문에 사용하기 껄끄러운 면이 있었습니다.
 ResNet은 바로 적용이 가능하더라도 그 이이외에 GoogleNet, VGG 등은 CAM 논문에서 제시한 구조를 갖고 있지 않았기 때문입니다.
