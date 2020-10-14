@@ -55,15 +55,15 @@ FC layer가 의미하는 것은 각 feature map($A_{i,j}^k$)이 class($c$)에 �
 <center>$Y^c = \sum_{i,j} \frac{1}{Z} \sum_k w_k^c A_{i,j}^k$</center>
 <center>$Y^c = \sum_{i,j} M_{i,j}^c$</center>
 
-$A_{i,j}^k$ : feature map k의 가로($i$), 세로($j$)에 해당하는 값  
-$F^k$ : feature $k$의 Global Average Pooling 값 
-$Y^c$ : class $c$에 대한 score
-$k$ : feature map의 index  
-$i, j$ : feature map의 가로, 세로 좌표  
-$w_k^c$ : feature map $k$가 class $c$에 기여하는 weight
-$M_{i,j}^c$ : 좌표 $i$, $j$의 class $c$에 대한 영향력(class activation value)  
+$A_{i,j}^k$ : feature map k의 가로($i$), 세로($j$)에 해당하는 값    
+$F^k$ : feature $k$의 Global Average Pooling 값   
+$Y^c$ : class $c$에 대한 score  
+$k$ : feature map의 index    
+$i, j$ : feature map의 가로, 세로 좌표    
+$w_k^c$ : feature map $k$가 class $c$에 기여하는 weight  
+$M_{i,j}^c$ : 좌표 $i$, $j$의 class $c$에 대한 영향력(class activation value)    
 
-즉 CAM인 $M_{i,j}^c$는 weights($w_k^c$)와 $F_k로 이루어져 있음을 알 수 있습니다.
+즉 CAM인 $M_{i,j}^c$는 weights($w_k^c$)와 $F_k$로 이루어져 있음을 알 수 있습니다.
 
 ### Grad-CAM 적용방법
 위 수식처럼 CAM을 구하려면 특정 구조로부터 $w_k^c$가 추출되어야 합니다.
@@ -86,36 +86,42 @@ $Y^c$는 특정 class c의 score이고 이를 feature map의 각 부분($A_{i,j}
 <center>$M_{i,j}^c = \frac{1}{Z} \sum_k A_{i,j}^k \sum_{i,j} \frac{\partial Y^c}{\partial A_{i,j}^k}$</center>
 <center>$M_{i,j}^c = \sum_k a_k^c A_{i,j}^k $</center>
 <center>$a_k^c = \frac{1}{Z} \frac{\partial Y^c}{\partial A_{i,j}^k} $</center>
-$a_k^c$ = $w_k^c$를 대채한 backpropagating gradients
+$a_k^c$ : $w_k^c$를 대채한 gradients
 
 논문에서는 이미지에서 특정 클래스에 긍정적인 영향을 미치는 부분에만 관심이 있으므로 ReLU 비선형 함수를 적용하여 Grad-CAM을 구성한다고 합니다.
 따라서 최종적으로 추출된 Grad-CAM의 식은 아래와 같습니다.
 
-<center>$L_{Grad_CAM}^c - ReLU(M_{i,j}^c) = ReLU(\sum_k a_k^c A_{i,j}^k)$</center>
+<center>$L_{Grad_CAM}^c = ReLU(M_{i,j}^c) = ReLU(\sum_k a_k^c A_{i,j}^k)$</center>
 
 
-#### Grad-CAm 증명
-Grad-CAM은 CAM의 일반화한 case입니다.
-이를 증명하는 과정은 다음과 같습니다.
-
-$w_k^c$를 구하는 과정은 아래와 같습니다.
-
+#### Grad-CAM 증명
+Grad-CAM은 CAM의 일반화한 case입니다. 이를 증명하는 과정은 다음과 같습니다.
 분류모델의 output인 class score($Y^c$)를 feature의 average pooling 값인 $F^k$로 미분하여 gradint를 나타내면 아래와 같은 $A_{i,j}^k$에 대한 식으로 표현됩니다.
 
 <center>$\frac{\partial Y^c}{\partial F^k} = \frac{\frac{\partial Y^c}{\partial A_{i,j}^k}}{\frac{\partial F^k}{\partial A_{i,j}^k}}$</center>
 
 $\frac{\partial F^k}{\partial A_{i,j}^k} = \frac{1}{Z}$ 이고, $\frac{\partial Y^c}{\partial F^k} = w_k^c$ 이므로 아래와 같은 식으로 변형이 가능합니다.
 
-<center>$\frac{\partial Y^c}{\partial F^k} = \frac{\partial Y^c}{\partial A_{i,j^k} \cdot Z}$</center> 
+<center>$\frac{\partial Y^c}{\partial F^k} = \frac{\partial Y^c}{\partial A_{i,j}^k} \cdot Z$</center>
+<center>$w_k^c = \frac{\partial Y^c}{\partial A_{i,j}^k} \cdot Z$</center>  
 
 $Z$와 $w_k^c$는 pixcel($i, j$)와는 무관하므로 위의 식을 풀어서 쓰면 $w_k^c$와 gradient 사이의 관계로 변형이 가능합니다.
 
-<center>$\frac{\partial Y^c}{\partial F^k} = \frac{\partial Y^c}{\partial A_{i,j^k} \cdot Z}$</center>
+<center>$\sum_{i,j} w_k^c = \sum_{i,j} \frac{\partial Y^c}{\partial A_{i,j}^k} \cdot Z $</center>
+<center>$\sum_{i,j} w_k^c = Z \sum_{i,j} \frac{\partial Y^c}{\partial A_{i,j}^k} $</center>
+
+$Z=\sum_{i,j}1$을 이용하여 정리하면 $w_c^k$와 gradient의 관계식을 추출할 수 있습니다.
+
+<center>$Z w_k^c = Z \sum_{i,j} \frac{\partial Y^c}{\partial A_{i,j}^k} $</center>
+<center>$w_k^c = \sum_{i,j} \frac{\partial Y^c}{\partial A_{i,j}^k} $</center>
+
+CAM에서 제안한 Global Average Pooling(GAP)가 적용된 구조에서 Grad-CAM을 구하는 것과 CAM을 구하는 것은 동일하다는 것을 알 수 있습니다.
+즉 CAM은 특정 구조에서 Grad-CAM을 구하는 방법으로 해석할 수 있으므로 Grad-CAM은 CAM의 일반화한 방법이라고 논문에서 주장합니다.
 
 
 
 
-## REference
+## Reference
 - [[BLOG]](https://github.com/jacobgil/pytorch-grad-cam) Grad-CAM implementation in Pytorch
 
 
