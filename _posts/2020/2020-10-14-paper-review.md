@@ -146,7 +146,7 @@ Grad-CAM으로부터 추출된 image map의 비율을 증가시켜 원래 이미
 Grad-CAM을 통해 추출된 부분 이외에 네트워크의 예측에 영향을 미치는 부분을 논문에서는 Counterfactual 라고 명칭합니다.
 
 ![](/img/in-post/2020/2020-10-14/counterfactual_example.png)
-<center><b>Guided Grad-CAM 예시</b></center>
+<center><b>Counterfactual 예시</b></center>
 
 논문에서 제시한 그림을 보면 이미지에 개와 고양이가 있습니다.
 분류모델이 이 그림을 보고 개로 분류할 때 긍정적인 영향을 미치는 부분은 이미지에서 개가 있는 부분입니다.
