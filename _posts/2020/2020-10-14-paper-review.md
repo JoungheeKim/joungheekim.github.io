@@ -34,8 +34,8 @@ CAM은 이미지 분류 모델로 사진을 분류할 때 사진의 어느 부�
 이 논문의 큰 특징 3가지는 아래와 같습니다.
 
 1. 모델의 구조를 변경하지 않으면서 <u>객체의 위치를 추출하는 방법</u>인 **Grad-CAM** 을 제시합니다.
-2. 높은 해상도의 이미지에서 <u>분류에 영향을 주는 pixcel을 추출할 수 있는 방법</u>인 **Guided Grad-CAM** 을 제시합니다.
-3. 이미지에서 모델의 score에 영향을 주는 지역을 추출할 수 있는 새로운 해석 방식을 제시합니다.    
+2. 높은 해상도의 이미지에서 <u>분류에 영향을 주는 pixcel</u>을 추출하는 방법인 **Guided Grad-CAM** 을 제시합니다.
+3. 이미지에서 오분류 확률을 높이는 지역을 추출할 수 있는 **새로운 해석 방식**을 제시합니다.    
 
 ### [1] CAM 적용방법
 Grad-CAM에 대해 리뷰하기 전에 기존 CAM의 특징과 적용방법에 대해서 알아 보겠습니다.
@@ -97,8 +97,7 @@ $a_k^c$ : $w_k^c$를 대채한 gradients
 
 <center>$L_{Grad_CAM}^c = ReLU(M_{i,j}^c) = ReLU(\sum_k a_k^c A_{i,j}^k)$</center>
 
-
-##### Grad-CAM 증명
+##### Grad-CAM 도출 과정
 Grad-CAM은 CAM의 **일반화한 방법**입니다. 이를 증명하는 과정은 다음과 같습니다.
 분류모델의 output인 class score($Y^c$)를 feature의 average pooling 값인 $F^k$로 미분하여 gradint를 나타내면 아래와 같은 $A_{i,j}^k$에 대한 식으로 표현됩니다.
 
@@ -142,6 +141,22 @@ Guided Backpropagation 핵심은 backpropation 하기전에 feature map에서 0 
 Guided Backpropagation에서 추출한 image map과 Grad-CAM에서 추출한 image map은 해상도(크기)가 다르기 때문에 해상도를 맞춰야 합니다.
 Grad-CAM으로부터 추출된 image map의 비율을 증가시켜 원래 이미지만큼 확장합니다.
 그 다음 Guided Backpropagation을 통해 생성된 image map과 element-wise 곱을 통해 Guided Grad-CAM image map을 추출할 수 있습니다.
+
+### [4] Counterfactual 추출방법
+Grad-CAM을 통해 추출된 부분 이외에 네트워크의 예측에 영향을 미치는 부분을 논문에서는 Counterfactual 라고 명칭합니다.
+
+![](/img/in-post/2020/2020-10-14/counterfactual_example.png)
+<center><b>Guided Grad-CAM 예시</b></center>
+
+논문에서 제시한 그림을 보면 이미지에 개와 고양이가 있습니다.
+분류모델이 이 그림을 보고 개로 분류할 때 긍정적인 영향을 미치는 부분은 이미지에서 개가 있는 부분입니다.
+반면에 모델이 이 그림을 개로 분류할 때 부정적인 영향을 미치는 부분은 고양이가 있는 부분입니다.
+
+즉 모델이 특정 클래스로 분류할 때 방해가 되는 부분을 Counterfactual라고 합니다.
+Counterfactual는 Grad-CAM의 식을 변경하여 추출할 수 있습니다.
+ 
+<center>$L_{Counterfactual}^c = ReLU(-M_{i,j}^c) = ReLU(\sum_k -a_k^c A_{i,j}^k)$</center>
+
 
 ## 결론 및 개인적인 생각
 CAM 논문은 구조적 변경이 필요하기 때문에 사용하기 껄끄러운 면이 있었습니다.
