@@ -107,12 +107,12 @@ Location Sensitive Attention 이란 Additive attention mechanism([Bandau Attetni
 <center>$\alpha_{t} = [\alpha_{t, 1}, \alpha_{t, 2}, ... \alpha_{t, n}]$</center>
 <center>$c_{t} = \sum a_{t, i}h_{i} = \alpha_{t}h$</center>
 $W, V$ : 학습이 가능한 matrix weights  
-$w, b$ : 학습이 가능한 bector weights    
-$h_{i}$ : Encoder bi-LSTM에서 생성된 $i$번째 feature
-$d_{t}$ : Decoder LSTM에서 생성된 $t$번째 feature
-$s_{t, i}$ : $t$ 시점에서 hidden $i$ 에 대한 attention score
-$\alpha_{t, i}$ : $t$ 시점에서 hidden $i$ 에 대한 alignment(0~1)
-$c_{t}$ : $t$시점에서 Attetnion 모듈로 부터 추출한 context vector
+$w, b$ : 학습이 가능한 bector weights      
+$h_{i}$ : Encoder bi-LSTM에서 생성된 $i$번째 feature  
+$d_{t}$ : Decoder LSTM에서 생성된 $t$번째 feature  
+$s_{t, i}$ : $t$ 시점에서 hidden $i$ 에 대한 attention score  
+$\alpha_{t, i}$ : $t$ 시점에서 hidden $i$ 에 대한 alignment(0~1)  
+$c_{t}$ : $t$시점에서 Attetnion 모듈로 부터 추출한 context vector  
 
 Addictive Attention 은 Encoder RNN으로부터 생성된 feature($h$)와 Decoder RNN의 한 step 전 결과물($d_{t-1}$) 을 이용하여 attention alignment($\alpha_{t}$)를 구합니다. 
 
@@ -122,8 +122,8 @@ Addictive Attention 은 Encoder RNN으로부터 생성된 feature($h$)와 Decode
 $U$ : 학습이 가능한 matrix weights  
 $F$ : Convolution Filter
 
-Location Sentitive Attention은 이전 시점($t-1$)에서 생성된 attention alignment($\alpah_{t-1}$)를 이용하여 다음 시점($t$) Attention alignment($\alpah_{t}$)를 구할 때 추가로 고려한 형태입니다. 
-k개의 filter를 갖고 있는 1D convolution을 이용하여 Attention alignment($\alpah_{t-1}$)를 확장하여 $f_{i}$ matrix를 생성합니다.
+Location Sentitive Attention은 이전 시점($t-1$)에서 생성된 attention alignment($\alpha_{t-1}$)를 이용하여 다음 시점($t$) Attention alignment($\alpha_{t}$)를 구할 때 추가로 고려한 형태입니다. 
+k개의 filter를 갖고 있는 1D convolution을 이용하여 Attention alignment($\alpha_{t-1}$)를 확장하여 $f_{i}$ matrix를 생성합니다.
 이후 학습이 가능한 weights($U$)와 내적한 후 Addictivae attention의 구성에 포함하여 계산합니다.
 
 >논문에서 Attention과 관련하여 자세한 구조를 설명하고 있지 않습니다.
