@@ -151,12 +151,12 @@ Decoder LSTM에서 생성된 매 시점($t$) vector는 <u>두개로 분기</u>�
 종료 조건의 확률을 계산하는 경로는 Decoder LSTM으로부터 매 시점 생성된 vector를 Fully Connected layer를 통과시킨 후 sigmoid 함수를 취하여 **0에서 1사이의 확률**로 변환합니다.
 이 확률이 **Stop 조건**에 해당하며 사용자가 설정한 threshold를 넘을 시 inference 단계에서 <u>mel-spectrogram 생성을 멈추는 역할</u>을 합니다. 
 
-mel-spectrogram을 생성하는 경로는 Decoder LSTM으로부터 매 시점 생성된 vector와 Attention에서 생성된 context vector를 합친 후 Fully Connected Layer를 통과시킵티다.
+mel-spectrogram을 생성하는 경로는 Decoder LSTM으로부터 매 시점 생성된 vector와 Attention에서 생성된 context vector를 합친 후 Fully Connected Layer를 통과시킵니다.
 이렇게 생성된 mel-vector는 inference 단계에서 Decoder의 <u>다음 시점의 input</u>이 됩니다.
 
 Post-Net은 5개의 1D Convolution Layer로 구성되어 있습니다.
 Convolution Layer는 512개의 filter와 5×1 kernel size를 가지고 있습니다.
-이전 단계에서 생성된 mel-vector는 Post-Net을 통과한 뒤 다시 mel-vector와 구조(Residual Connection)로 이루어져 있습니다.
+이전 단계에서 생성된 mel-vector는 Post-Net을 통과한 뒤 다시 mel-vector와 구조(**Residual Connection**)로 이루어져 있습니다.
 **Post-Net**은 mel-vector를 <u>보정하는 역할</u>을 하며 타코트론2 Task1의 최종 결과물인 mel-spectrogram의 <u>품질을 높이는 역할</u>을 합니다.
 
 #### 1.5 타코트론2 Loss
@@ -168,11 +168,11 @@ Convolution Layer는 512개의 filter와 5×1 kernel size를 가지고 있습니
 
 **Vocoder**는 mel-spectrogram 으로부터 <u>waveform(음성)을 생성</u>하는 모듈을 의미합니다. 
 타코트론2 논문에서는 WaveNet의 구조를 조금 변경한 모델을 Vocoder로 사용합니다.
-[WaveNet 논문](https://arxiv.org/abs/1609.03499) 에서 제시한 모델은 **Softmax 함수**를 이용하여 매 시점 $-2^7$ ~ $2^7$ 사이의 숫자가 나올 확률을 추출하고 waveform 생성합니다.
-이를 수정하여 PixelCNN++ 처럼 [mixture of logistic distribution(MoL)](https://medium.com/@smallfishbigsea/an-explanation-of-discretized-logistic-mixture-likelihood-bdfe531751f0) 을 이용하여 매 시점 $-2^7$ ~ $2^7$ 사이의 숫자가 나올 확률을 생성합니다.
+[WaveNet 논문](https://arxiv.org/abs/1609.03499) 에서 제시한 모델은 **Softmax 함수**를 이용하여 매 시점 $-2^{15}$ ~ $2^{15}+1$ 사이의 숫자가 나올 확률을 추출하고 waveform 생성합니다.
+이를 수정하여 PixelCNN++ 처럼 [mixture of logistic distribution(MoL)](https://medium.com/@smallfishbigsea/an-explanation-of-discretized-logistic-mixture-likelihood-bdfe531751f0) 을 이용하여 매 시점 $-2^{15}$ ~ $2^{15}+1$ 사이의 숫자가 나올 확률을 생성합니다.
 
 위 그림에서는 mel-spectrogram을 이용하여 WaveNet은 **MOL에 사용할 paramter를 생성**합니다.
-생성된 paramter를 이용하여 $-2^7$ ~ $2^7$ 사이의 숫자가 나올 확률인 mixture of logistic distribution를 생성하고 가장 큰 확률을 갖고 있는 값을 이용하여 waveform을 생성합니다.
+생성된 paramter를 이용하여 $-2^{15}$ ~ $2^{15}+1$ 사이의 숫자가 나올 확률인 mixture of logistic distribution를 생성하고 가장 큰 확률을 갖고 있는 값을 이용하여 waveform을 생성합니다.
 
 #### 2.1 WaveNet Loss
 WaveNet으로부터 생성된 waveform과 실제 waveform의 시점 별 **Negative log-likelihood** Loss를 이용하여 모델을 학습합니다.
