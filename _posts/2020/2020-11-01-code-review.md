@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "[코드리뷰]Face Recognition Using with KPCA"
+title:      "[코드리뷰]Face Recognition Using KPCA"
 subtitle:   "Face Recognition Using Kernel Principal Component Analysis"
 mathjax: true
 tags:
@@ -36,11 +36,20 @@ PCA는 데이터의 분산을 최대한 보존하면서 저차원 공간으로 �
 일반적으로 공분산에서 고유벡터(eigenvector)와 고유값(eigenvalue)를 추출한 뒤 n개의 고유벡터만을 활용하여 입력을 재구성함으로써 PCA를 적용할 수 있습니다.   
 
 Kernel-PCA는 PCA에 kernel trick을 적용한 알고리즘 입니다.
-Kernel-PCA는 input $x$를 non-linear 매핑함수 $\pi$를 활용하여 고차원 공간으로 매핑한 다음 일번적인 linear PCA를 적용하는 것입니다.
+Kernel-PCA는 non-linear 매핑함수 $\varpi$를 활용하여 input $x$를 고차원 공간으로 매핑한 다음 일번적인 linear PCA를 적용합니다.
 
 ##### Kernel PCA Procedure
-Kernel Covariance Matrix는 다음과 같습니다.
-<center>$C = \frac{1}{M} \sum^M_{i=1} \pi(x_i) \cdot \pi(x_i)$</center>
+Kernel covariance matrix는 아래과 같습니다.
+<center>$C^{\varpi} = \frac{1}{M} \sum^M_{i=1} \varpi(x_i) \varpi(x_i)^T$</center>
+
+수학적 정의에 따라 covariance matrix의 eigenvalue와 eigenvectors는 아래와 같이 식이 성립합니다.
+<center>$C^{\varpi} v_k = \lamda_k v_k$</center>
+
+위 두 수식을 이용하여 다음과 같은 식을 구성할 수 있습니다.
+<center>$\frac{1}{M} \sum^M_{i=1} \varpi(x_i) (\varpi(x_i)^T v_k)$</center>
+<center>$v_k = \frac{1}{N} \sum^N_{i=1} \alpha_{ki} \varpi(x_i)$</center>
+
+
 
 <center>$m^{\pi} = \frac{1}{N} \sum^N_{i=1} \pi(x_i) = 0$</center>
 
