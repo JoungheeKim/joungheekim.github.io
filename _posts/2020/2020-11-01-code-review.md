@@ -27,7 +27,7 @@ tags:
 1. **FACE FEATURE EXTRACTION** : kerenl-PCA를 이용하여 이미지 특징점 추출과정
 2. **FACE RECOGNITION** : linear-SVM을 이용하여 이미지를 분류하는 과정
 
-#### [1] FACE FEATURE EXTRACTION
+#### [1] Face Feature Extraction
 본 논문에서는 이미지 특징점을 추출하기 위하여 kernel-PCA를 이용합니다. 
 따라서 PCA와 kernel-PCA에 대해 간단하게 설명드리겠습니다.
 
@@ -36,7 +36,7 @@ PCA는 데이터의 분산을 최대한 보존하면서 저차원 공간으로 �
 일반적으로 공분산에서 고유벡터(eigenvector)와 고유값(eigenvalue)를 추출한 뒤 n개의 고유벡터만을 활용하여 입력을 재구성함으로써 PCA를 적용할 수 있습니다.   
 
 kernel-PCA는 PCA에 kernel trick을 적용한 알고리즘 입니다.
-kernel-PCA는 non-linear 매핑함수 $\phi$를 활용하여 input $x$를 고차원 공간으로 매핑한 다음 일번적인 linear-PCA를 적용합니다.
+kernel-PCA는 non-linear 매핑함수 $\phi$를 활용하여 input $x$를 고차원 공간으로 매핑한 다음 일반적인 linear-PCA를 적용합니다.
 
 ##### Kernel PCA Procedure
 covariance의 정의에 따라 kernel covariance matrix는 아래과 같이 표현됩니다.
@@ -46,7 +46,7 @@ covariance matrix는 feature M×M 차원으로 표현됩니다.
 $\phi$ : 매핑함수  
 $C^{\phi}$ : kernel covariance matrix    
 $x_i$ : i 번째 데이터  
-$\phi{x_i}$ : 고차원으로 공간으로 매핑된 i 번째 데이터  
+$\phi(x_i)$ : 고차원으로 공간으로 매핑된 i 번째 데이터  
 $m^{\phi}$ : 고차원으로 공간으로 매핑된 데이터의 평균  
 $M$ : feature space의 차원  
 $N$ : 데이터 갯수  
@@ -55,19 +55,37 @@ $N$ : 데이터 갯수
 사영된 공간에서 평균은 0이라는 가정을 하면 좀 더 쉬운 수식으로 아래와 같이 표현할 수 있습니다.
 
 <center>$m^{\phi} = \frac{1}{N} \sum^N_{i=1} \phi(x_i) = 0$</center>
-<center>$C^{\phi} = \frac{1}{M} \sum^M_{i=1} \phi(x_i) \phi(x_i)^T$</center>
+<center>$C^{\phi} = \frac{1}{N} \sum^N_{i=1} \phi(x_i) \phi(x_i)^T$</center>
 
-수학적 정의에 따라 covariance matrix의 eigenvalue와 eigenvectors는 아래와 같이 식이 성립합니다.
+수학적 정의에 따라 covariance matrix($C^{\phi}$)의 eigenvalue($\lambda_k$)와 eigenvectors($v_k$)는 아래와 같이 식이 성립합니다.
 
 <center>$C^{\phi} v_k = \lambda_k v_k$</center>
 
 위 두 수식을 이용하여 다음과 같은 식을 구성할 수 있습니다.
 또한 주성분 $v_k$ 는 데이터의 선형결합으로 표현되므로 아래와 같은 식으로 표현할 수 있습니다.
  
-<center>$\frac{1}{M} \sum^M_{i=1} \phi(x_i) (\phi(x_i)^T v_k)$</center>
+<center>$\frac{1}{N} \sum^N_{i=1} \phi(x_i) (\phi(x_i)^T v_k) = \lambda_k v_k$</center>
 <center>$v_k = \frac{1}{N} \sum^N_{i=1} \alpha_{ki} \phi(x_i)$</center>
 
 $v_k$를 정리하면 식을 아래와 같이 정리할 수 있습니다.
+
+<center>$\frac{1}{N} \sum^N_{i=1} \phi(x_i) \phi(x_i)^T \sum^N_{j=1} \alpha_{kj} \phi(x_j) = \lambda_k \sum^N_{i=1} \alpha_{kj} \phi(x_i)$</center>
+
+위 식에 kernel fuctnion을 적용하기 위하여 $\phi(x_l)$를 양변에 곱하고 약간의 변형하여 식을 재구성합니다.
+
+<center>$\frac{1}{N} \sum^N_{i=1} \phi(x_l)^T \phi(x_i) \sum^N_{j=1} \alpha_{kj} \phi(x_i)^T \phi(x_j) = \lambda_k \sum^N_{i=1} \alpha_{kj} \phi(x_l)^T \phi(x_i)$</center>
+
+이제 kernel trick을 이용하여 매핑함수 $\phi$와 관련된 식을 정리하면 아래와 같이 표현할 수 있습니다.
+
+<center>$K(x_i, x_j) = \phi(x_i)^T \phi(x_j)$</center>
+
+
+
+
+
+위 식을 
+
+
 
 <center> \frac{1}{N} \sum^N_{i=1} \phi(x_i) \phi(x_i)^T \sum^N_{j=1} \alpha_{kj} \phi(x_j) = \lambda_k \sum^N_{i=1} \alpha_{kj} \phi(x_i) $</center>
 
