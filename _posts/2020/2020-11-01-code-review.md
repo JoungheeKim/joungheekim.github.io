@@ -49,6 +49,9 @@ kernel-PCA는 PCA에 kernel trick을 적용한 알고리즘 입니다.
 kernel-PCA는 non-linear 매핑함수 $\phi$를 활용하여 input $x$를 고차원 공간으로 매핑한 다음 일반적인 linear-PCA를 적용합니다.
 
 ##### Kernel PCA Procedure
+![](/img/in-post/2020/2020-11-01/kpca_example.png)
+<center><b>Kernel-PCA 예시</b></center>
+
 covariance의 정의에 따라 kernel covariance matrix는 아래과 같이 표현됩니다.
 covariance matrix는 feature M×M 차원으로 표현됩니다.  
 
@@ -115,39 +118,6 @@ kernel-PCA로부터 추출한 특징을 N-1개의 Linear-SVM에 넣어 각 class
 
 
 
-
-
-
-
-
-
-
-
-
- 
-
-
-간단한 Linear-SVM을 활용합니다.
-
-각 SVM으로부터 특정 class 속하는지에 대한 score가 추출됩니다.
-이 score에 tanh non-linear 함수를 적용하여 
- 
-
-각 SVM은 특정 class에 속하는지에 대한 score를 
-일반적으로 one-vs-rest SVM을 사용하는 방법은 
-
-
-
-
-
-
-
-
-<center> \frac{1}{N} \sum^N_{i=1} \phi(x_i) \phi(x_i)^T \sum^N_{j=1} \alpha_{kj} \phi(x_j) = \lambda_k \sum^N_{i=1} \alpha_{kj} \phi(x_i) $</center>
-
-
-
-<center>$m^{\phi} = \frac{1}{N} \sum^N_{i=1} \phi(x_i) = 0$</center>
 
 
 
