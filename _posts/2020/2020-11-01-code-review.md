@@ -9,10 +9,10 @@ tags:
   - Kernel-based learning
 ---
 
-# [코드리뷰] - [Face Recognition Using Kernel Principal Component Analysis](https://arxiv.org/abs/1207.3538), 2002
+# [코드리뷰] - [Face Recognition Using Kernel Principal Component Analysis](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=991133), 2002
 
 오늘 리뷰는 이미지에서 Kernel-PCA를 사용하여 얼굴의 특징점을 추출하고 SVM을 이용하여 서로다른 얼굴을 분류하는 논문을 리뷰하겠습니다.
-이 글은 [**Face Recognition Using Kernel Principal Component Analysis 논문**](https://arxiv.org/abs/1502.04681) 과 [**고려대학교 강필성 교수님의 강의**](https://www.youtube.com/watch?v=6Et6S03Me4o&list=PLetSlH8YjIfWMdw9AuLR5ybkVvGcoG2EW&index=14) 참고하여 정리하였음을 먼저 밝힙니다.
+이 글은 [**Face Recognition Using Kernel Principal Component Analysis 논문**](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=991133) 과 [**고려대학교 강필성 교수님의 강의**](https://www.youtube.com/watch?v=6Et6S03Me4o&list=PLetSlH8YjIfWMdw9AuLR5ybkVvGcoG2EW&index=14) 참고하여 정리하였음을 먼저 밝힙니다.
 논문을 간단하게 리뷰하고 sklearn 라이브러리를 이용하여 <u>코드를 구현</u>한 후 자세하게 설명드리겠습니다.
 혹시 제가 잘못 알고 있는 점이나 보안할 점이 있다면 댓글 부탁드립니다.
 
@@ -22,14 +22,24 @@ tags:
 1. 이미지로부터 특징점을 추출하는 방법으로 Kernel-PCA를 적용합니다.
 2. SVM을 활용하여 이미지 특징점을 학습하고 얼굴을 분류하는 알고리즘을 구축합니다. 
 
-## 모델 학습 과정
-논문에서 제시하는 얼굴인식 학습 과정은 크게 2가지로 나뉩니다.
-1. **FACE FEATURE EXTRACTION** : kerenl-PCA를 이용하여 이미지 특징점 추출과정
-2. **FACE RECOGNITION** : linear-SVM을 이용하여 이미지를 분류하는 과정
+## 모델 구조
+![](/img/in-post/2020/2020-11-01/model_flow.png)
+<center><b>모델 상세 구조</b></center>
 
-#### [1] Face Feature Extraction
+논문에서 제시하는 얼굴인식 분류 과정은 크게 2가지로 나뉩니다.
+
+1. **Face Feature Extraction** : kerenl-PCA를 이용하여 <u>이미지 특징점 추출</u>과정
+2. **Face Recognition** : linear-SVM을 이용하여 이미지를 <u>class로 분류</u>하는 과정
+
+이미지 특징점 추출하는 단계에서는 **kernel-PCA**를 활용합니다.
+분류단계에서는 **linear-SVM**과 **Neural Network**를 활용합니다.
+
+### [1] Face Feature Extraction
 본 논문에서는 이미지 특징점을 추출하기 위하여 kernel-PCA를 이용합니다. 
 따라서 PCA와 kernel-PCA에 대해 간단하게 설명드리겠습니다.
+
+![](/img/in-post/2020/2020-11-01/pca_example.png)
+<center><b>PCA 예시</b></center>
 
 PCA는 데이터의 분산을 최대한 보존하면서 저차원 공간으로 변환하는 기법입니다. 
 따라서 의미없는 정보를 버리고 의미있는 정보만을 추출하는 방법으로 사용됩니다.
@@ -78,12 +88,58 @@ $v_k$를 정리하면 식을 아래와 같이 정리할 수 있습니다.
 이제 kernel trick을 이용하여 매핑함수 $\phi$와 관련된 식을 정리하면 아래와 같이 표현할 수 있습니다.
 
 <center>$K(x_i, x_j) = \phi(x_i)^T \phi(x_j)$</center>
+<center>$\frac{1}{N} \sum^N_{i=1} K(x_l, x_i) \sum^N_{j=1} \alpha_{kj} K(x_i, x_j) = \lambda_k \sum^N_{i=1} \alpha_{kj} K(x_l, x_i)$</center>
+<center>$K^2 = \lambda N K \alpha_k$</center>
+
+이로써 Kernel PCA는 아래와 같이 구할 수 있습니다.
+
+<center>$y_k(x) = \phi(x)^T v_k = \sum^N_{i=1} \alpha_{ki} K(x, x_i)$</center>
+
+### [2] Face Recognition
+![](/img/in-post/2020/2020-11-01/face_recognition_example.png)
+<center><b>분류 단계 상세 구조</b></center>
+
+kernel-PCA를 통해 추출한 특징을 이용하여 분류하는 단계입니다.
+본 논문에서는 2가지 모델을 차례로 이용하여 특징점을 각 class로 분류합니다.
+
+1. Linear-SVM으로부터 각 **class에 대한 점수를 추출**하는 단계
+2. Neural Network 를 활용하여 각 **class에 대한 점수를 Normalize**하고 최종 결과를 도출하는 단계
+
+분류할 대상은 2개 이상의 class를 갖고 있으므로 SVM을 class 갯수(N)만큼 구성합니다.
+kernel-PCA로부터 추출한 특징을 N-1개의 Linear-SVM에 넣어 각 class에 대한 점수를 추출합니다.
+
+이후 추출한 점수를 (Fully Connected Layer + Tanh) 로 구성된 2개 층의 Neural Network에 넣습니다.
+최종 결과로 각 Class에 대한 Normalize 점수가 추출됩니다. 
+이미지가 해당 class에 속할 경우 1로 해당하지 않을 경우 -1 로 label을 구성하고 **MSE Loss를 이용하여 학습**하면 SVM으로부터 추출된 점수보다 정규화한 점수를 Neural Network에서 추출할 수 있습니다.
+ 
 
 
 
 
 
-위 식을 
+
+
+
+
+
+
+
+ 
+
+
+간단한 Linear-SVM을 활용합니다.
+
+각 SVM으로부터 특정 class 속하는지에 대한 score가 추출됩니다.
+이 score에 tanh non-linear 함수를 적용하여 
+ 
+
+각 SVM은 특정 class에 속하는지에 대한 score를 
+일반적으로 one-vs-rest SVM을 사용하는 방법은 
+
+
+
+
+
 
 
 
@@ -96,7 +152,7 @@ $v_k$를 정리하면 식을 아래와 같이 정리할 수 있습니다.
 
 
 ## Reference
-- [[PAPER]](https://arxiv.org/abs/1207.3538) Face Recognition Using Kernel Principal Component Analysis, 2002
+- [[PAPER]](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=991133) Face Recognition Using Kernel Principal Component Analysis, 2002
 - [[BLOG]](https://www.geeksforgeeks.org/ml-face-recognition-using-pca-implementation/) Face Recognition Using PCA Implementation, 
 - [[YOUTUBE]](https://www.youtube.com/watch?v=6Et6S03Me4o&list=PLetSlH8YjIfWMdw9AuLR5ybkVvGcoG2EW&index=14) Kernel-based Learning - KPCA, 강필성
 
