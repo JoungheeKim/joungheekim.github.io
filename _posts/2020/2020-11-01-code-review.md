@@ -112,8 +112,8 @@ kernel-PCA를 통해 추출한 특징점을 이용하여 이미지를 분류하�
 분류할 대상은 2개 이상의 class를 갖고 있으므로 SVM을 class 갯수(N)만큼 구성합니다.
 kernel-PCA로부터 추출한 특징을 N개의 SVM에 넣어 각 class에 대한 점수를 추출합니다.
 
-추출한 점수를 (Fully Connected Layer + Tanh) 로 구성된 2개 층의 Neural Network에 넣습니다.
-Neural Network로부터 최종 결과인 각 Class에 대한 Normalize 점수가 추출됩니다. 
+추출한 점수를 (Fully Connected Layer + Tanh activation) 으로 구성된 2개 층의 Neural Network에 넣습니다.
+Neural Network로부터 최종 결과인 각 Class에 대한 Normalized 점수가 추출됩니다. 
 이미지가 해당 class에 속할 경우 1로 해당하지 않을 경우 -1로 label을 구성하고 Neural Network의 output과의 차이로부터 **MSE Loss로 계산하여 학습**하면 SVM으로부터 추출된 점수보다 정규화한 점수를 Neural Network에서 추출할 수 있습니다.
 
 ## 코드 구현
@@ -130,7 +130,7 @@ Neural Network로부터 최종 결과인 각 Class에 대한 Normalize 점수가
 튜토리얼에서 사용하는 데이터는 [The Labeled Faces in the Wild face recognition dataset](http://vis-www.cs.umass.edu/lfw/) 입니다.
 Olivetti 데이터는 총 40명의 인물이 등장하며 각 인물에 대해 10개의 이미지로 구성되어 있습니다.
 각 이미지는 서로 다른 시간에 촬영되었습니다.
-또한 촬영시 제약사항이 없으므로 이미지에는 다양한 얼굴표정, 안경 착용 등 독특한 특징이 나타날 수 있습니다.
+또한 촬영 시 제약사항이 없으므로 이미지에는 다양한 얼굴표정, 안경 착용 등 독특한 특징이 나타날 수 있습니다.
 데이터는 `sklearn` package를 통해서 다운 받을 수 있으므로 편의상 라이브러리를 활용합니다.
 
 ##### 1. 라이브러리 Import
@@ -190,7 +190,7 @@ plot_gallery(X, itemindex, n_col, h, w)
 
 ##### 3. Kernel-PCA & Linear-SVM
 
-이미지를 input으로 사용하여 각 class로 구분하기 까지 kernel-PCA, SVM, Neural Network 알고리즘을 구성해야 합니다.
+이미지를 input으로 사용하여 각 class로 구분하기하기 위하여 kernel-PCA, SVM, Neural Network 알고리즘을 구성해야 합니다.
 각 알고리즘은 다양한 hyper-parameter 갖고 있으므로 알맞는 hyper-parameter 탐색이 필요합니다.
 우선적으로 Kernel-PCA와 SVM 두개의 알고리즘을 이용하여 Pipe-Line을 구성하고 Grid Search를 활용하여 각 알고리즘의 hyper-paramter 탐색을 진행합니다. 
 
@@ -202,7 +202,7 @@ pipe = Pipeline([('pca', KernelPCA(kernel="poly")), ('svc', SVC(class_weight ='b
 param_grid = {
     'pca__n_components': [20, 40, 60, 80, 100, 120, 140], ## Kernel-PCA 파라미터(n_components)
     'pca__degree': [2, 3, 4, 5], ## Kernel-PCA 파라미터(degree)
-    'svc__C': [1e3, 5e3, 1e4, 5e4, 1e5], ## SVM 파라미터
+    'svc__C': [1e-1, 2e-1, 3e-1, 4e-1, 5e-1, 6e-1, 7e-1, 8e-1, 9e-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1e1], ## SVM 파라미터
 } 
 ```
 kernel-PCA에서 탐색해야 할 hyper-paramter는 degree와 n_components 입니다.
@@ -215,9 +215,20 @@ C는 패널티 정도를 의미하며 SVM을 fitting하는 과정에서 정답 c
 ``` python
 clf = GridSearchCV(pipe, param_grid=param_grid)
 clf = clf.fit(X_train, y_train)
+print("Grid Search를 이용하여 탐색한 Best hyper-parameter") 
 print(clf.best_estimator_)
+
+## 결과를 Dataframe으로 도출
+summary = pd.concat([pd.DataFrame(clf.cv_results_["params"]),pd.DataFrame(clf.cv_results_["mean_test_score"], columns=["Accuracy"])],axis=1)
+
+## 결과를 시각화
+fig = px.bar(summary, x="pca__n_components", y="Accuracy", color="pca__n_components",
+  animation_frame="svc__C", animation_group="pca__n_components", range_y=[0.5,1])
+fig.show()
 ```
-![](/img/in-post/2020/2020-11-01/grid_search_result.png)
+![](/img/in-post/2020/2020-11-01/grid_search_result.gif)
+<center><b>Grid Search 결과 시각화</b></center>
+
 Grid-Search를 통해 앞서 setting 탐색범위를 확인하고 가장 좋은 성능의 모델을 추출합니다.
 
 ``` python
