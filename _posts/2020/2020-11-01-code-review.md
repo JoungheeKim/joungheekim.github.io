@@ -45,7 +45,7 @@ PCA는 데이터의 분산을 <u>최대한 보존하면서 저차원 공간으�
 따라서 의미없는 정보를 버리고 **의미있는 정보만을 추출**하는 방법으로 사용됩니다.
 일반적으로 공분산에서 고유벡터(eigenvector)와 고유값(eigenvalue)를 추출한 뒤 n개의 고유벡터만을 활용하여 입력을 재구성함으로써 PCA를 적용할 수 있습니다.   
 
-kernel-PCA는 PCA에 kernel trick을 적용한 알고리즘 입니다.
+kernel-PCA는 PCA에 **kernel trick을 적용**한 알고리즘 입니다.
 kernel-PCA는 non-linear 매핑함수 $\phi$를 활용하여 input $x$를 고차원 공간으로 매핑한 다음 일반적인 linear-PCA를 적용합니다.
 
 ##### Kernel PCA Procedure
@@ -106,14 +106,14 @@ kernel-PCA를 통해 추출한 특징점을 이용하여 이미지를 분류하�
 본 논문에서는 2가지 모델을 차례로 이용하여 특징점을 각 class로 분류합니다.
 
 1. **점수 추출** : Linear-SVM으로부터 각 <u>class에 대한 점수를 추출</u>하는 단계
-2. **정규화 과정** : Neural Network 를 활용하여 각 **class에 대한 점수를 Normalize**하고 최종 결과를 도출하는 단계
+2. **정규화 과정** : Neural Network 를 활용하여 각 <u>class에 대한 점수를 normalize</u>하고 최종 결과를 도출하는 단계
 
 각 class에 대한 점수를 추출하기 위하여 Linear-SVM을 구성합니다.
 분류할 대상은 2개 이상의 class를 갖고 있으므로 SVM을 class 갯수(N)만큼 구성합니다.
 kernel-PCA로부터 추출한 특징을 N개의 SVM에 넣어 각 class에 대한 점수를 추출합니다.
 
 추출한 점수를 (Fully Connected Layer + Tanh activation) 으로 구성된 2개 층의 Neural Network에 넣습니다.
-Neural Network로부터 최종 결과인 각 Class에 대한 Normalized 점수가 추출됩니다. 
+Neural Network로부터 최종 결과인 각 class에 대한 Normalized 점수가 추출됩니다. 
 이미지가 해당 class에 속할 경우 1로 해당하지 않을 경우 -1로 label을 구성하고 Neural Network의 output과의 차이로부터 **MSE Loss로 계산하여 학습**하면 SVM으로부터 추출된 점수보다 정규화한 점수를 Neural Network에서 추출할 수 있습니다.
 
 ## 코드 구현
@@ -130,7 +130,7 @@ Neural Network로부터 최종 결과인 각 Class에 대한 Normalized 점수�
 튜토리얼에서 사용하는 데이터는 [The Labeled Faces in the Wild face recognition dataset](http://vis-www.cs.umass.edu/lfw/) 입니다.
 Olivetti 데이터는 총 40명의 인물이 등장하며 각 인물에 대해 10개의 이미지로 구성되어 있습니다.
 각 이미지는 서로 다른 시간에 촬영되었습니다.
-또한 촬영 시 제약사항이 없으므로 이미지에는 다양한 얼굴표정, 안경 착용 등 독특한 특징이 나타날 수 있습니다.
+또한 촬영 시 제약사항이 없으므로 <u>이미지에는 다양한 얼굴표정, 안경 착용 등 독특한 특징</u>이 나타날 수 있습니다.
 데이터는 `sklearn` package를 통해서 다운 받을 수 있으므로 편의상 라이브러리를 활용합니다.
 
 ##### 1. 라이브러리 Import
@@ -152,7 +152,7 @@ from torch import optim
 import torch
 from tqdm.notebook import tqdm
 ```
-모델을 구현하는데 필요한 라이브러리를 Import 합니다.
+모델을 구현하는데 필요한 라이브러리를 import 합니다.
 Import 에러가 발생하면 반드시 해당 **라이브러리를 설치한 후 진행**해야 합니다.
 
 ##### 2. 데이터 불러오기
@@ -204,7 +204,7 @@ plot_gallery(X, itemindex, n_col, h, w)
 
 ##### 3. Kernel-PCA & Linear-SVM 파라미터 탐색
 
-이미지를 input으로 사용하여 각 class로 구분하기하기 위하여 kernel-PCA, SVM, Neural Network 알고리즘을 구성해야 합니다.
+이미지를 input으로 사용하여 각 class로 구분하기하기 위하여 **kernel-PCA, SVM, Neural Network 알고리즘**을 구성해야 합니다.
 각 알고리즘은 다양한 hyper-parameter 갖고 있으므로 알맞는 hyper-parameter 탐색이 필요합니다.
 우선적으로 Kernel-PCA와 SVM 두개의 알고리즘을 이용하여 Pipe-Line을 구성하고 Grid Search를 활용하여 각 알고리즘의 hyper-paramter 탐색을 진행합니다. 
 
@@ -284,9 +284,9 @@ class NeuralNetwork(nn.Module):
 ```
 
 Neural Network를 구축합니다.
-scaling 되지 않은 input을 처리해야 하므로 빨리 수렴할 수 있도록 본 논문에서 제시한 구조와는 조금 다르게 BatchNorm을 사용하였습니다.
+scaling 되지 않은 input을 처리해야 하므로 <u>빨리 수렴할 수 있도록</u> 본 논문에서 제시한 구조와는 조금 다르게 **BatchNorm**을 사용하였습니다.
 또한 본 논문에서는 Neural Network에 넣기 전 SVM에 tanh activation을 적용을 제시하고 있지만 
-반복 실험한 결과 SVM output에 tanh activation을 적용하면 SVM의 크기 정보가 손실되어 Neural Network가 잘 학습되지 않는 현상이 있습니다.
+반복 실험한 결과 SVM output에 tanh activation을 적용하면 <u>SVM의 크기 정보가 손실</u>되어 Neural Network가 잘 학습되지 않는 현상이 있습니다.
 따라서 SVM output에 비선형 함수를 적용하지 않고 바로 Neural Network의 input으로 활용합니다.
 
 ``` python
@@ -398,19 +398,19 @@ print("검증용 데이터 성능 [{}]".format(accuracy_score(y_test, y_test_pre
 ![](/img/in-post/2020/2020-11-01/train_example.gif)
 
 Neural Network 학습 후 성능을 평가합니다.
-성능 평가 결과 학습용 데이터는 1.0 정확도 성능을 보이고, 검증용 데이터는 0.8 정확도 성능을 보입니다.
+성능 평가 결과 학습용 데이터는 1.0 정확도 성능을 보이고, 검증용 데이터는 **0.8 정확도 성능**을 보입니다.
 
 >최종모델을 활용한 결과 학습용 데이터에서는 SVM+PCA 만을 사용한 경우와 비슷한 정확도를 보입니다.
->하지만 검증용 데이터에서 평가 결과 최종모델이 SVM+PCA 모델보다 좋지 못한 성능을 보이는 것을 확인 할 수 있습니다.
+>하지만 검증용 데이터에서 평가 결과 <u>최종모델이 SVM+PCA 모델보다 좋지 못한 성능</u>을 보이는 것을 확인 할 수 있습니다.
 >저자의 주장과는 다르게 SVM+PCA 결과를 Neural Network로 normalize하는 것이 오히려 안 좋은 결과로 도출되었습니다.
 >개인적으로 생각해 봤을 때 이미 SVM은 PCA를 통해 도출한 특징점을 보고 가장 합리적인 Output인 각 class에 대한 점수를 추출합니다.
 >이 점수가 neural network에 들어가면 neural network는 SVM의 다른 것들을 보며 가중치 합으로 최종 output을 만듭니다.
->즉 neural network가 만든 최종 output은 단순히 SVM으로부터 도출된 각 class 점수를 normalize 하는것이 아니라 복잡한 연산을 통해 다른 class 점수도 함께 이용하여 output을 구성합니다.
->SVM의 합리적인 결과를 그대로 사용하지 않고 SVM 끼리 상호 작용까지 고려한 결과를 도출한 것입니다.
->상호작용이 있었다면 검증용데이터에서 성능향상을 볼 수 있었겟지만 상호작용이 없었기 때문에 더 안 좋은 결과가 나온 것으로 생각됩니다.
->오히려 PCA 결과를 neural network에 바로 활용한 것이 좋은 결과를 도출 할 수 있는 방법이라고 생각합니다.(물론 데이터가 많은 데이터셋에서 유효한 방식입니다.)
+>즉 neural network가 만든 최종 output은 단순히 SVM으로부터 도출된 각 class 점수를 normalize 하는것이 아니라 <u>복잡한 연산을 통해 다른 class 점수도 함께 이용하여 output을 구성</u>합니다.
+>SVM의 합리적인 결과를 그대로 사용하지 않고 **SVM 끼리 상호 작용까지 고려한 결과**를 도출한 것입니다.
+>상호작용이 있었다면 검증용데이터에서 성능향상을 볼 수 있었겟지만 **상호작용이 없었기 때문에 더 안 좋은 결과**가 나온 것으로 생각됩니다.
+>오히려 <u>PCA 결과를 neural network에 바로 활용한 것</u>이 좋은 결과를 도출 할 수 있는 방법이라고 생각합니다.(물론 데이터가 많은 데이터셋에서 유효한 방식입니다.)
 
-[[주피터 파일(튜토리얼)]](https://github.com/JoungheeKim/autoencoder-lstm)에서 튜토리얼의 전체 파일을 제공하고 있습니다.
+[[주피터 파일(튜토리얼)]](/img/in-post/2020/2020-11-01/Face_recognition(KPCA).ipynb)에서 튜토리얼의 전체 파일을 제공하고 있습니다.
 
 ## Reference
 - [[PAPER]](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=991133) Face Recognition Using Kernel Principal Component Analysis, 2002
