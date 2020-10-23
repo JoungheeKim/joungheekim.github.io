@@ -110,11 +110,11 @@ kernel-PCA를 통해 추출한 특징점을 이용하여 이미지를 분류하�
 2. **정규화 과정** : Neural Network 를 활용하여 각 <u>class에 대한 점수를 normalize</u>하고 최종 결과를 도출하는 단계
 
 각 class에 대한 점수를 추출하기 위하여 Linear-SVM을 구성합니다.
-분류할 대상은 2개 이상의 class를 갖고 있으므로 SVM을 class 갯수(N)만큼 구성합니다.
+분류할 대상은 2개 이상의 class를 갖고 있으므로 **SVM을 class 갯수(N)만큼 구성**합니다.
 kernel-PCA로부터 추출한 특징을 N개의 SVM에 넣어 각 class에 대한 점수를 추출합니다.
 
 추출한 점수를 (Fully Connected Layer + Tanh activation) 으로 구성된 2개 층의 Neural Network에 넣습니다.
-Neural Network로부터 최종 결과인 각 class에 대한 Normalized 점수가 추출됩니다. 
+Neural Network로부터 <u>최종 결과인 각 class에 대한 Normalized 점수</u>가 추출됩니다. 
 이미지가 해당 class에 속할 경우 1로 해당하지 않을 경우 -1로 label을 구성하고 Neural Network의 output과의 차이로부터 **MSE Loss로 계산하여 학습**하면 SVM으로부터 추출된 점수보다 정규화한 점수를 Neural Network에서 추출할 수 있습니다.
 
 ## 코드 구현
@@ -132,7 +132,7 @@ Neural Network로부터 최종 결과인 각 class에 대한 Normalized 점수�
 Olivetti 데이터는 총 40명의 인물이 등장하며 각 인물에 대해 10개의 이미지로 구성되어 있습니다.
 각 이미지는 서로 다른 시간에 촬영되었습니다.
 또한 촬영 시 제약사항이 없으므로 <u>이미지에는 다양한 얼굴표정, 안경 착용 등 독특한 특징</u>이 나타날 수 있습니다.
-데이터는 `sklearn` package를 통해서 다운 받을 수 있으므로 편의상 라이브러리를 활용합니다.
+데이터는 `scikit-learn` package를 통해서 다운 받을 수 있으므로 편의상 라이브러리를 활용합니다.
 
 ##### 1. 라이브러리 Import
 ``` python
@@ -171,7 +171,7 @@ y = olive_data.target
 n_classes = len(set(y))
 print("클래스 개수[{}]".format(n_classes))
 ```
-이미지의 갯수는 400개 입니다. 1개의 channel과 64×64 픽셀 크기의 데이터입니다.
+이미지의 갯수는 총 400개 입니다. 각 이미지는 1개의 channel과 64×64 픽셀 크기를 갖고 있습니다.
 
 ``` python
 ## 데이터 시각화  
@@ -201,16 +201,16 @@ plot_gallery(X, itemindex, n_col, h, w)
 ![](/img/in-post/2020/2020-11-01/visulization_sample.png)
 <center><b>Olivetti faces 데이터 시각화</b></center>
 
-이미지를 시각화하여 API를 통해 데이터를 잘 불러왔는지 확인합니다.
+API를 통해 데이터를 저장한 후 이미지를 시각화하여 데이터가 잘 저장되었는지를 확인합니다.
 
 ##### 3. Kernel-PCA & Linear-SVM 파라미터 탐색
 
 이미지를 input으로 사용하여 각 class로 구분하기하기 위하여 **kernel-PCA, SVM, Neural Network 알고리즘**을 구성해야 합니다.
 각 알고리즘은 다양한 hyper-parameter 갖고 있으므로 알맞는 hyper-parameter 탐색이 필요합니다.
-우선적으로 Kernel-PCA와 SVM 두개의 알고리즘을 이용하여 Pipe-Line을 구성하고 Grid Search를 활용하여 각 알고리즘의 hyper-paramter 탐색을 진행합니다. 
+우선적으로 Kernel-PCA와 SVM 두개의 알고리즘을 이용하여 Pipe-Line을 구성하고 Grid Search를 활용하여 각 알고리즘의 hyper-parameter 탐색을 진행합니다. 
 
-pipe-line에 있는 각 알고리즘의 hyper-parameter를 grid-search를 이용하여 탐색하기 위해서는 `pipe-line에서 설정한 이름` + `__` + `파라미터` 로 **String**을 만들어야 한다.
-예를들어 SVM의 이름을 pipeline에서 `svc`라고 지정하고 grid-search를 이용하여 SVM의 hyper-parameter인 `C`를 탐색하고 싶다면 
+pipe-line에 있는 각 알고리즘의 hyper-parameter를 grid-search를 이용하여 탐색하기 위해서는 `pipe-line에서 설정한 이름` + `__` + `파라미터` 로 **String**을 만들어야 합니다.
+예를들어 SVM의 이름을 pipeline에서 `svc`라고 지정하고 Grid Search를 이용하여 SVM의 hyper-parameter인 `C`를 탐색하고 싶다면 
 parameter dict에 key를 `svc__C`로 넣고 value에 탐색할 영역에 해당하는 리스트 형태의 데이터를 넣어야 합니다.  
 
 ``` python
@@ -224,16 +224,16 @@ param_grid = {
     'svc__C': [1e-1, 2e-1, 3e-1, 4e-1, 5e-1, 6e-1, 7e-1, 8e-1, 9e-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1e1], ## SVM 파라미터
 } 
 ```
-kernel-PCA에서 탐색해야 할 hyper-paramter는 degree와 n_components 입니다.
-degree는 polynomial kernel 의 승수를 의미합니다.
-n_components는 몇개의 eigenvector를 활용하여 차원을 축소할 것인지를 나타내는 hyper-parameter입니다.
+kernel-PCA에서 탐색해야 할 hyper-paramter는 **degree**와 **n_components** 입니다.
+degree는 <u>polynomial kernel 의 승수</u>를 의미합니다.
+n_components는 <u>몇개의 eigenvector를 활용하여 차원을 축소</u>할 것인지를 나타내는 hyper-parameter입니다.
 
 >본 논문에서는 Polynomial Kernel-PCA의 **degree를 4**로 설정했을 때 가장 성능이 좋았다고 기술하고 있습니다.
 >또한 알고리즘으로부터 추출된 **eigenvalues(n_components) 중 큰 순서대로 120개를 뽑아 특징점**으로 활용했을 때 가장 성능이 높다고 기술하고 있습니다.
 >하지만 튜토리얼에서는 Grid Search을 통해 합리적인 hyper-parameter를 도출합니다.    
 
-Support Vector Machine(SVM)에서 탐색해야 할 hyper-parameter는 C입니다.
-C는 패널티 정도를 의미하며 SVM을 fitting하는 과정에서 정답 class로 분류되지 않을 때 부여되는 값과 비례합니다.
+Support Vector Machine(SVM)에서 탐색해야 할 hyper-parameter는 **C**입니다.
+C는 <u>패널티 강도</u>를 의미하며 SVM을 fitting하는 과정에서 정답 class로 분류되지 않을 때 부여되는 값과 비례합니다.
 
 ``` python
 clf = GridSearchCV(pipe, param_grid=param_grid)
@@ -252,7 +252,7 @@ fig.show()
 ![](/img/in-post/2020/2020-11-01/grid_search_result.gif)
 <center><b>Grid Search 결과 시각화</b></center>
 
-Grid-Search를 통해 앞서 setting 탐색범위를 확인하고 가장 좋은 성능의 모델을 추출합니다.
+Grid Search를 통해 앞서 setting 탐색범위를 확인하고 가장 좋은 성능의 모델을 추출합니다.
 
 ``` python
 ## kenel-PCA & SVM 성능평가
@@ -286,9 +286,9 @@ class NeuralNetwork(nn.Module):
 
 Neural Network를 구축합니다.
 scaling 되지 않은 input을 처리해야 하므로 <u>빨리 수렴할 수 있도록</u> 본 논문에서 제시한 구조와는 조금 다르게 **BatchNorm**을 사용하였습니다.
-또한 본 논문에서는 Neural Network에 넣기 전 SVM에 tanh activation을 적용을 제시하고 있지만 
+또한 본 논문에서는 Neural Network에 넣기 전 SVM에 tanh activation을 적용하도록 제시하고 있지만 
 반복 실험한 결과 SVM output에 tanh activation을 적용하면 <u>SVM의 크기 정보가 손실</u>되어 Neural Network가 잘 학습되지 않는 현상이 있습니다.
-따라서 SVM output에 비선형 함수를 적용하지 않고 바로 Neural Network의 input으로 활용합니다.
+따라서 SVM output에 **비선형 함수를 적용하지 않고** 바로 Neural Network의 input으로 활용합니다.
 
 ``` python
 class FaceRecognition(object):
@@ -417,6 +417,3 @@ Neural Network 학습 후 성능을 평가합니다.
 - [[PAPER]](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=991133) Face Recognition Using Kernel Principal Component Analysis, 2002
 - [[BLOG]](https://www.geeksforgeeks.org/ml-face-recognition-using-pca-implementation/) Face Recognition Using PCA Implementation, 
 - [[YOUTUBE]](https://www.youtube.com/watch?v=6Et6S03Me4o&list=PLetSlH8YjIfWMdw9AuLR5ybkVvGcoG2EW&index=14) Kernel-based Learning - KPCA, 강필성
-
-
-
