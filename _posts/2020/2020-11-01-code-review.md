@@ -135,8 +135,22 @@ Olivetti 데이터는 총 40명의 인물이 등장하며 각 인물에 대해 1
 
 ##### 1. 라이브러리 Import
 ``` python
-
-
+from sklearn.datasets import fetch_olivetti_faces
+from sklearn.model_selection import train_test_split 
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import confusion_matrix 
+from sklearn.decomposition import KernelPCA 
+from sklearn.svm import SVC 
+import numpy as np
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.pipeline import Pipeline
+import pandas as pd
+import plotly.express as px
+from torch import optim
+import torch
+from tqdm.notebook import tqdm
 ```
 모델을 구현하는데 필요한 라이브러리를 Import 합니다.
 Import 에러가 발생하면 반드시 해당 **라이브러리를 설치한 후 진행**해야 합니다.
@@ -188,11 +202,15 @@ plot_gallery(X, itemindex, n_col, h, w)
 
 이미지를 시각화하여 API를 통해 데이터를 잘 불러왔는지 확인합니다.
 
-##### 3. Kernel-PCA & Linear-SVM
+##### 3. Kernel-PCA & Linear-SVM 파라미터 탐색
 
 이미지를 input으로 사용하여 각 class로 구분하기하기 위하여 kernel-PCA, SVM, Neural Network 알고리즘을 구성해야 합니다.
 각 알고리즘은 다양한 hyper-parameter 갖고 있으므로 알맞는 hyper-parameter 탐색이 필요합니다.
 우선적으로 Kernel-PCA와 SVM 두개의 알고리즘을 이용하여 Pipe-Line을 구성하고 Grid Search를 활용하여 각 알고리즘의 hyper-paramter 탐색을 진행합니다. 
+
+pipe-line에 있는 각 알고리즘의 hyper-parameter를 grid-search를 이용하여 탐색하기 위해서는 `pipe-line에서 설정한 이름` + `__` + `파라미터` 로 **String**을 만들어야 한다.
+예를들어 SVM의 이름을 pipeline에서 `svc`라고 지정하고 grid-search를 이용하여 SVM의 hyper-parameter인 `C`를 탐색하고 싶다면 
+parameter dict에 key를 `svc__C`로 넣고 value에 탐색할 영역에 해당하는 리스트 형태의 데이터를 넣어야 합니다.  
 
 ``` python
 ## Pipe Line 구성
@@ -208,6 +226,10 @@ param_grid = {
 kernel-PCA에서 탐색해야 할 hyper-paramter는 degree와 n_components 입니다.
 degree는 polynomial kernel 의 승수를 의미합니다.
 n_components는 몇개의 eigenvector를 활용하여 차원을 축소할 것인지를 나타내는 hyper-parameter입니다.
+
+>본 논문에서는 Polynomial Kernel-PCA의 **degree를 4**로 설정했을 때 가장 성능이 좋았다고 기술하고 있습니다.
+>또한 알고리즘으로부터 추출된 **eigenvalues(n_components) 중 큰 순서대로 120개를 뽑아 특징점**으로 활용했을 때 가장 성능이 높다고 기술하고 있습니다.
+>하지만 튜토리얼에서는 Grid Search을 통해 합리적인 hyper-parameter를 도출합니다.    
 
 Support Vector Machine(SVM)에서 탐색해야 할 hyper-parameter는 C입니다.
 C는 패널티 정도를 의미하며 SVM을 fitting하는 과정에서 정답 class로 분류되지 않을 때 부여되는 값과 비례합니다.
@@ -233,45 +255,162 @@ Grid-Search를 통해 앞서 setting 탐색범위를 확인하고 가장 좋은 
 
 ``` python
 ## kenel-PCA & SVM 성능평가
+y_pred = clf.predict(X_train) 
+print("학습용 데이터 성능 [{}]".format(accuracy_score(y_train, y_pred)))
+
 y_pred = clf.predict(X_test) 
-print(classification_report(y_test, y_pred)) 
+print("검증용 데이터 성능 [{}]".format(accuracy_score(y_test, y_pred)))
 ```
-탐색을 통해 얻은 hyper-parameter를 활용하여 Kernel-PCA와 SVM 만을 활용했을 때 성능을 측정합니다.
-성능측정 결과 **0.97의 정확도**가 도출되었습니다.
+탐색을 통해 얻은 hyper-parameter를 활용하여 Kernel-PCA와 SVM 만을 활용했을 때 검증용 데이터에서 성능을 측정합니다.
+성능측정 결과 **0.915의 정확도**가 도출되었습니다.
 즉 Kernel-PCA와 SVM만으로도 충분히 40개의 얼굴 이미지는 분류가 가능하다는 것을 확인할 수 있습니다. 
 
-##### 3. Neural Network
+##### 3. Neural Network 구축
+``` python
+class NeuralNetwork(nn.Module):
+    def __init__(self, hidden_size, class_size):
+        super(NeuralNetwork, self).__init__()
+        self.fc = nn.Sequential(
+                    nn.BatchNorm1d(class_size),
+                    nn.Linear(class_size, hidden_size),
+                    nn.Tanh(),
+                    nn.BatchNorm1d(hidden_size),
+                    nn.Linear(hidden_size, class_size),
+        )
+    
+    def forward(self, x, label=None):
+        output = self.fc(x)
+        return output
+```
 
+Neural Network를 구축합니다.
+scaling 되지 않은 input을 처리해야 하므로 빨리 수렴할 수 있도록 본 논문에서 제시한 구조와는 조금 다르게 BatchNorm을 사용하였습니다.
+또한 본 논문에서는 Neural Network에 넣기 전 SVM에 tanh activation을 적용을 제시하고 있지만 
+반복 실험한 결과 SVM output에 tanh activation을 적용하면 SVM의 크기 정보가 손실되어 Neural Network가 잘 학습되지 않는 현상이 있습니다.
+따라서 SVM output에 비선형 함수를 적용하지 않고 바로 Neural Network의 input으로 활용합니다.
 
+``` python
+class FaceRecognition(object):
+    def __init__(self, pca, svm, hidden_size, class_size, learning_rate=0.001):
+        ## PCA, SVM setting
+        self.pca = pca
+        self.svm = svm
+        
+        self.class_size = class_size
+        
+        ## Neural Network 구축
+        self.network = NeuralNetwork(hidden_size, class_size)
+        
+        ## loss
+        #self.loss = nn.MSELoss()
+        self.loss = nn.CrossEntropyLoss()
+        self.optimizer = optim.Adam(self.network.parameters(), lr=learning_rate)
+    
+    ## 변환 함수
+    def transform(self, x, label=None):
+        ## PCA를 이용하여 데이터 변환
+        projected_x = self.pca.transform(x) 
+        
+        ## SVM Score 산출
+        class_scores = self.svm.decision_function(projected_x)
+        
+        ## Neural Network로 정규화
+        tensor_score = torch.tensor(class_scores, dtype=torch.float)
+        output = self.network(tensor_score)
+        
+        ## Label 이 있는 경우
+        if label is not None:
+            label = torch.tensor(label, dtype=torch.long)
+            
+            ## MSE를 이용하여 loss 계산
+            return self.loss(output, label)
+        
+        return output
+    
+    ## 학습용 함수
+    def fit(self, x, label):
+        self.network.train()
+        self.network.zero_grad()
+        
+        loss = self.transform(x, label)
+        loss.backward()
+        
+        self.optimizer.step()
+        return float(loss)
+    
+    ## 예측용 함수
+    def predict(self, x):
+        self.network.eval()
+        with torch.no_grad():
+            output = self.transform(x)
+            
+        output = output.argmax(dim=1).cpu().numpy()
+        return output
+    
+    def raw_predict(self, x):
+        ## PCA를 이용하여 데이터 변환
+        projected_x = self.pca.transform(x) 
+        
+        ## SVM Score 산출
+        return self.svm.predict(projected_x)   
+```
 
+최종 얼굴분류 알고리즘 클래스를 다음과 같이 구성합니다.
+앞 단계에서 얻은 hyper-parameter로 setting된 PCA와 SVM을 내부적으로 활용합니다.
+학습용 데이터로 Neural Network가 학습할 수 있도록 `fit`함수를 만들었습니다.
+또한 학습된 모델로 예측할 수 있도록 함수 `predict`를 구성하였습니다.
 
+##### 4. Neural Network 학습
+``` python
+## Best SVM, PCA 모델 hyper-parameter setting
+degree = clf.best_estimator_.get_params()['pca__degree']
+n_components = clf.best_estimator_.get_params()['pca__n_components']
+C = clf.best_estimator_.get_params()['svc__C']
 
-얼굴을 Input으로 받아 구분하기 까지 총 3가지  
+svm = SVC(class_weight ='balanced', C=C)
+pca = KernelPCA(kernel="poly", degree=degree, n_components=n_components)
 
-Kernel-PCA와 Linear-SVM을 활용하여 얼굴을 구분하는 알고리즘을 구축할 수 있습니다.
-
-
-
-
-Kernel-PCA를 이용하여 이미지로부터 특징점을 추출하는 단계입니다.
-본 논문에서는 **Polynomial Kernel을 사용**합니다. 
-Polynomial Kernel-PCA는 Hyper-parameter로 degree를 설정해야 합니다.
-논문에서는 **degree를 4**로 설정했을 때 가장 성능이 좋았다고 기술하고 있습니다.
-또한 알고리즘으로부터 추출된 **eigenvalues 중 큰 순서대로 120개를 뽑아 특징점**으로 활용했을 때 가장 성능이 높다고 기술하고 있습니다.   
-
-
-
-
-
-
-
+## SVM, PCA Fitting
+X_transformed = pca.fit_transform(X_train)
+svm.fit(X_transformed, y_train) 
  
+## 최종 모델 구축
+hidden_size = 10
+model = FaceRecognition(pca, svm, hidden_size=n_classes , class_size=n_classes, learning_rate=0.002) 
  
+## training epoch 설정
+epochs = 300 
+
+## 학습하기
+progress_bar = tqdm(range(epochs), desc='Epoch')
+for epoch in progress_bar:
+    loss = model.fit(X_train, y_train)
+    progress_bar.set_postfix_str("loss [{}]".format(loss))
 
 
+## 최종 모델 성능평가
+y_train_pred = model.predict(X_train)
+print("학습용 데이터 성능 [{}]".format(accuracy_score(y_train, y_train_pred)))
 
+y_test_pred = model.predict(X_test)
+print("검증용 데이터 성능 [{}]".format(accuracy_score(y_test, y_test_pred)))
+``` 
+![](/img/in-post/2020/2020-11-01/train_example.gif)
 
+Neural Network 학습 후 성능을 평가합니다.
+성능 평가 결과 학습용 데이터는 1.0 정확도 성능을 보이고, 검증용 데이터는 0.8 정확도 성능을 보입니다.
 
+>최종모델을 활용한 결과 학습용 데이터에서는 SVM+PCA 만을 사용한 경우와 비슷한 정확도를 보입니다.
+>하지만 검증용 데이터에서 평가 결과 최종모델이 SVM+PCA 모델보다 좋지 못한 성능을 보이는 것을 확인 할 수 있습니다.
+>저자의 주장과는 다르게 SVM+PCA 결과를 Neural Network로 normalize하는 것이 오히려 안 좋은 결과로 도출되었습니다.
+>개인적으로 생각해 봤을 때 이미 SVM은 PCA를 통해 도출한 특징점을 보고 가장 합리적인 Output인 각 class에 대한 점수를 추출합니다.
+>이 점수가 neural network에 들어가면 neural network는 SVM의 다른 것들을 보며 가중치 합으로 최종 output을 만듭니다.
+>즉 neural network가 만든 최종 output은 단순히 SVM으로부터 도출된 각 class 점수를 normalize 하는것이 아니라 복잡한 연산을 통해 다른 class 점수도 함께 이용하여 output을 구성합니다.
+>SVM의 합리적인 결과를 그대로 사용하지 않고 SVM 끼리 상호 작용까지 고려한 결과를 도출한 것입니다.
+>상호작용이 있었다면 검증용데이터에서 성능향상을 볼 수 있었겟지만 상호작용이 없었기 때문에 더 안 좋은 결과가 나온 것으로 생각됩니다.
+>오히려 PCA 결과를 neural network에 바로 활용한 것이 좋은 결과를 도출 할 수 있는 방법이라고 생각합니다.(물론 데이터가 많은 데이터셋에서 유효한 방식입니다.)
+
+[[주피터 파일(튜토리얼)]](https://github.com/JoungheeKim/autoencoder-lstm)에서 튜토리얼의 전체 파일을 제공하고 있습니다.
 
 ## Reference
 - [[PAPER]](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=991133) Face Recognition Using Kernel Principal Component Analysis, 2002
