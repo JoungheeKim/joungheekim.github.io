@@ -55,9 +55,12 @@ Decoder는 입력으로 Encoder에서 생상한 feature를 받아 original 데�
 
 Auto-Encoder의 입력인 $x^{(1)}, x_^{(2)}, x_^{(3)}, ..., x_^{(n)}$ 와 출력인 $\hat{x^{(1)}}, \hat{x^{(2)}}, ..., \hat{x^{(n)}}$ 의 차이인 MSE(Mean Squared Error)를 최소화하는 방향으로 학습합니다.
 
+Auto-Encoder를 학습하는 과정에는 이상치 데이터가 없는 정상 데이터만을 사용합니다.
+또한 Decoder의 입력으로 original 데이터를 활용하는 Teacher Forcing 테크닉을 적용합니다.
+
 ##### 학습 목표
 <center><b>$Minimize \sum_{X \in s_N} \sum_{i=1}^L ||x^{(i)} - \hat{x^{(i)}}||$</b></center>
- 
+**$s_N$** : 정상 데이터
 
 
  
