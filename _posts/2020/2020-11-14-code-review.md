@@ -39,7 +39,7 @@ Decoder는 Encoder에서 받은 Feature를 이용하여 Encoder에서 받은 다
 Encoder의 Input과 Decoder에서 나온 Output의 차이를 줄이도록 학습함으로써 Auto-Encoder는 데이터의 특징을 압축할 수 있습니다. 
 
 ### 학습 과정(Training)
-![](/img/in-post/2020/2020-11-14/autoencoder_example.png)
+![](/img/in-post/2020/2020-11-14/training_process.png)
 <center><b>모델 학습 과정 예시</b></center>
 
 모델 학습과정은 위의 그림과 같습니다.
