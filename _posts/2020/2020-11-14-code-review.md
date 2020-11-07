@@ -137,10 +137,11 @@ Import 에러가 발생하면 해당 **라이브러리를 설치한 후 진행**
 <center><b>Pump Sensor 데이터 예시</b></center>
 
 튜토리얼에서 사용하는 데이터는 [Pump Sensor Dataset](https://www.kaggle.com/nphantawee/pump-sensor-data) 입니다.
-이 데이터는 펌프에 부착된 52개의 센서로부터 계측된 값들이 2018년 4월 ~ 2018년 8월 까지 수집되었습니다.
-약 20만개의 분당 수집된 데이터이며 수집 기간내에 총 7번의 시스템 오류가 존재합니다.
+Pump Sensor Dataset은 펌프에 부착된 52개의 센서로부터 계측된 값들을 2018년 4월 ~ 2018년 8월 까지 분 단위로 수집한 데이터 입니다.
+약 20만개의 데이터로 구성되어 있으며 수집 기간내에 총 7번의 시스템 오류가 존재합니다. 
+라벨정보('NORMAL', 'BROKEN', 'RECOVERING')를 포함하고 있습니다.
 
-해당 데이터는 Kaggle에서 제공하는 데이터로써 Kaggle 가입 후 자유롭게 다운받을 수 있습니다.
+데이터는 Kaggle에서 제공하고 있으므로 Kaggle 가입 후 자유롭게 다운받을 수 있습니다.
 케글 API가 있다면 간단한 명령어를 통해 데이터를 다운받을 수 있습니다.
 ``` python
 !kaggle datasets download -d nphantawee/pump-sensor-data
@@ -156,7 +157,7 @@ df.head()
 ![](/img/in-post/2020/2020-11-14/data_sample.png)
 
 ##### 3. 데이터 전처리
-`pandas` 라이브러리를 통해 불러온 데이터는 각 컬럼의 데이터 타입이 Object이므로 시각화 및 연산할 때 종종 에러가 발생합니다.
+`pandas` 라이브러리를 통해 불러온 데이터는 각 컬럼의 데이터 타입이 ``object``이므로 시각화 및 연산할 때 종종 에러가 발생합니다.
 따라서 "*timestamp*" 컬럼은 datetime으로 "*sensor*" 컬럼은 숫자로 데이터 타입을 변경합니다.  
 ``` python
 ## 데이터 Type 변경
