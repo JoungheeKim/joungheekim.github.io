@@ -138,8 +138,8 @@ Import 에러가 발생하면 해당 **라이브러리를 설치한 후 진행**
 
 튜토리얼에서 사용하는 데이터는 [Pump Sensor Dataset](https://www.kaggle.com/nphantawee/pump-sensor-data) 입니다.
 Pump Sensor Dataset은 펌프에 부착된 52개의 센서로부터 계측된 값들을 2018년 4월 ~ 2018년 8월 까지 분 단위로 수집한 데이터 입니다.
-약 20만개의 데이터로 구성되어 있으며 수집 기간내에 총 7번의 시스템 오류가 존재합니다. 
-라벨정보('NORMAL', 'BROKEN', 'RECOVERING')를 포함하고 있습니다.
+약 20만개의 데이터로 구성되어 있으며 수집 기간내에 <u>총 7번의 시스템 오류</u>가 존재합니다. 
+오류기간을 구분할 수 있는 라벨정보('NORMAL', 'BROKEN', 'RECOVERING')를 포함하고 있습니다.
 
 데이터는 Kaggle에서 제공하고 있으므로 Kaggle 가입 후 자유롭게 다운받을 수 있습니다.
 케글 API가 있다면 간단한 명령어를 통해 데이터를 다운받을 수 있습니다.
@@ -147,7 +147,7 @@ Pump Sensor Dataset은 펌프에 부착된 52개의 센서로부터 계측된 �
 !kaggle datasets download -d nphantawee/pump-sensor-data
 ```
 
-압축 데이터를 다운받고 분석할 폴더에 위치시킨 후 시각화 하여 데이터가 잘 다운되었는지 확인합니다.
+[압축 데이터](https://www.kaggle.com/nphantawee/pump-sensor-data)를 다운받고 분석할 폴더에 위치시킨 후 시각화 하여 데이터가 잘 다운되었는지 확인합니다.
 ``` python
 ## 데이터 불러오기
 df = pd.read_csv('sensor.csv', index_col=0)
@@ -157,8 +157,8 @@ df.head()
 ![](/img/in-post/2020/2020-11-14/data_sample.png)
 
 ##### 3. 데이터 전처리
-`pandas` 라이브러리를 통해 불러온 데이터는 각 컬럼의 데이터 타입이 ``object``이므로 시각화 및 연산할 때 종종 에러가 발생합니다.
-따라서 "*timestamp*" 컬럼은 datetime으로 "*sensor*" 컬럼은 숫자로 데이터 타입을 변경합니다.  
+**pandas 라이브러리**를 통해 불러온 데이터는 각 컬럼의 데이터 타입이 `object`이므로 시각화 및 연산할 때 종종 에러가 발생합니다.
+따라서 "*timestamp*" 컬럼은 `datetime`으로 "*sensor*" 컬럼은 숫자로 데이터 타입을 변경합니다.  
 ``` python
 ## 데이터 Type 변경
 df['date'] = pd.to_datetime(df['timestamp'])
@@ -170,7 +170,8 @@ del df['timestamp']
 df = df.set_index('date')
 ```
 
-결측치 데이터 갯수를 확인하여 보간할 변수들을 확인합니다.
+데이터를 분석 할 때에는 결측치가 없어야 딥러닝 모델을 활용하여 학습 및 추론이 가능합니다.
+따라서 각 변수별 결측치 비율을 시각화하고 제거하거나 보간할 변수들을 확인합니다.
 ``` python
 ## 결측 변수 확인
 (df.isnull().sum()/len(df)).plot.bar(figsize=(18, 8), colormap='Paired')
@@ -178,7 +179,7 @@ df = df.set_index('date')
 ![](/img/in-post/2020/2020-11-14/missing_data.png)
 
 센서 15는 모든 구간이 결측 데이터 이며 센서 50은 결측 비율이 40% 이상입니다. 
-결측비율이 높은 데이터는 보간이 잘 안될뿐더러 보간을 하더라도 모델의 성능을 떨어트리는 영향을 주므로 제거합니다.
+결측비율이 높은 데이터는 정확한 보간이 어려우며 다양한 방법으로 보간을 하더라도 모델의 성능을 하락시키므로 제거합니다.
 나머지 10% 미만의 결측 비율을 갖고 있는 6개의 센서 데이터는 한 시점 이전 데이터를 이용하여 보간하여 사용합니다.
 ``` python
 ## 중복된 데이터를 삭제
@@ -192,6 +193,15 @@ del df['sensor_50']
 df.fillna(method='ffill')
 ```
 
+
+##### 4. 모델 구성하기
+
+``` python
+
+
+```
+LSTM AutoEncoder 모델은 Encoder와 Decoder로 구성되어 있습니다. 
+**Pytorch 라이브러리** 를 이용하여 각 구성요소를 구현합니다. 
 
 
 
