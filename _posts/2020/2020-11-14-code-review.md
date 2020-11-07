@@ -62,8 +62,8 @@ Auto-Encoder를 <u>학습하는 과정</u>에는 이상치 데이터가 없는 *
 <center><b>$Minimize \sum_{X \in s_N} \sum_{i=1}^N ||x^{(i)} - \hat{x^{(i)}}||^2$</b></center>
 **$s_N$** : 정상 데이터  
 **$x^{(i)}$** : original 데이터(input)  
-**$\hat{x^{(i)}}$** : reconstructed 데이터(output)  
-**N** : input sequence length
+**$\hat{x^{(i)}}$** : $i$ 지점의 reconstructed output  
+**$N$** : input sequence length
 
 ### [2]추론 과정(Inference)
 ![](/img/in-post/2020/2020-11-14/inference_process.png)
@@ -75,11 +75,11 @@ Auto-Encoder를 <u>학습하는 과정</u>에는 이상치 데이터가 없는 *
 
 ##### Reconstruction Error 계산
 <center><b>$e^{(i)} = ||x^{(i)} - \hat{x^{(i)}}||$</b></center>
-**$e^{(i)}$** : i지점 데이터의 Reconstruction Error  
+**$e^{(i)}$** : $i$ 지점의 Reconstruction Error  
 
 MSE Loss를 이용하여 학습하였지만 추론 과정에서 Error를 계산하는 방법은 위와 같이 Absolute Error를 활용합니다. 
 
-### [4]데이터 분할
+### [3]데이터 분할
 ![](/img/in-post/2020/2020-11-14/data_split.png)
 <center><b>데이터 활용 예시</b></center>
 
@@ -96,7 +96,7 @@ Reconstruction Error가 정규분포를 따른다고 가정하고 정규분포�
 이 후 아래와 같은 식을 활용하여 각 구간의 비정상 점수(Anomaly Score)를 계산할 수 있습니다.
 
 <center>$a^{(i)} = ( e^{(i)} - \mu )^T \sum^{-1} ( e^{(i)} - \mu )$</center>
-**$a^{(i)}$** : i지점 데이터의 비정상 점수  
+**$a^{(i)}$** : $i$ 지점의 비정상 점수  
 
 이 비정상 점수(Anomaly Score)가 사용자가 지정한 Threshold($\tau$) 를 상회하면 $a^{(i)} > \tau$ 이 지점($i$)를 비정상 이라고 정의합니다.
 이를 통해 추론단계에서 각 지점 및 구간의 비정상 여부를 판단 할 수 있습니다.
@@ -115,15 +115,91 @@ Reconstruction Error가 정규분포를 따른다고 가정하고 정규분포�
 2020.10.11 기준 최신 버전의 라이브러리를 이용하여 구현하였고 이후 **업데이트 버전에 따른 변경은 고려하고 있지 않습니다.**
 <u>Jupyter로 구현한 코드를 기반</u>으로 글을 작성하고 있습니다. 따라서 tqdm 라이브러리를 python 코드로 옮길때 주의가 필요합니다.
 
-#### 데이터
-![](/img/in-post/2020/2020-10-11/data_description.gif)
-<center><b>Moving MNIST 데이터 예시</b></center>
+##### 1. 라이브러리 Import
+``` python
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+from torch import nn
+from torchvision import transforms, datasets
+import easydict
+from tqdm.notebook import tqdm
+from tqdm.notebook import trange
+import torch.utils.data as data
+from celluloid import Camera
+```
+모델을 구현하는데 필요한 라이브러리를 Import 합니다.
+Import 에러가 발생하면 해당 **라이브러리를 설치한 후 진행**해야 합니다.
 
-튜토리얼에서 사용하는 데이터는 [Moving MNIST](http://www.cs.toronto.edu/~nitish/unsupervised_video/) 입니다.
-이 데이터는 9000개의 학습 비디오 데이터와 1000개의 평가 비디오 데이터로 구성되어 있습니다. 
-비디오는 20개의 이미지 frame으로 구성되어 있습니다.
-각 이미지는 64×64 픽셀, 1개의 channel로 구성되어 있고 이미지 내에 두개의 숫자가 임의의 좌표에 위치해 있습니다.
-각 비디오는 두개의 임의의 숫자가 원을 그리며 각각 다른 속도로 움직이고 있습니다.
+#### 2. 데이터 다운로드
+![](/img/in-post/2020/2020-11-14/kaggle_dataset.png)
+<center><b>Pump Sensor 데이터 예시</b></center>
+
+튜토리얼에서 사용하는 데이터는 [Pump Sensor Dataset](https://www.kaggle.com/nphantawee/pump-sensor-data) 입니다.
+이 데이터는 펌프에 부착된 52개의 센서로부터 계측된 값들이 2018년 4월 ~ 2018년 8월 까지 수집되었습니다.
+약 20만개의 분당 수집된 데이터이며 수집 기간내에 총 7번의 시스템 오류가 존재합니다.
+
+해당 데이터는 Kaggle에서 제공하는 데이터로써 Kaggle 가입 후 자유롭게 다운받을 수 있습니다.
+케글 API가 있다면 간단한 명령어를 통해 데이터를 다운받을 수 있습니다.
+``` python
+!kaggle datasets download -d nphantawee/pump-sensor-data
+```
+
+압축 데이터를 다운받고 분석할 폴더에 위치시킨 후 시각화 하여 데이터가 잘 다운되었는지 확인합니다.
+``` python
+## 데이터 불러오기
+df = pd.read_csv('sensor.csv', index_col=0)
+## 데이터 확인
+df.head()
+```
+![](/img/in-post/2020/2020-11-14/data_sample.png)
+
+##### 3. 데이터 전처리
+`pandas` 라이브러리를 통해 불러온 데이터는 각 컬럼의 데이터 타입이 Object이므로 시각화 및 연산할 때 종종 에러가 발생합니다.
+따라서 "*timestamp*" 컬럼은 datetime으로 "*sensor*" 컬럼은 숫자로 데이터 타입을 변경합니다.  
+``` python
+## 데이터 Type 변경
+df['date'] = pd.to_datetime(df['timestamp'])
+for var_index in [item for item in df.columns if 'sensor_' in item]:
+    df[var_index] = pd.to_numeric(df[var_index], errors='coerce')
+del df['timestamp']
+
+## date를 index로 변환
+df = df.set_index('date')
+```
+
+결측치 데이터 갯수를 확인하여 보간할 변수들을 확인합니다.
+``` python
+## 결측 변수 확인
+(df.isnull().sum()/len(df)).plot.bar(figsize=(18, 8), colormap='Paired')
+```
+![](/img/in-post/2020/2020-11-14/missing_data.png)
+
+센서 15는 모든 구간이 결측 데이터 이며 센서 50은 결측 비율이 40% 이상입니다. 
+결측비율이 높은 데이터는 보간이 잘 안될뿐더러 보간을 하더라도 모델의 성능을 떨어트리는 영향을 주므로 제거합니다.
+나머지 10% 미만의 결측 비율을 갖고 있는 6개의 센서 데이터는 한 시점 이전 데이터를 이용하여 보간하여 사용합니다.
+``` python
+## 중복된 데이터를 삭제
+df = df.drop_duplicates()
+
+## 센서 15번, 센서 50 은 삭제
+del df['sensor_15']
+del df['sensor_50']
+
+## 이전 시점의 데이터로 보간
+df.fillna(method='ffill')
+```
+
+
+
+
+## Reference
+- [[PAPER]](https://arxiv.org/abs/1607.00148) LSTM-based Encoder-Decoder for Multi-sensor Anomaly Detection, Pankaj at el
+- [[BLOG]](https://towardsdatascience.com/anomaly-detection-in-time-series-sensor-data-86fd52e62538) Anomaly Detection in Time Series Sensor Data
+- [[KAGGLE]](https://www.kaggle.com/nphantawee/pump-sensor-data) Pump Sensor Data
+
+
 
 
 
