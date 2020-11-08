@@ -111,7 +111,7 @@ Reconstruction Error가 정규분포를 따른다고 가정하고 정규분포�
 ## 코드 구현
 
 <p style="text-align: center;"><b><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> 주의 <i class="fa fa-exclamation-triangle" aria-hidden="true"></i></b></p>  
-튜토리얼은 pytorch, numpy, torchvision, easydict, tqdm, matplotlib, celluloid, tqdm, pickle 라이브러리가 필요합니다.
+튜토리얼은 pytorch, numpy, torchvision, easydict, tqdm, matplotlib, celluloid, pickle 라이브러리가 필요합니다.
 2020.11.14 기준 최신 버전의 라이브러리를 이용하여 구현하였고 이후 **업데이트 버전에 따른 변경은 고려하고 있지 않습니다.**
 <u>Jupyter로 구현한 코드를 기반</u>으로 글을 작성하고 있습니다. 따라서 tqdm 라이브러리를 python 코드로 옮길때 주의가 필요합니다.
 
@@ -140,7 +140,7 @@ Import 에러가 발생하면 해당 **라이브러리를 설치한 후 진행**
 튜토리얼에서 사용하는 데이터는 [Pump Sensor Dataset](https://www.kaggle.com/nphantawee/pump-sensor-data) 입니다.
 Pump Sensor Dataset은 펌프에 부착된 52개의 센서로부터 계측된 값들을 2018년 4월 ~ 2018년 8월 까지 분 단위로 수집한 데이터 입니다.
 약 20만개의 데이터로 구성되어 있으며 수집 기간내에 <u>총 7번의 시스템 오류</u>가 존재합니다. 
-오류기간을 구분할 수 있는 라벨정보('NORMAL', 'BROKEN', 'RECOVERING')를 포함하고 있습니다.
+오류기간을 구분할 수 있는 **라벨정보('NORMAL', 'BROKEN', 'RECOVERING')를 포함**하고 있습니다.
 
 데이터는 Kaggle에서 제공하고 있으므로 Kaggle 가입 후 자유롭게 다운받을 수 있습니다.
 케글 API가 있다면 간단한 명령어를 통해 데이터를 다운받을 수 있습니다.
@@ -237,7 +237,7 @@ df = df.set_index('date')
 ![](/img/in-post/2020/2020-11-14/missing_data.png)
 
 센서 15는 모든 구간이 결측 데이터 이며 센서 50은 결측 비율이 40% 이상입니다. 
-결측비율이 높은 데이터는 정확한 보간이 어려우며 다양한 방법으로 보간을 하더라도 모델의 성능을 하락시키므로 제거합니다.
+**결측비율이 높은 데이터**는 정확한 보간이 어려우며 다양한 방법으로 보간을 하더라도 <u>모델의 성능을 하락</u>시키므로 제거합니다.
 나머지 10% 미만의 결측 비율을 갖고 있는 6개의 센서 데이터는 한 시점 이전 데이터를 이용하여 보간하여 사용합니다.
 
 ``` python
@@ -277,7 +277,7 @@ abnormal_df1 = df.iloc[0:interval_ab]
 abnormal_df2 = df.iloc[interval_ab:]
 ```
 
-시계열 데이터이므로 모델입력의 형태가 특정길이(sequence)의 벡터입니다. 따라서 Shuffle을 사용하지 않고 분리합니다.
+시계열 데이터이므로 모델입력의 형태가 특정길이(sequence)의 벡터입니다. 따라서 **Shuffle을 사용하지 않고 분리**합니다.
 정상데이터는 데이터를 4개로 분리하여 사용합니다. 일반적으로 학습용 데이터의 비율을 높게 하여 분리합니다.
 즉 정상데이터는 학습데이터, 파라미터 설정데이터, 검증용데이터, 실험용데이터의 비율을 7:1:1:1 로 분리합니다.
 비정상데이터는 동일한 비율로 데이터를 2개로 분리합니다. 
@@ -289,9 +289,9 @@ mean_df = normal_df1.mean()
 std_df = normal_df1.std()
 ```
 
-모델은 input(original data)과 output(reconstructed data)의 차이인 MSE Loss를 이용하여 학습합니다. 
+모델은 입력(original data)과 출력(reconstructed data)의 차이인 $MSE Loss$를 이용하여 학습합니다. 
 각 센서데이터(변수)의 단위 차이가 크면 모델은 가장 큰 단위를 갖고 있는 특정 변수의 의존도가 높게 학습됩니다.
-따라서 특정 변수의 의존도를 없애고 모델을 robust하게 하기 위하여 데이터 정규화가 필요합니다.
+따라서 <u>특정 변수의 의존도를 없애고 모델을 robust</u>하게 하기 위하여 **데이터 정규화**가 필요합니다.
 학습용데이터의 평균과 분산을 추출하여 이후 학습, 검증, 평가 시 정규화에 사용합니다. 
 
 ##### 5. 데이터 구조 만들기
@@ -356,8 +356,8 @@ class TagDataset(Dataset):
         return input_values
 ```
 
-pytorch의 Dataset을 상속받아 데이터 Class를 구성합니다.
-데이터 Class는 정규화 과정을 포함하고 있습니다.
+pytorch의 `Dataset`을 상속받아 데이터 클래스를 구성합니다.
+데이터 클래스는 정규화 과정을 포함하고 있습니다.
 
 ##### 6. 모델 구성하기
 
@@ -466,7 +466,7 @@ class LSTMAutoEncoder(nn.Module):
 
 LSTM AutoEncoder 모델은 Encoder와 Decoder로 구성되어 있습니다. 
 **Pytorch 라이브러리** 를 이용하여 각 구성요소를 구현합니다.
-구현 시 주의할 점은 Decoder의 Reconstruction 순서가 입력의 반대로 진행해야 한다는 점 입니다.
+구현 시 주의할 점은 <u>Decoder의 Reconstruction 순서</u>가 **입력의 반대**로 진행해야 한다는 점 입니다.
 > 본 논문에서는 학습 과정에서 origian data를 활용하는 Teacher Forcing 테크닉을 활용하였지만 구현체는 편의상 학습 과정에서 Decoder의 이전 step의 output을 활용하였습니다.
 
 ##### 7. 학습 구성
@@ -554,7 +554,7 @@ def get_loss_list(args, model, test_loader):
 
 모델을 안정적이게 학습하기 위하여 `SGD optimizer` 대신 `Adam optimizer` 을 사용합니다.
 총 반복할 횟수(**max iteration**)를 설정하고 반복횟수를 만족할 때까지 계속 학습을 진행합니다.
-early stop 조건이 있으므로 검증용 데이터의 loss(validation loss)가 매 epoch마다 감소하지 않으면 학습을 중단합니다.
+<u>early stop 조건</u>이 있으므로 검증용 데이터의 loss(validation loss)가 매 epoch마다 감소하지 않으면 학습을 중단합니다.
 
 ##### 8. 모델 & 학습파라미터 설정
 ``` python
@@ -574,7 +574,7 @@ args = easydict.EasyDict({
 ```
 
 모델과 학습 하이퍼파라미터를 설정합니다.
->자원이 넉넉하지 않다면 early stop을 이용하여 모델의 학습 종료 조건을 설정하는 것을 추천드립니다.
+>GPU, CPU 자원이 충분하지 않다면 early stop을 이용하여 모델의 학습 종료 조건을 설정하는 것을 추천드립니다.
 
 ##### 9. 학습하기
 ``` python
@@ -602,7 +602,7 @@ valid_loader = torch.utils.data.DataLoader(
                 shuffle=False)
 ```
 
-배치 형태로 데이터를 불러올 수 있도록 torch 라이브러리의 DataLoader를 활용합니다.
+배치 형태로 데이터를 불러올 수 있도록 torch 라이브러리의 `DataLoader`를 활용합니다.
 
 ``` python
 ## 모델 생성
@@ -647,7 +647,7 @@ class Anomaly_Calculator:
 anomaly_calculator = Anomaly_Calculator(mean, std)
 ```
 
-앞서 계산한 Reconstuction Error의 평균과 공분산을 이용하여 비정상 점수(abnormal Score)를 산출할 수 있는 class를 구현합니다.
+앞서 계산한 Reconstuction Error의 평균과 공분산을 이용하여 비정상 점수(abnormal Score)를 산출할 수 있는 클래스를 구현합니다.
 
 ``` python   
 ## Threshold 찾기
@@ -685,6 +685,7 @@ visualization_df['recons_error'] = total_loss.sum(axis=1)
 ```
 
 비정상 점수를 기준으로 시각화 합니다.
+
 ``` python
 ## 시각화 하기
 fig = plt.figure(figsize=(16, 6))
@@ -759,22 +760,15 @@ if temp_label == "RECOVERING":
 Reconstruction Error도 비슷한 양상을 보이고 있습니다.
 
 ## 결론
-비교적 이상치를 잘 탐지하는 것을 확인 할 수 있습니다. 
-다변량 이상치 탐지 데이터에 바로 적용할 수 있을 정도로 모델의 구조가 간단합니다.
-코드 구현 결과 학습에 사용되지 않은 정상구간에서 비정상 점수가 높게 형성되어 False Alarm 횟수가 많습니다.
-따라서 이런 단점을 보안할 앙상블 모델 또는 후처리 알고리즘이 필요해 보입니다.
+비교적 **이상치를 잘 탐지**하는 것을 확인 할 수 있습니다. 
+다변량 이상치 탐지 데이터에 바로 적용할 수 있을 정도로 **모델의 구조가 간단**합니다.
+코드 구현 결과 학습에 사용되지 않은 <u>정상구간에서 비정상 점수가 높게 형성</u>되어 **False Alarm** 횟수가 많습니다.
+따라서 이런 단점을 보안할 앙상블 모델 또는 **후처리 알고리즘이 필요**해 보입니다.
 Reconstruction Error를 정규분포로 가정하고 평균과 공분산을 구하여 이상치 점수를 계산한 후 이상여부를 판단하지만 시각화 결과 Reconstruction Error를 그대로 사용하는 것과 큰 차이가 없어보입니다. 
-따라서 이상치 점수를 굳이 계산하지 않고 reconstruction Error를 그대로 이상치 점수로 활용하는 것이 더 실용적이게 보입니다.
+따라서 이상치 점수를 굳이 계산하지 않고 <u>reconstruction Error를 그대로 이상치 점수로 활용</u>하는 것이 더 실용적이게 보입니다.
 > [[주피터 파일(튜토리얼)]](/img/in-post/2020/2020-11-14/Anomaly Detection with LSTM AutoEncoder Tutorial.ipynb)에서 튜토리얼의 전체 파일을 제공하고 있습니다.
 
 ## Reference
 - [[PAPER]](https://arxiv.org/abs/1607.00148) LSTM-based Encoder-Decoder for Multi-sensor Anomaly Detection, Pankaj at el
 - [[BLOG]](https://towardsdatascience.com/anomaly-detection-in-time-series-sensor-data-86fd52e62538) Anomaly Detection in Time Series Sensor Data
 - [[KAGGLE]](https://www.kaggle.com/nphantawee/pump-sensor-data) Pump Sensor Data
-
-
-
-
-
-
-
