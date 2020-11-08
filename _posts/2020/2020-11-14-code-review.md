@@ -294,7 +294,7 @@ std_df = normal_df1.std()
 따라서 특정 변수의 의존도를 없애고 모델을 robust하게 하기 위하여 데이터 정규화가 필요합니다.
 학습용데이터의 평균과 분산을 추출하여 이후 학습, 검증, 평가 시 정규화에 사용합니다. 
 
-##### 5. 데이터 셋 구성
+##### 5. 데이터 구조 만들기
 ``` python
 ## 데이터를 불러올 때 index로 불러오기
 def make_data_idx(dates, window_size=1):
@@ -359,15 +359,368 @@ class TagDataset(Dataset):
 pytorch의 Dataset을 상속받아 데이터 Class를 구성합니다.
 데이터 Class는 정규화 과정을 포함하고 있습니다.
 
-##### 4. 모델 구성하기
+##### 6. 모델 구성하기
 
 ``` python
+## 인코더
+class Encoder(nn.Module):
 
+    def __init__(self, input_size=4096, hidden_size=1024, num_layers=2):
+        super(Encoder, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True,
+                            dropout=0.1, bidirectional=False)
 
+    def forward(self, x):
+        outputs, (hidden, cell) = self.lstm(x)  # out: tensor of shape (batch_size, seq_length, hidden_size)
+
+        return (hidden, cell)
+    
+## 디코더
+class Decoder(nn.Module):
+
+    def __init__(self, input_size=4096, hidden_size=1024, output_size=4096, num_layers=2):
+        super(Decoder, self).__init__()
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+        self.num_layers = num_layers
+
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True,
+                            dropout=0.1, bidirectional=False)
+
+        self.relu = nn.ReLU()
+        self.fc = nn.Linear(hidden_size, output_size)
+        
+    def forward(self, x, hidden):
+        output, (hidden, cell) = self.lstm(x, hidden)  # out: tensor of shape (batch_size, seq_length, hidden_size)
+        prediction = self.fc(output)
+
+        return prediction, (hidden, cell)
+    
+## LSTM Auto Encoder
+class LSTMAutoEncoder(nn.Module):
+
+    def __init__(self,
+                 input_dim: int,
+                 latent_dim: int,
+                 window_size: int=1,
+                 **kwargs) -> None:
+        """
+        :param input_dim: 변수 Tag 갯수
+        :param latent_dim: 최종 압축할 차원 크기
+        :param window_size: 길이
+        :param kwargs:
+        """
+
+        super(LSTMAutoEncoder, self).__init__()
+
+        self.latent_dim = latent_dim
+        self.input_dim = input_dim
+        self.window_size = window_size
+
+        if "num_layers" in kwargs:
+            num_layers = kwargs.pop("num_layers")
+        else:
+            num_layers = 1
+
+        self.encoder = Encoder(
+            input_size=input_dim,
+            hidden_size=latent_dim,
+            num_layers=num_layers,
+        )
+        self.reconstruct_decoder = Decoder(
+            input_size=input_dim,
+            output_size=input_dim,
+            hidden_size=latent_dim,
+            num_layers=num_layers,
+        )
+
+    def forward(self, src:torch.Tensor, **kwargs):
+        batch_size, sequence_length, var_length = src.size()
+
+        ## Encoder 넣기
+        encoder_hidden = self.encoder(src)
+        
+        inv_idx = torch.arange(sequence_length - 1, -1, -1).long()
+        reconstruct_output = []
+        temp_input = torch.zeros((batch_size, 1, var_length), dtype=torch.float).to(src.device)
+        hidden = encoder_hidden
+        for t in range(sequence_length):
+            temp_input, hidden = self.reconstruct_decoder(temp_input, hidden)
+            reconstruct_output.append(temp_input)
+        reconstruct_output = torch.cat(reconstruct_output, dim=1)[:, inv_idx, :]
+        
+        return [reconstruct_output, src]
+
+    def loss_function(self,
+                      *args,
+                      **kwargs) -> dict:
+        recons = args[0]
+        input = args[1]
+        
+        ## MSE loss(Mean squared Error)
+        loss =F.mse_loss(recons, input)
+        return loss
 ```
-LSTM AutoEncoder 모델은 Encoder와 Decoder로 구성되어 있습니다. 
-**Pytorch 라이브러리** 를 이용하여 각 구성요소를 구현합니다. 
 
+LSTM AutoEncoder 모델은 Encoder와 Decoder로 구성되어 있습니다. 
+**Pytorch 라이브러리** 를 이용하여 각 구성요소를 구현합니다.
+구현 시 주의할 점은 Decoder의 Reconstruction 순서가 입력의 반대로 진행해야 한다는 점 입니다.
+> 본 논문에서는 학습 과정에서 origian data를 활용하는 Teacher Forcing 테크닉을 활용하였지만 구현체는 편의상 학습 과정에서 Decoder의 이전 step의 output을 활용하였습니다.
+
+##### 7. 학습 구성
+``` python
+def run(args, model, train_loader, test_loader):
+    # optimizer 설정
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+
+    ## 반복 횟수 Setting
+    epochs = tqdm(range(args.max_iter//len(train_loader)+1))
+    
+    ## 학습하기
+    count = 0
+    for epoch in epochs:
+        model.train()
+        optimizer.zero_grad()
+        train_iterator = tqdm(enumerate(train_loader), total=len(train_loader), desc="training")
+
+        for i, batch_data in train_iterator:
+            
+            if count > args.max_iter:
+                return model
+            count += 1
+            
+            batch_data = batch_data.to(args.device)
+            predict_values = model(batch_data)
+            loss = model.loss_function(*predict_values)
+
+            # Backward and optimize
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+            
+            train_iterator.set_postfix({
+                "train_loss": float(loss),
+            })
+
+        model.eval()
+        best_loss = 100000000
+        eval_loss = 0
+        test_iterator = tqdm(enumerate(test_loader), total=len(test_loader), desc="testing")
+        with torch.no_grad():
+            for i, batch_data in test_iterator:
+                
+                batch_data = batch_data.to(args.device)
+                predict_values = model(batch_data)
+                loss = model.loss_function(*predict_values)
+
+                eval_loss += loss.mean().item()
+
+                test_iterator.set_postfix({
+                    "eval_loss": float(loss),
+                })
+        eval_loss = eval_loss / len(test_loader)
+        epochs.set_postfix({
+             "Evaluation Score": float(eval_loss),
+        })
+        if eval_loss < best_loss:
+            best_loss = eval_loss
+        else:
+            if args.early_stop:
+                print('early stop condition   best_loss[{}]  eval_loss[{}]'.format(best_loss, eval_loss))
+                return model
+        
+    return model
+
+def get_loss_list(args, model, test_loader):
+    test_iterator = tqdm(enumerate(test_loader), total=len(test_loader), desc="testing")
+    loss_list = []
+    
+    with torch.no_grad():
+        for i, batch_data in test_iterator:
+                
+            batch_data = batch_data.to(args.device)
+            predict_values = model(batch_data)
+            
+            ## MAE(Mean Absolute Error)로 계산
+            loss = F.l1_loss(predict_values[0], predict_values[1], reduce=False)
+            #loss = loss.sum(dim=2).sum(dim=1).cpu().numpy()
+            loss = loss.mean(dim=1).cpu().numpy()
+            loss_list.append(loss)
+    loss_list = np.concatenate(loss_list, axis=0)
+    return loss_list
+```
+
+모델을 안정적이게 학습하기 위하여 `SGD optimizer` 대신 `Adam optimizer` 을 사용합니다.
+총 반복할 횟수(**max iteration**)를 설정하고 반복횟수를 만족할 때까지 계속 학습을 진행합니다.
+early stop 조건이 있으므로 검증용 데이터의 loss(validation loss)가 매 epoch마다 감소하지 않으면 학습을 중단합니다.
+
+##### 8. 모델 & 학습파라미터 설정
+``` python
+## 설정 폴더
+args = easydict.EasyDict({
+    "batch_size": 128, ## 배치 사이즈 설정
+    "device": torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'), ## GPU 사용 여부 설정
+    "input_size": 40, ## 입력 차원 설정
+    "latent_size": 10, ## Hidden 차원 설정
+    "output_size": 40, ## 출력 차원 설정
+    "window_size" : 3, ## sequence Length
+    "num_layers": 2,     ## LSTM layer 갯수 설정
+    "learning_rate" : 0.001, ## learning rate 설정
+    "max_iter" : 10000, ## 총 반복 횟수 설정
+    'early_stop' : True,  ## valid loss가 작아지지 않으면 early stop 조건 설정
+})
+```
+
+모델과 학습 하이퍼파라미터를 설정합니다.
+>자원이 넉넉하지 않다면 early stop을 이용하여 모델의 학습 종료 조건을 설정하는 것을 추천드립니다.
+
+##### 9. 학습하기
+``` python
+## 데이터셋으로 변환
+normal_dataset1 = TagDataset(df=normal_df1, input_size=args.input_size, window_size=args.window_size, mean_df=mean_df, std_df=std_df)
+normal_dataset2 = TagDataset(df=normal_df2, input_size=args.input_size, window_size=args.window_size, mean_df=mean_df, std_df=std_df)
+normal_dataset3 = TagDataset(df=normal_df3, input_size=args.input_size, window_size=args.window_size, mean_df=mean_df, std_df=std_df)
+normal_dataset4 = TagDataset(df=normal_df4, input_size=args.input_size, window_size=args.window_size, mean_df=mean_df, std_df=std_df)
+abnormal_dataset1 = TagDataset(df=abnormal_df1, input_size=args.input_size, window_size=args.window_size, mean_df=mean_df, std_df=std_df)
+abnormal_dataset2 = TagDataset(df=abnormal_df2, input_size=args.input_size, window_size=args.window_size, mean_df=mean_df, std_df=std_df)
+```
+
+정상데이터와 비정상데이터를 데이터셋 구성체로 변환합니다.
+옵션으로 학습용 정상데이터의 평균(`mean_df`)와 학습용 정상데이터의 분산(`std_df`)를 추가하여 정규화 기능을 활용합니다.
+
+ ``` python
+## Data Loader 형태로 변환
+train_loader = torch.utils.data.DataLoader(
+                 dataset=normal_dataset1,
+                 batch_size=args.batch_size,
+                 shuffle=True)
+valid_loader = torch.utils.data.DataLoader(
+                dataset=normal_dataset2,
+                batch_size=args.batch_size,
+                shuffle=False)
+```
+
+배치 형태로 데이터를 불러올 수 있도록 torch 라이브러리의 DataLoader를 활용합니다.
+
+``` python
+## 모델 생성
+model = LSTMAutoEncoder(input_dim=args.input_size, latent_dim=args.latent_size, window_size=args.window_size, num_layers=args.num_layers)
+model.to(args.device)
+```
+
+설정한 하이퍼 파라미터로 모델을 구성합니다.
+GPU를 활용한다면 모델의 `.to(device)` 함수를 호출하여 모델의 weight를 GPU 메모리에 할당합니다.
+
+``` python
+## 학습하기
+model = run(args, model, train_loader, valid_loader)
+```
+![](/img/in-post/2020/2020-11-14/training_model.gif)
+
+##### 10. 비정상 점수 계산 
+``` python
+## Reconstruction Error를 구하기
+loss_list = get_loss_list(args, model, valid_loader)
+
+## Reconstruction Error의 평균과 Covarinace 계산
+mean = np.mean(loss_list, axis=0)
+std = np.cov(loss_list.T)
+```
+
+학습이 끝난 후 파라미터 설정용 데이터의 Reconstruction Error를 모두 계산하고 그 평균과 공분산을 계산합니다.
+ 
+``` python
+## Anomaly Score
+class Anomaly_Calculator:
+    def __init__(self, mean:np.array, std:np.array):
+        assert mean.shape[0] == std.shape[0] and mean.shape[0] == std.shape[1], '평균과 분산의 차원이 똑같아야 합니다.'
+        self.mean = mean
+        self.std = std
+    
+    def __call__(self, recons_error:np.array):
+        x = (recons_error-self.mean)
+        return np.matmul(np.matmul(x, self.std), x.T)
+
+## 비정상 점수 계산기
+anomaly_calculator = Anomaly_Calculator(mean, std)
+```
+
+앞서 계산한 Reconstuction Error의 평균과 공분산을 이용하여 비정상 점수(abnormal Score)를 산출할 수 있는 class를 구현합니다.
+
+``` python   
+## Threshold 찾기
+anomaly_scores = []
+for temp_loss in tqdm(loss_list):
+    temp_score = anomaly_calculator(temp_loss)
+    anomaly_scores.append(temp_score)
+
+## 정상구간에서 비정상 점수 분포
+print("평균[{}], 중간[{}], 최소[{}], 최대[{}]".format(np.mean(anomaly_scores), np.median(anomaly_scores), np.min(anomaly_scores), np.max(anomaly_scores)))
+```
+
+비정상 점수의 최대, 최소, 평균 값을 산출하고 사용자 지정에 따라 Threshold를 계산합니다.
+
+##### 11. 전체 데이터 시각화
+지금까지 만든 모델과 비정상 점수 계산기를 이용하여 전체 데이터를 시각화하고 잘 작동하는지 확인합니다.  
+
+``` python  
+## 전체 데이터 불러오기
+total_dataset = TagDataset(df=df, input_size=args.input_size, window_size=args.window_size, mean_df=mean_df, std_df=std_df)
+total_dataloader = torch.utils.data.DataLoader(dataset=total_dataset,batch_size=args.batch_size,shuffle=False)
+
+## Reconstruction Loss를 계산하기
+total_loss = get_loss_list(args, model, total_dataloader)
+
+## 이상치 점수 계산하기
+anomaly_scores = []
+for temp_loss in tqdm(total_loss):
+    temp_score = anomaly_calculator(temp_loss)
+    anomaly_scores.append(temp_score)
+
+## 시각화 하기
+visualization_df = total_dataset.df
+visualization_df['score'] = anomaly_scores
+
+fig = plt.figure(figsize=(16, 6))
+ax=fig.add_subplot(111)
+
+## 불량 구간 탐색 데이터
+labels = visualization_df['machine_status'].values.tolist()
+dates = visualization_df.index
+
+
+visualization_df['score'].plot(ax=ax)
+ax.legend(['abnormal score'], loc='upper right')
+
+## 고장구간 표시
+temp_start = dates[0]
+temp_date = dates[0]
+temp_label = labels[0]
+
+for xc, value in zip(dates, labels):
+    if temp_label != value:
+        if temp_label == "BROKEN":
+            ax.axvspan(temp_start, temp_date, alpha=0.2, color='blue')
+        if temp_label == "RECOVERING":
+            ax.axvspan(temp_start, temp_date, alpha=0.2, color='orange')
+        temp_start=xc
+        temp_label=value
+    temp_date = xc
+if temp_label == "BROKEN":
+    ax.axvspan(temp_start, xc, alpha=0.2, color='blue')
+if temp_label == "RECOVERING":
+    ax.axvspan(temp_start, xc, alpha=0.2, color='orange')
+```
+![](/img/in-post/2020/2020-11-14/final_result.png)
+
+비교적 비정상구간에서 비정상 점수가 급격히 상승하는 것을 확인할 수 있습니다.
+정상구간중에서도 학습에 사용한 구간에서는 비정상 점수는 낮게 형성되지만 학습에 사용하지 않은 정상구간의 경우에는 때때로 비정상 점수가 높게 형성되는 False Alarm을 확인할 수 있습니다.
+
+## 결론
+비교적 
+> 파라미터 설정용 데이터를 이용하여 Treshold를 구하였지만 너무 낮게 형성되어 F 
 
 
 ## Reference
