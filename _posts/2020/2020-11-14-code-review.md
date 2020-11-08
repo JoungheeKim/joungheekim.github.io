@@ -133,7 +133,7 @@ from typing import List
 모델을 구현하는데 필요한 라이브러리를 Import 합니다.
 Import 에러가 발생하면 해당 **라이브러리를 설치한 후 진행**해야 합니다.
 
-#### 2. 데이터 다운로드
+##### 2. 데이터 다운로드
 ![](/img/in-post/2020/2020-11-14/kaggle_dataset.png)
 <center><b>Pump Sensor 데이터 예시</b></center>
 
@@ -480,6 +480,7 @@ def run(args, model, train_loader, test_loader):
     
     ## 학습하기
     count = 0
+    best_loss = 100000000
     for epoch in epochs:
         model.train()
         optimizer.zero_grad()
@@ -505,7 +506,6 @@ def run(args, model, train_loader, test_loader):
             })
 
         model.eval()
-        best_loss = 100000000
         eval_loss = 0
         test_iterator = tqdm(enumerate(test_loader), total=len(test_loader), desc="testing")
         with torch.no_grad():
@@ -558,17 +558,17 @@ early stop 조건이 있으므로 검증용 데이터의 loss(validation loss)�
 
 ##### 8. 모델 & 학습파라미터 설정
 ``` python
-## 설정 폴더
+## 하이퍼 파라미터 설정
 args = easydict.EasyDict({
     "batch_size": 128, ## 배치 사이즈 설정
     "device": torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'), ## GPU 사용 여부 설정
     "input_size": 40, ## 입력 차원 설정
     "latent_size": 10, ## Hidden 차원 설정
     "output_size": 40, ## 출력 차원 설정
-    "window_size" : 3, ## sequence Length
+    "window_size" : 3, ## sequence Lenght
     "num_layers": 2,     ## LSTM layer 갯수 설정
     "learning_rate" : 0.001, ## learning rate 설정
-    "max_iter" : 10000, ## 총 반복 횟수 설정
+    "max_iter" : 100000, ## 총 반복 횟수 설정
     'early_stop' : True,  ## valid loss가 작아지지 않으면 early stop 조건 설정
 })
 ```
@@ -679,10 +679,14 @@ for temp_loss in tqdm(total_loss):
     temp_score = anomaly_calculator(temp_loss)
     anomaly_scores.append(temp_score)
 
-## 시각화 하기
 visualization_df = total_dataset.df
 visualization_df['score'] = anomaly_scores
+visualization_df['recons_error'] = total_loss.sum(axis=1)
+```
 
+비정상 점수를 기준으로 시각화 합니다.
+``` python
+## 시각화 하기
 fig = plt.figure(figsize=(16, 6))
 ax=fig.add_subplot(111)
 
@@ -715,12 +719,53 @@ if temp_label == "RECOVERING":
 ```
 ![](/img/in-post/2020/2020-11-14/final_result.png)
 
+Reconstruction Error를 기준으로 시각화 합니다.
+``` python
+## 시각화 하기
+fig = plt.figure(figsize=(16, 6))
+ax=fig.add_subplot(111)
+
+## 불량 구간 탐색 데이터
+labels = visualization_df['machine_status'].values.tolist()
+dates = visualization_df.index
+
+
+visualization_df['recons_error'].plot(ax=ax)
+ax.legend(['reconstruction error'], loc='upper right')
+
+## 고장구간 표시
+temp_start = dates[0]
+temp_date = dates[0]
+temp_label = labels[0]
+
+for xc, value in zip(dates, labels):
+    if temp_label != value:
+        if temp_label == "BROKEN":
+            ax.axvspan(temp_start, temp_date, alpha=0.2, color='blue')
+        if temp_label == "RECOVERING":
+            ax.axvspan(temp_start, temp_date, alpha=0.2, color='orange')
+        temp_start=xc
+        temp_label=value
+    temp_date = xc
+if temp_label == "BROKEN":
+    ax.axvspan(temp_start, xc, alpha=0.2, color='blue')
+if temp_label == "RECOVERING":
+    ax.axvspan(temp_start, xc, alpha=0.2, color='orange')
+```
+
 비교적 비정상구간에서 비정상 점수가 급격히 상승하는 것을 확인할 수 있습니다.
 정상구간중에서도 학습에 사용한 구간에서는 비정상 점수는 낮게 형성되지만 학습에 사용하지 않은 정상구간의 경우에는 때때로 비정상 점수가 높게 형성되는 False Alarm을 확인할 수 있습니다.
+Reconstruction Error도 비슷한 양상을 보이고 있습니다.
 
 ## 결론
-비교적 
-> 파라미터 설정용 데이터를 이용하여 Treshold를 구하였지만 너무 낮게 형성되어 F 
+비교적 이상치를 잘 탐지하는 것을 확인 할 수 있습니다. 
+다변량 이상치 탐지 데이터에 바로 적용할 수 있을 정도로 모델의 구조가 간단합니다.
+코드 구현결과 학습에 사용되지 않은 정상구간에서 비정상 점수가 높게 형성되어 False Alarm 횟수가 많습니다.
+따라서 이런 단점을 보안할 앙상블 모델 또는 후처리 알고리즘이 필요해 보입니다.
+이상치 점수를 정규분포를 가정하고 평균과 공분산을 구하여 계산하지만 실제로 사용해본 결과 비정상 구간에서도 이상치 점수가 튀는 것을 확인 할 수 있습니다.
+이상치 점수를 굳이 계산하지 않고 reconstruction Error를 그대로 이상치 점수로 활용하는 것이 더 실용적이게 보입니다.
+> 
+  
 
 
 ## Reference
