@@ -752,6 +752,7 @@ if temp_label == "BROKEN":
 if temp_label == "RECOVERING":
     ax.axvspan(temp_start, xc, alpha=0.2, color='orange')
 ```
+![](/img/in-post/2020/2020-11-14/final_result2.png)
 
 비교적 비정상구간에서 비정상 점수가 급격히 상승하는 것을 확인할 수 있습니다.
 정상구간중에서도 학습에 사용한 구간에서는 비정상 점수는 낮게 형성되지만 학습에 사용하지 않은 정상구간의 경우에는 때때로 비정상 점수가 높게 형성되는 False Alarm을 확인할 수 있습니다.
@@ -760,13 +761,11 @@ Reconstruction Error도 비슷한 양상을 보이고 있습니다.
 ## 결론
 비교적 이상치를 잘 탐지하는 것을 확인 할 수 있습니다. 
 다변량 이상치 탐지 데이터에 바로 적용할 수 있을 정도로 모델의 구조가 간단합니다.
-코드 구현결과 학습에 사용되지 않은 정상구간에서 비정상 점수가 높게 형성되어 False Alarm 횟수가 많습니다.
+코드 구현 결과 학습에 사용되지 않은 정상구간에서 비정상 점수가 높게 형성되어 False Alarm 횟수가 많습니다.
 따라서 이런 단점을 보안할 앙상블 모델 또는 후처리 알고리즘이 필요해 보입니다.
-이상치 점수를 정규분포를 가정하고 평균과 공분산을 구하여 계산하지만 실제로 사용해본 결과 비정상 구간에서도 이상치 점수가 튀는 것을 확인 할 수 있습니다.
-이상치 점수를 굳이 계산하지 않고 reconstruction Error를 그대로 이상치 점수로 활용하는 것이 더 실용적이게 보입니다.
-> 
-  
-
+Reconstruction Error를 정규분포로 가정하고 평균과 공분산을 구하여 이상치 점수를 계산한 후 이상여부를 판단하지만 시각화 결과 Reconstruction Error를 그대로 사용하는 것과 큰 차이가 없어보입니다. 
+따라서 이상치 점수를 굳이 계산하지 않고 reconstruction Error를 그대로 이상치 점수로 활용하는 것이 더 실용적이게 보입니다.
+> [[주피터 파일(튜토리얼)]](/img/in-post/2020/2020-11-14/Anomaly Detection with LSTM AutoEncoder Tutorial.ipynb)에서 튜토리얼의 전체 파일을 제공하고 있습니다.
 
 ## Reference
 - [[PAPER]](https://arxiv.org/abs/1607.00148) LSTM-based Encoder-Decoder for Multi-sensor Anomaly Detection, Pankaj at el
