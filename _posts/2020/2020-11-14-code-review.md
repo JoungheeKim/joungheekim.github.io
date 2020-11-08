@@ -111,8 +111,8 @@ Reconstruction Error가 정규분포를 따른다고 가정하고 정규분포�
 ## 코드 구현
 
 <p style="text-align: center;"><b><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> 주의 <i class="fa fa-exclamation-triangle" aria-hidden="true"></i></b></p>  
-튜토리얼은 pytorch, numpy, torchvision, easydict, tqdm, matplotlib, celluloid, tqdm 라이브러리가 필요합니다.
-2020.10.11 기준 최신 버전의 라이브러리를 이용하여 구현하였고 이후 **업데이트 버전에 따른 변경은 고려하고 있지 않습니다.**
+튜토리얼은 pytorch, numpy, torchvision, easydict, tqdm, matplotlib, celluloid, tqdm, pickle 라이브러리가 필요합니다.
+2020.11.14 기준 최신 버전의 라이브러리를 이용하여 구현하였고 이후 **업데이트 버전에 따른 변경은 고려하고 있지 않습니다.**
 <u>Jupyter로 구현한 코드를 기반</u>으로 글을 작성하고 있습니다. 따라서 tqdm 라이브러리를 python 코드로 옮길때 주의가 필요합니다.
 
 ##### 1. 라이브러리 Import
@@ -122,12 +122,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch import nn
-from torchvision import transforms, datasets
 import easydict
-from tqdm.notebook import tqdm
-from tqdm.notebook import trange
-import torch.utils.data as data
+from tqdm.notebook import trange, tqdm
+from torch.utils.data import DataLoader, Dataset
 from celluloid import Camera
+import pandas as pd
+import pickle
+from typing import List
 ```
 모델을 구현하는데 필요한 라이브러리를 Import 합니다.
 Import 에러가 발생하면 해당 **라이브러리를 설치한 후 진행**해야 합니다.
@@ -143,11 +144,13 @@ Pump Sensor Dataset은 펌프에 부착된 52개의 센서로부터 계측된 �
 
 데이터는 Kaggle에서 제공하고 있으므로 Kaggle 가입 후 자유롭게 다운받을 수 있습니다.
 케글 API가 있다면 간단한 명령어를 통해 데이터를 다운받을 수 있습니다.
+
 ``` python
 !kaggle datasets download -d nphantawee/pump-sensor-data
 ```
 
 [압축 데이터](https://www.kaggle.com/nphantawee/pump-sensor-data)를 다운받고 분석할 폴더에 위치시킨 후 시각화 하여 데이터가 잘 다운되었는지 확인합니다.
+
 ``` python
 ## 데이터 불러오기
 df = pd.read_csv('sensor.csv', index_col=0)
@@ -156,9 +159,63 @@ df.head()
 ```
 ![](/img/in-post/2020/2020-11-14/data_sample.png)
 
+라벨정보('NORMAL', 'BROKEN', 'RECOVERING')를 이용하여 고장구간을 표시하고 센서데이터를 시각화하여 고장과 센서데이터 사이의 관계를 직관적으로 확인합니다.
+
+``` python
+def plot_sensor(temp_df, save_path='sample.gif'):
+    fig = plt.figure(figsize=(16, 6))
+    ## 에니메이션 만들기
+    camera = Camera(fig)
+    ax=fig.add_subplot(111)
+    
+    ## 불량 구간 탐색 데이터
+    labels = temp_df['machine_status'].values.tolist()
+    dates = temp_df.index
+    
+    for var_name in tqdm([item for item in df.columns if 'sensor_' in item]):
+        ## 센서별로 사진 찍기
+        temp_df[var_name].plot(ax=ax)
+        ax.legend([var_name], loc='upper right')
+        
+        ## 고장구간 표시
+        temp_start = dates[0]
+        temp_date = dates[0]
+        temp_label = labels[0]
+        
+        for xc, value in zip(dates, labels):
+            if temp_label != value:
+                if temp_label == "BROKEN":
+                    ax.axvspan(temp_start, temp_date, alpha=0.2, color='blue')
+                if temp_label == "RECOVERING":
+                    ax.axvspan(temp_start, temp_date, alpha=0.2, color='orange')
+                temp_start=xc
+                temp_label=value
+            temp_date = xc
+        if temp_label == "BROKEN":
+            ax.axvspan(temp_start, xc, alpha=0.2, color='blue')
+        if temp_label == "RECOVERING":
+            ax.axvspan(temp_start, xc, alpha=0.2, color='orange')
+        ## 카메라 찍기
+        camera.snap()
+        
+    animation = camera.animate(500, blit=True)
+    # .gif 파일로 저장하면 끝!
+    animation.save(
+        save_path,
+        dpi=100,
+        savefig_kwargs={
+            'frameon': False,
+            'pad_inches': 'tight'
+        }
+    )
+plot_sensor(df)
+```
+![](/img/in-post/2020/2020-11-14/merge.gif)
+
 ##### 3. 데이터 전처리
 **pandas 라이브러리**를 통해 불러온 데이터는 각 컬럼의 데이터 타입이 `object`이므로 시각화 및 연산할 때 종종 에러가 발생합니다.
 따라서 "*timestamp*" 컬럼은 `datetime`으로 "*sensor*" 컬럼은 숫자로 데이터 타입을 변경합니다.  
+
 ``` python
 ## 데이터 Type 변경
 df['date'] = pd.to_datetime(df['timestamp'])
@@ -172,6 +229,7 @@ df = df.set_index('date')
 
 데이터를 분석 할 때에는 결측치가 없어야 딥러닝 모델을 활용하여 학습 및 추론이 가능합니다.
 따라서 각 변수별 결측치 비율을 시각화하고 제거하거나 보간할 변수들을 확인합니다.
+
 ``` python
 ## 결측 변수 확인
 (df.isnull().sum()/len(df)).plot.bar(figsize=(18, 8), colormap='Paired')
@@ -181,6 +239,7 @@ df = df.set_index('date')
 센서 15는 모든 구간이 결측 데이터 이며 센서 50은 결측 비율이 40% 이상입니다. 
 결측비율이 높은 데이터는 정확한 보간이 어려우며 다양한 방법으로 보간을 하더라도 모델의 성능을 하락시키므로 제거합니다.
 나머지 10% 미만의 결측 비율을 갖고 있는 6개의 센서 데이터는 한 시점 이전 데이터를 이용하여 보간하여 사용합니다.
+
 ``` python
 ## 중복된 데이터를 삭제
 df = df.drop_duplicates()
@@ -193,6 +252,112 @@ del df['sensor_50']
 df.fillna(method='ffill')
 ```
 
+##### 4. 데이터 분리 및 정규화 하기
+``` python
+normal_df = df[df['machine_status']=='NORMAL']
+abnormal_df = df[df['machine_status']!='NORMAL']
+```
+
+본 논문에서는 정상 데이터와 비정상 데이터를 분리하여 학습, 검증, 테스트에 사용합니다.
+따라서 라벨정보를 이용하여 정상 데이터와 비정상 데이터를 분리합니다.
+
+``` python
+## 시계열 데이터이고, 입력의 형태가 특정 길이(window size)의 sequence 데이터 이므로 shuffle은 사용하지 않습니다.
+## Normal 데이터는 학습데이터, 파라미터 설정데이터, 검증용데이터, 실험용데이터의 비율을 7:1:1:1 로 나누어서 사용합니다.
+
+interval_n = int(len(normal_df)/10)
+normal_df1 = df.iloc[0:interval_n*7]
+normal_df2 = df.iloc[interval_n*7:interval_n*8]
+normal_df3 = df.iloc[interval_n*8:interval_n*9]
+normal_df4 = df.iloc[interval_n*9:]
+
+## abnormal 데이터는 검증용데이터, 실험용데이터의 비율을 5:5 로 나누어서 사용합니다.
+interval_ab = int(len(abnormal_df)/2)
+abnormal_df1 = df.iloc[0:interval_ab]
+abnormal_df2 = df.iloc[interval_ab:]
+```
+
+시계열 데이터이므로 모델입력의 형태가 특정길이(sequence)의 벡터입니다. 따라서 Shuffle을 사용하지 않고 분리합니다.
+정상데이터는 데이터를 4개로 분리하여 사용합니다. 일반적으로 학습용 데이터의 비율을 높게 하여 분리합니다.
+즉 정상데이터는 학습데이터, 파라미터 설정데이터, 검증용데이터, 실험용데이터의 비율을 7:1:1:1 로 분리합니다.
+비정상데이터는 동일한 비율로 데이터를 2개로 분리합니다. 
+즉 비정상데이터는 검증용데이터, 실험용데이터의 비율을 5:5 로 분리합니다.
+
+``` python
+## 데이터 정규화를 위하여 분산 및 평균 추출
+mean_df = normal_df1.mean()
+std_df = normal_df1.std()
+```
+
+모델은 input(original data)과 output(reconstructed data)의 차이인 MSE Loss를 이용하여 학습합니다. 
+각 센서데이터(변수)의 단위 차이가 크면 모델은 가장 큰 단위를 갖고 있는 특정 변수의 의존도가 높게 학습됩니다.
+따라서 특정 변수의 의존도를 없애고 모델을 robust하게 하기 위하여 데이터 정규화가 필요합니다.
+학습용데이터의 평균과 분산을 추출하여 이후 학습, 검증, 평가 시 정규화에 사용합니다. 
+
+##### 5. 데이터 셋 구성
+``` python
+## 데이터를 불러올 때 index로 불러오기
+def make_data_idx(dates, window_size=1):
+    input_idx = []
+    for idx in range(window_size-1, len(dates)):
+        cur_date = dates[idx].to_pydatetime()
+        in_date = dates[idx - (window_size-1)].to_pydatetime()
+        
+        _in_period = (cur_date - in_date).days * 24 * 60 + (cur_date - in_date).seconds / 60
+        
+        ## 각 index가 1분 간격으로 떨어져 있는지를 확인합니다.
+        if _in_period == (window_size-1):
+            input_idx.append(list(range(idx - window_size+1, idx+1)))
+    return input_idx
+```
+
+모델은 연속된 시계열 데이터를 이용하여 비정상 점수를 산출해야 합니다.
+따라서 데이터의 연속 여부를 추출하기 위하여 `make_data_idx` 함수를 만듭니다.
+
+``` python
+## Dataset을 상속받아 데이터를 구성
+class TagDataset(Dataset):
+    def __init__(self, input_size, df, mean_df=None, std_df = None, window_size=1):
+        
+        ## 변수 갯수
+        self.input_size = input_size
+        
+        ## 복원할 sequence 길이
+        self.window_size = window_size
+        
+        ## Summary용 데이터 Deep copy
+        original_df = df.copy()
+        
+        ## 정규화
+        if mean_df is not None and std_df is not None:
+            sensor_columns = [item for item in df.columns if 'sensor_' in item]
+            df[sensor_columns] = (df[sensor_columns]-mean_df)/std_df
+        
+        ## 연속한 index를 기준으로 학습에 사용합니다.
+        dates = list(df['date'])
+        self.input_ids = make_data_idx(dates, window_size=window_size)
+        
+        ## sensor 데이터만 사용하여 reconstruct에 활용
+        self.selected_column = [item for item in df.columns if 'sensor_' in item][:input_size]
+        self.var_data = torch.tensor(df[self.selected_column].values, dtype=torch.float)
+        
+        ## Summary 용
+        self.df = original_df.iloc[np.array(self.input_ids)[:, -1]]
+        
+    ## Dataset은 반드시 __len__ 함수를 만들어줘야함(데이터 길이)
+    def __len__(self):
+        return len(self.input_ids)
+    
+    ## Dataset은 반드시 __getitem__ 함수를 만들어줘야함
+    ## torch 모듈은 __getitem__ 을 호출하여 학습할 데이터를 불러옴.
+    def __getitem__(self, item):
+        temp_input_ids = self.input_ids[item]
+        input_values = self.var_data[temp_input_ids]
+        return input_values
+```
+
+pytorch의 Dataset을 상속받아 데이터 Class를 구성합니다.
+데이터 Class는 정규화 과정을 포함하고 있습니다.
 
 ##### 4. 모델 구성하기
 
