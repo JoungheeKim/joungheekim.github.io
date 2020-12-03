@@ -16,7 +16,7 @@ tags:
 이후 많은 사람들이 당시 대결로부터 큰 충격과 영감을 받았으며 딥러닝과 강화학습의 가능성에 큰 기대를 갖고 투자를 시작하여 현재 해당 분야는 많은 발전을 이루었습니다.
 
 ![](https://lh3.googleusercontent.com/kFsqNQX_cQ2bLof_G_2UKCuSwDT34PcZpC8nNHDwaiGFteedmYbJODRnUXz8t_zdCemoWPAX_JxtkjfFHdBKhf819GDxiruo4HYYug=w1440-rw-v1)
-<center><b>다양한 게임에 도전하는 알파고[(출처 : DeepMind Blog)](https://deepmind.com/blog/article/alphazero-shedding-new-light-grand-games-chess-shogi-and-go)</b></center>
+<center><b>다양한 게임에 도전하는 알파고<a href="https://deepmind.com/blog/article/alphazero-shedding-new-light-grand-games-chess-shogi-and-go">[(출처 : DeepMind Blog)]</a></b></center>
 
 현재는 다양한 강화학습 모델이 존재하고 있으며 다양한 분야에 활용되고 있습니다. 강화학습의 종류는 **[여기](https://dreamgonfly.github.io/blog/rl-taxonomy/)** 를 참조하시기 바랍니다.
 오늘 포스팅에서는 강화학습 모델 중 하나인 DQN(Deep Q Network)에 bootstrapping 방법을 적용한 Ensemble 모델인 `Bootstrapped DQN` 에 대해 다루도록 하겠습니다.
@@ -39,12 +39,12 @@ DQN 모델을 이해하기 위해서는 먼저 강화학습이 다루는 문제�
 ![](/img/in-post/2020/2020-12-06/reinforcement_learning_example.png)
 
 강화학습에는 환경(Environment)과 에이전트(Agent)가 있습니다.
-이 포스팅에서는 게임을 예제로 다룰 것이니 *환경*을 게임기라고 하고 *에이전트*를 사람 또는 딥러닝 에이전트라고 생각해 봅시다.
-게임기는 매 시점 마다 현재 게임에서 어떤 상황인지를 파악할 수 있는 정보인 *상태(State)* 와 *보상(Reward)* 에 대한 정보를 제공합니다.
-게임에서 *상태*는 게임화면이라고 볼 수 있고 *보상*은 획득점수 또는 깨진 블럭수(블럭깨기 게임)로 볼 수 있습니다. 
+이 포스팅에서는 게임을 예제로 다룰 것이니 환경을 게임기라고 하고 에이전트를 사람 또는 딥러닝 에이전트라고 생각해 봅시다.
+게임기는 매 시점 마다 현재 게임에서 어떤 상황인지를 파악할 수 있는 정보인 상태(State) 와 보상(Reward) 에 대한 정보를 제공합니다.
+게임에서 상태는 게임화면이라고 볼 수 있고 보상은 획득점수 또는 깨진 블럭수(블럭깨기 게임)로 볼 수 있습니다. 
 
-그 정보를 보고 에이전트는 매 시점에서 어떤 행위를 취해야 할지 결정하고 *행동*을 환경에 전달하게 됩니다.
-게이머가 방향키 키보드를 누르는 행위를 *행동*의 예로 들 수 있습니다.
+그 정보를 보고 에이전트는 매 시점에서 어떤 행위를 취해야 할지 결정하고 행동을 환경에 전달하게 됩니다.
+게이머가 방향키 키보드를 누르는 행위를 행동의 예로 들 수 있습니다.
 
 ![](/img/in-post/2020/2020-12-06/reinforcement_learning_example2.png)
 
@@ -67,14 +67,46 @@ $R$ 은 상태($s$)에서 행동($s$)를 취했을 때 받을 수 있는 즉각�
 보상은 게임에서는 블럭 한개를 깻을 때 받을 수 있는 점수와 같습니다.
 즉 위의 식은 상태($s$)에서 행동($s$)을 취했을 때 받을 수 있는 가치는 즉각적인 가치와 미래 가치를 더한 것이라는 것을 의미합니다.
 
-<center>$가치 \cong 즉각적인 보상 + 미래 가치$</center>
+<center>가치 $\cong$ 즉각적인 보상 + 미래 가치</center>
 
 다만 게임의 경우 빠른 시간에 보상을 얻어 게임을 끝내는 것이 더 좋은 결과이므로 미래 가치에는 시간에 따른 감가율($\gamma$)이 적용되어야 합니다.
 또한 다음 시점의 상태($\grave{s}$)에서 일반적으로 가장 이득을 취할 수 있는 행동을 취할 것이므로 이를 반영하면 위의 식을 변형하여 아래와 같이 표현할 수 있습니다.   
 
 <center>$Q(s,a) \cong R + \gamma \cdot max Q(\grave{s}, \grave{a})$</center>
 
+`Q함수` 대한 정의를 하였고, 이제 위에서 정의한 것처럼 $Q(s,a)$ 가 $R + \gamma \cdot max Q(\grave{s}, \grave{a})$ 가까워지게 만들면 됩니다.
+현재 $Q(s,a)$와 $R + \gamma \cdot max Q(\grave{s}, \grave{a})$ 의 차이에 학습율 $\alpha$를 곱하여 점진적으로 `Q함수`를 근사하는 것이 바로 DQN 강화학습의 목표입니다.
+이는 아래와 같이 표현 할 수 있습니다.
 
+<center>Q함수 = Q함수 + 비율 * 차이</center>
+<center>$Q(s,a) = $Q(s,a) + \alpha( R + \gamma \cdot max Q(\grave{s}, \grave{a}) - Q(s, a) )$</center>
+
+이제 실제 게임과 연결지어 앞서 설명한 내용을 적용하는 방법에 대해 생각해 보겠습니다. 
+
+![](/img/in-post/2020/2020-12-06/game_data.png)
+
+컴퓨터 또는 사람이 게임한 내용을 저장하고 있다고 가정합니다. 
+게임한 내용은 특정 시점에서 화면($s$), 그 시점에서 조작한 행동($a$), 그 행동을 통해 생성된 보상($R$), 그 행동을 통해 다음 시점 변경된 게임화면($\grave{s}$)을 포함하고 있습니다.
+
+![](/img/in-post/2020/2020-12-06/q_sample.png)
+
+이 데이터를 이용하면 다음과 같이 쉽게 식을 구성할 수 있습니다.
+이제 앞서 설명한 것처럼 `Q함수`를 잘 근사하는 모델을 만들고 학습하면 됩니다.
+
+DQN에서는 `Q함수`를 Deep Neural Network를 이용하여 구성합니다.
+DQN은 게임 화면($s$)를 입력으로 받고 각 행동($s$)에 따라 얼마만큼 가치가 있는지 추출할 수 있어야 합니다.
+
+![](/img/in-post/2020/2020-12-06/q_architecture.png)
+
+
+
+
+ `Q함수`
+
+
+
+ $t$ 시점의 화면($s$)과 그것을 
+즉 게임을 한 과거 데이터() 
 
 
 
@@ -136,11 +168,11 @@ Import 에러가 발생하면 해당 **라이브러리를 설치한 후 진행**
 `GYM`은 **OpenAI** 에서 제공하고 있는 가상환경 라이브러리 입니다. 
 이 라이브러리는 다양한 환경을 제공하고 있으나 본 튜토리얼에서는 아타리 게임 중 하나인 breakout_4 를 활용하겠습니다.
 
-`GYM` 라이브러리 설치 방법은 [OpenAI 사이트](https://gym.openai.com/docs/) 에서 가이드를 제공 받을 수 있습니다.
+`GYM` 라이브러리 설치 방법은 [[OpenAI 공식 사이트]](https://gym.openai.com/docs/) 에서 가이드를 제공 받을 수 있습니다.
 하지만 해당 라이브러리는 Linux OS를 기반으로 Build 되었기 때문에 Windows OS 에서 활용하기 위해서는 Wrapper가 필요합니다.
-[[GYM 설치방법 안내]](https://talkingaboutme.tistory.com/entry/RL-Windows-10%EC%97%90%EC%84%9C-OpenAI-Gym-Baselines-%EC%84%A4%EC%B9%98%ED%95%98%EA%B8%B0) 는 Windows OS에서 GYM 라이브러리 설치하는 방법을 안내하고 있으니 참고 바랍니다.
+Windows OS에서 GYM 라이브러리 설치하는 방법은 [[GYM 설치방법 안내]](https://talkingaboutme.tistory.com/entry/RL-Windows-10%EC%97%90%EC%84%9C-OpenAI-Gym-Baselines-%EC%84%A4%EC%B9%98%ED%95%98%EA%B8%B0) 를 참고하시기 바랍니다.
 
-GYM 라이브러리를 정상정으로 설치한 후 게임이 잘 작동하는지 확인해 봅니다.
+`GYM` 라이브러리를 정상정으로 설치한 후 게임이 잘 작동하는지 확인해 봅니다.
 ``` python
 import gym
 from PIL import Image
