@@ -25,16 +25,22 @@ tags:
 혹시 제가 잘못 알고 있는 점이나 보안할 점이 있다면 댓글 부탁드립니다.
 
 #### Short Summary
-이 논문의 큰 특징 2가지는 아래와 같습니다.
+이 논문의 큰 특징 3가지는 아래와 같습니다.
 
 1. 강화학습 모델 DQN을 변형한 앙상블 모델인 **Bootstrapped DQN**의 아키텍처를 제시합니다.
-2. Unbalanced label 시계열 데이터에 **Unsupervised Anomaly Detection 방법론**을 적용하는 방법에 대해 제시합니다.
+2. Mask를 만들어 Replay Momory에 저장되어 있는 데이터를 각 앙상블 모델에 할당하는 Boostraping 방법론을 제시합니다.  
+3. 앙상블 모델이 기존 DQN보다 빠른 시간 안에 학습할 수 있다는 것을 실험적으로 증명합니다. 
+  
 
 ## 논문 리뷰
 
-### DQN 개념
+### Deep Q Learning 이란?
+
 논문에서 활용한 base 모델인 DQN(Deep Q Network)에 대한 짧은 개념을 먼저 소개하고 논문리뷰를 시작하겠습니다.
+이 내용은 **[Playing Atari with Deep Reinforcement Learning](https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf)** 논문과 [Greentec's 블로그](https://greentec.github.io/reinforcement-learning-second/) 참고하여 정리하였습니다.
 DQN 모델을 이해하기 위해서는 먼저 강화학습이 다루는 문제가 어떤 것인지 살펴보겠습니다.
+
+##### [1] Deep Q Learning 기초
 
 ![](/img/in-post/2020/2020-12-06/reinforcement_learning_example.png)
 
@@ -74,12 +80,12 @@ $R$ 은 상태($s$)에서 행동($s$)를 취했을 때 받을 수 있는 즉각�
 
 <center>$Q(s,a) \cong R + \gamma \cdot max Q(\grave{s}, \grave{a})$</center>
 
-`Q함수` 대한 정의를 하였고, 이제 위에서 정의한 것처럼 $Q(s,a)$ 가 $R + \gamma \cdot max Q(\grave{s}, \grave{a})$ 가까워지게 만들면 됩니다.
+`Q함수` 대한 정의를 하였고, 이제 위에서 정의한 것처럼 $Q(s,a)$ 가 $R + \gamma \cdot max Q(\grave{s}, \grave{a})$ 에 가까워지게 만들면 됩니다.
 현재 $Q(s,a)$와 $R + \gamma \cdot max Q(\grave{s}, \grave{a})$ 의 차이에 학습율 $\alpha$를 곱하여 점진적으로 `Q함수`를 근사하는 것이 바로 DQN 강화학습의 목표입니다.
 이는 아래와 같이 표현 할 수 있습니다.
 
 <center>Q함수 = Q함수 + 비율 * 차이</center>
-<center>$Q(s,a) = $Q(s,a) + \alpha( R + \gamma \cdot max Q(\grave{s}, \grave{a}) - Q(s, a) )$</center>
+<center>$Q(s,a) = Q(s,a) + \alpha( R + \gamma \cdot max Q(\grave{s}, \grave{a}) - Q(s, a) )$</center>
 
 이제 실제 게임과 연결지어 앞서 설명한 내용을 적용하는 방법에 대해 생각해 보겠습니다. 
 
@@ -90,13 +96,85 @@ $R$ 은 상태($s$)에서 행동($s$)를 취했을 때 받을 수 있는 즉각�
 
 ![](/img/in-post/2020/2020-12-06/q_sample.png)
 
-이 데이터를 이용하면 다음과 같이 쉽게 식을 구성할 수 있습니다.
+이 데이터를 이용하면 그림과 같이 쉽게 식을 구성할 수 있습니다.
 이제 앞서 설명한 것처럼 `Q함수`를 잘 근사하는 모델을 만들고 학습하면 됩니다.
 
-DQN에서는 `Q함수`를 Deep Neural Network를 이용하여 구성합니다.
-DQN은 게임 화면($s$)를 입력으로 받고 각 행동($s$)에 따라 얼마만큼 가치가 있는지 추출할 수 있어야 합니다.
+##### [2] Deep Q Learning 아키텍처
+
+DQN은 Deep Neural Network를 이용하여 `Q함수`를 근사한 아키텍처를 의미합니다.
+`Q함수`는 게임 화면($s$)를 입력으로 받고 각 행동($s$)에 따라 얼마만큼 가치가 있는지 추출할 수 있어야 합니다.
+이를 딥러닝 아키텍처로 표현한 DQN은 아래와 같습니다.
 
 ![](/img/in-post/2020/2020-12-06/q_architecture.png)
+
+DQN은 크게 Convolution Network와 Linear Layer로 구성되어 있습니다.
+입력으로 게임 이미지(환경)가 3개의 Convolution Network를 통과하면 특징벡터가 생성됩니다.
+생성된 특징벡터를 Linear Layer에 넣으면 행동의 갯수 만큼 벡터가 생성됩니다.
+이 벡터의 요소들이 각각 의미하는 것은 입력으로 넣은 이미지(환경)에서 특정 방향키(행동)을 했을 때의 가치입니다.
+
+##### [3] Deep Q Learning 학습 구조
+
+![](/img/in-post/2020/2020-12-06/overview_base.png)
+<center><b>DQN 강화학습 과정 Overview</b></center>
+
+다음은 Atari 게임을 하면서 DQN의 학습 과정의 전체적인 모습을 보겠습니다.
+상호작용하는 객체는 환경, Target DQN, Policy DQN, Replay Memory가 있습니다.
+
+파란색 선으로 표기된 게임 play 과정 부터 살펴보겠습니다.
+파란색 선에 있는 환경은 게임기를 의미합니다.
+이 게임기는 입력으로 행동(방향키)를 받고 출력으로 상태(게임화면)과 보상(점수)를 제공합니다.
+Target DQN은 상태(게임화면)과 보상(점수)을 입력으로 받고 행동을 출력하는 Deep Nueral Network 입니다.
+Target DQN은 각 행동(방향키)에 대한 점수를 생성하므로 게임을 Play하여 상호작용 할 때에는 매번 DQN을 통해 나온 행동(방향키) 중 점수가 높은 행동(방향 한개)을 선택하여 상호작용합니다.
+즉 게임기와 Target DQN의 상호작용에 따라 게임이 Play 되며, 이로부터 지속적으로 상태와 보상 그리고 행동과 관련된 데이터가 생성됩니다.
+
+다음은 초록색 선으로 표기된 데이터 저장 단계를 살펴보겟습니다.
+게임기와 Target DQN의 상호작용으로 생성된 데이터는 초록색 선으로 표기된 방향으로 이동하여 Replay Memory에 저장됩니다.
+Replay 메모리에 저장되는 데이터는 특정 시점에서 게임화면($s$), 그 시점에서 조작한 행동($a$), 그 행동을 통해 생성된 보상($R$), 그 행동을 통해 다음 시점 변경된 게임화면($\grave{s}$)을 포함하고 있습니다.
+
+다음은 학습 과정입니다.
+빨간색으로 표기된 선처럼 강화학습의 학습과정은 Replay Memory에 저장되어 있는 데이터를 이용합니다.
+Replay Memory에 저장되어 있는 데이터를 Batch 형태로 갖고 와서 Policy DQN을 학습합니다.
+파란색 과정에서 생성된 데이터를 이용하여 바로 학습하지 않고 Replay Memory를 만드는 이유는 Replay Memory에 저장된 여러개의 데이터를 랜덤으로 샘플링하여 Batch 단위로 학습하기 위해서 입니다.
+랜덤으로 샘플링하기 때문에 batch 데이터는 평향되어 있지 않아 학습을 원할하게 하며, 이전 시점에 생성된 데이터를 재활용하여 학습의 안전성을 높일 수 있습니다.
+
+마지막으로 전이 과정입니다.
+학습과정을 통해 사용자가 설정한 횟수 만큼 Policy DQN을 학습한 후 Policy DQN의 학습 정보(Weights)를 Target DQN에 전달합니다.
+즉 Policy DQN을 복제하여 Target DQN으로 교체하는 것을 의미합니다.
+Policy DQN과 Target DQN을 따로 만들고 전이하는 과정을 적용한 이유는 DQN을 이용하여 파란색 선처럼 환경과 상호작용할 때 DQN이 학습되어 매 시점 동일한 상태(게임화면)에서 다른 행동(방향키)을 하게 되면 학습에 방해가 되기 때문입니다.
+
+### Bootstrapped DQN 이란?
+
+Bootsrapped DQN이란 DQN에서 설명한 강화학습 구조에 Bootsrapping 방법을 적용하여 만든 앙상블 모델입니다.
+Bootsrapped DQN은 DQN과 총 3부분이 다릅니다.
+
+![](/img/in-post/2020/2020-12-06/overview_ensemble.png)
+
+1. DQN 모델의 구조
+2. Replay Memory 저장 구조
+3. 환경과 상호작용 시 DQN의 행동을 선택하는 방법
+
+
+
+
+
+
+거시적 관점으로 보면 Bootsrapped DQN은 DQN의 구조를 변형한 모델입니다.
+
+
+
+논문에서 활용한 base 모델인 DQN(Deep Q Network)에 대한 짧은 개념을 먼저 소개하고 논문리뷰를 시작하겠습니다.
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -217,6 +295,7 @@ env.close()
 
 
 ## Reference
-- [[PAPER]](https://arxiv.org/abs/1607.00148) Deep Exploration via Bootstrapped DQN, Osband at el
+- [[PAPER]](https://arxiv.org/abs/1607.00148) Deep Exploration via Bootstrapped DQN, Osband at el, NIPS 2016
+- [[PAPER]](https://arxiv.org/abs/1607.00148) Playing Atari with Deep Reinforcement Learning, Osband at el
 - [[BLOG]](https://greentec.github.io/reinforcement-learning-second/) 강화학습 알아보기(DQN)
 - [[GITHUB]](https://github.com/johannah/bootstrap_dqn) Bootstrap DQN(Pytorch Implementation)
