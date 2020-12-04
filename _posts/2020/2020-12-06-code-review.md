@@ -455,7 +455,7 @@ class memoryDataset(object):
 ```
 
 ![](/img/in-post/2020/2020-12-06/replay_memory.png)
-<center><b>Replay Memory</b></center>
+<center><b>Replay Memory 예시</b></center>
 
 Replay 메모리에 저장되는 정보는 상태(state), 행동(action), 다음상태(next_state), 보상(reward), 재시작여부(done), 목숨(life), 종료여부(terminal) 가 있습니다.
 Replay 메모리는 데이터를 저장하는 기능과 Batch 사이즈로 데이터를 추출하는 기능을 갖고 있어야 합니다.
@@ -667,6 +667,7 @@ Loss의 식을 보면 위에서 언급한 것처럼 현재 $Q(s,a)$와 $R + \gam
 
 <center>Q함수 = Q함수 + 비율 * 차이</center>
 <center>$Q(s,a) = Q(s,a) + \alpha( R + \gamma \cdot max Q(\grave{s}, \grave{a}) - Q(s, a) )$</center>
+
 
 ```python
 class DQNSolver():
