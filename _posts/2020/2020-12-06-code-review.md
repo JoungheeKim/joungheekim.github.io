@@ -28,8 +28,8 @@ tags:
 이 논문의 큰 특징 3가지는 아래와 같습니다.
 
 1. 강화학습 모델 DQN을 변형한 앙상블 모델인 **Bootstrapped DQN**의 아키텍처를 제시합니다.
-2. Mask를 만들어 Replay Momory에 저장되어 있는 데이터를 각 앙상블 모델에 할당하는 Boostraping 방법론을 제시합니다.  
-3. 앙상블 모델이 기존 DQN보다 빠른 시간 안에 학습할 수 있다는 것을 실험적으로 증명합니다. 
+2. Mask를 만들어 Replay Momory에 저장되어 있는 데이터를 각 앙상블 모델에 할당하는 **Boostraping 방법론**을 제시합니다.  
+3. 앙상블 모델이 기존 DQN보다 **빠른 시간 안에 학습**할 수 있다는 것을 실험적으로 증명합니다. 
   
 
 ## 논문 리뷰
@@ -37,7 +37,7 @@ tags:
 ### Deep Q Learning 이란?
 
 논문에서 활용한 base 모델인 DQN(Deep Q Network)에 대한 짧은 개념을 먼저 소개하고 논문리뷰를 시작하겠습니다.
-이 내용은 **[Playing Atari with Deep Reinforcement Learning](https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf)** 논문과 [Greentec's 블로그](https://greentec.github.io/reinforcement-learning-second/) 참고하여 정리하였습니다.
+이 내용은 **[Playing Atari with Deep Reinforcement Learning](https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf)** 논문과 **[Greentec's 블로그](https://greentec.github.io/reinforcement-learning-second/)** 를 참고하여 정리하였습니다.
 DQN 모델을 이해하기 위해서는 먼저 강화학습이 다루는 문제가 어떤 것인지 살펴보겠습니다.
 
 ##### [1] Deep Q Learning 기초
@@ -55,11 +55,11 @@ DQN 모델을 이해하기 위해서는 먼저 강화학습이 다루는 문제�
 ![](/img/in-post/2020/2020-12-06/reinforcement_learning_example2.png)
 
 매 시점 보상이 생성되는 게임도 있지만 일반적으로 이벤트(블럭이 감소)가 발생한 특정시점에 생성됩니다.
-강화학습의 목표는 매 시점 주어진 환경에서 보상을 최대한 많이 받을 수 있도록 에이전트를 만드는 것(학습)입니다.
+강화학습의 목표는 매 시점 주어진 환경에서 **보상을 최대한 많이 받을 수 있도록** 에이전트를 만드는 것(학습)입니다.
 
-강화학습 모델 중 DQN은 상태와 행동을 가치(Value)로 치환하는 함수 `Q`를 만들어 강화학습에 적용하는 방법론입니다.
+강화학습 모델 중 DQN은 상태와 행동을 가치(Value)로 치환하는 함수 `Q함수` 를 만들어 강화학습에 적용하는 방법론입니다.
 이 방법은 매 시점 상태(게임화면)를 보고 특정 행위(왼쪽, 오른쪽)를 선택했을 때 얻을 수 있는 가치(Value)를 모델링 하는 방법입니다.
-즉 특정 상태(게임화면)를 보고 특정 행위(왼쪽, 오른쪽)을 선택했을 때 얻을 수 있는 보상을 알 수 있다면 매 시점 가장 큰 미래의 보상을 보장하는 행위를 선택하면 되는 문제로 바뀔 수 있습니다.
+즉 특정 상태(게임화면)를 보고 특정 <u>행위(왼쪽, 오른쪽)을 선택했을 때 얻을 수 있는 보상을 알 수 있다면</u> 매 시점 가장 큰 **미래의 보상을 보장하는 행위를 선택하면 되는 문제**로 바뀔 수 있습니다.
 
 ![](/img/in-post/2020/2020-12-06/q_function.png)
 
@@ -81,7 +81,7 @@ $R$ 은 상태($s$)에서 행동($s$)를 취했을 때 받을 수 있는 즉각�
 <center>$Q(s,a) \cong R + \gamma \cdot max Q(\grave{s}, \grave{a})$</center>
 
 `Q함수` 대한 정의를 하였고, 이제 위에서 정의한 것처럼 $Q(s,a)$ 가 $R + \gamma \cdot max Q(\grave{s}, \grave{a})$ 에 가까워지게 만들면 됩니다.
-현재 $Q(s,a)$와 $R + \gamma \cdot max Q(\grave{s}, \grave{a})$ 의 차이에 학습율 $\alpha$를 곱하여 점진적으로 `Q함수`를 근사하는 것이 바로 DQN 강화학습의 목표입니다.
+현재 $Q(s,a)$와 $R + \gamma \cdot max Q(\grave{s}, \grave{a})$ 의 차이에 학습율 $\alpha$를 곱하여 점진적으로 `Q함수`를 **근사**하는 것이 바로 <u>DQN 강화학습의 목표</u>입니다.
 이는 아래와 같이 표현 할 수 있습니다.
 
 <center>Q함수 = Q함수 + 비율 * 차이</center>
@@ -114,7 +114,7 @@ DQN은 Deep Neural Network를 이용하여 `Q함수`를 근사한 아키텍처�
 DQN은 크게 Convolution Network와 Linear Layer로 구성되어 있습니다.
 입력으로 게임 이미지(환경)가 3개의 Convolution Network를 통과하면 특징벡터가 생성됩니다.
 생성된 특징벡터를 Linear Layer에 넣으면 행동의 갯수 만큼 벡터가 생성됩니다.
-이 벡터의 요소들이 각각 의미하는 것은 입력으로 넣은 이미지(환경)에서 특정 방향키(행동)을 했을 때의 가치입니다.
+이 벡터의 요소들이 각각 의미하는 것은 입력으로 넣은 **이미지(환경)에서 특정 방향키(행동)을 했을 때의 가치**입니다.
 
 ##### [3] Deep Q Learning 학습 구조
 
@@ -124,24 +124,24 @@ DQN은 크게 Convolution Network와 Linear Layer로 구성되어 있습니다.
 다음은 Atari 게임을 하면서 DQN의 학습 과정의 전체적인 모습을 보겠습니다.
 상호작용하는 객체는 환경, Target DQN, Policy DQN, Replay Memory가 있습니다.
 
-파란색 선으로 표기된 게임 play 과정 부터 살펴보겠습니다.
-파란색 선에 있는 환경은 게임기를 의미합니다.
+<span style="color:blue">파란색 선</span>으로 표기된 게임 play 과정 부터 살펴보겠습니다.
+<span style="color:blue">파란색 선</span>에 있는 환경은 게임기를 의미합니다.
 이 게임기는 입력으로 행동(방향키)를 받고 출력으로 상태(게임화면)과 보상(점수)를 제공합니다.
 Target DQN은 상태(게임화면)과 보상(점수)을 입력으로 받고 행동을 출력하는 Deep Nueral Network 입니다.
 Target DQN은 각 행동(방향키)에 대한 점수를 생성하므로 게임을 Play하여 상호작용 할 때에는 매번 DQN을 통해 나온 행동(방향키) 중 점수가 높은 행동(방향 한개)을 선택하여 상호작용합니다.
 즉 게임기와 Target DQN의 상호작용에 따라 게임이 Play 되며, 이로부터 지속적으로 상태와 보상 그리고 행동과 관련된 데이터가 생성됩니다.
 
-다음은 초록색 선으로 표기된 데이터 저장 단계를 살펴보겟습니다.
-게임기와 Target DQN의 상호작용으로 생성된 데이터는 초록색 선으로 표기된 방향으로 이동하여 Replay Memory에 저장됩니다.
+다음은 <span style="color:green">초록색 선</span>으로 표기된 데이터 저장 단계를 살펴보겟습니다.
+게임기와 Target DQN의 상호작용으로 생성된 데이터는 <span style="color:green">초록색 선</span>으로 표기된 방향으로 이동하여 Replay Memory에 저장됩니다.
 Replay 메모리에 저장되는 데이터는 특정 시점에서 게임화면($s$), 그 시점에서 조작한 행동($a$), 그 행동을 통해 생성된 보상($R$), 그 행동을 통해 다음 시점 변경된 게임화면($\grave{s}$)을 포함하고 있습니다.
 
 다음은 학습 과정입니다.
-빨간색으로 표기된 선처럼 강화학습의 학습과정은 Replay Memory에 저장되어 있는 데이터를 이용합니다.
+<span style="color:red">빨간색으로 표기된 선</span>처럼 강화학습의 학습과정은 Replay Memory에 저장되어 있는 데이터를 이용합니다.
 Replay Memory에 저장되어 있는 데이터를 Batch 형태로 갖고 와서 Policy DQN을 학습합니다.
-파란색 과정에서 생성된 데이터를 이용하여 바로 학습하지 않고 Replay Memory를 만드는 이유는 Replay Memory에 저장된 여러개의 데이터를 랜덤으로 샘플링하여 Batch 단위로 학습하기 위해서 입니다.
+<span style="color:blue">파란색 과정</span>에서 생성된 데이터를 이용하여 바로 학습하지 않고 Replay Memory를 만드는 이유는 Replay Memory에 저장된 여러개의 데이터를 랜덤으로 샘플링하여 Batch 단위로 학습하기 위해서 입니다.
 랜덤으로 샘플링하기 때문에 batch 데이터는 평향되어 있지 않아 학습을 원할하게 하며, 이전 시점에 생성된 데이터를 재활용하여 학습의 안전성을 높일 수 있습니다.
 
-마지막으로 전이 과정입니다.
+마지막으로 <span style="color:orange">전이 과정</span>입니다.
 학습과정을 통해 사용자가 설정한 횟수 만큼 Policy DQN을 학습한 후 Policy DQN의 학습 정보(Weights)를 Target DQN에 전달합니다.
 즉 Policy DQN을 복제하여 Target DQN으로 교체하는 것을 의미합니다.
 Policy DQN과 Target DQN을 따로 만들고 전이하는 과정을 적용한 이유는 DQN을 이용하여 파란색 선처럼 환경과 상호작용할 때 DQN이 학습되어 매 시점 동일한 상태(게임화면)에서 다른 행동(방향키)을 하게 되면 학습에 방해가 되기 때문입니다.
@@ -149,15 +149,15 @@ Policy DQN과 Target DQN을 따로 만들고 전이하는 과정을 적용한 �
 ### Bootstrapped DQN 이란?
 
 Bootstrapped DQN이란 DQN에서 설명한 강화학습 구조에 Bootstrapping 방법을 적용하여 만든 앙상블 모델입니다.
-Bootstrapped DQN은 DQN과 총 3부분이 다릅니다.
+Bootstrapped DQN은 DQN과 총 **3부분**이 다릅니다.
 
 ![](/img/in-post/2020/2020-12-06/overview_ensemble.png)
 <center><b>Bootstrapped DQN 강화학습 과정 Overview</b></center>
 
-1. 앙상블 DQN 모델의 구조
-2. Replay Memory 저장 구조
-3. 데이터 수집할 때 앙상블 DQN의 행동을 선택하는 방법
-4. 평가 할 때 앙상블 DQN의 행동을 선택하는 방법
+1. **앙상블 DQN 모델의 구조**
+2. **Replay Memory 저장 구조**
+3. **데이터 수집할 때 앙상블 DQN의 행동을 선택하는 방법**
+4. **평가 할 때 앙상블 DQN의 행동을 선택하는 방법**
 
 ##### [1] 앙상블 DQN 아키텍처
 
@@ -167,7 +167,7 @@ Bootstrapped DQN은 DQN과 총 3부분이 다릅니다.
 앙상블 DQN의 입력과 출력은 DQN과 동일합니다.
 앙상블 DQN은 입력으로 이미지(게임화면)을 받고 Neural 각 행동(방향키)에 대한 가치를 출력합니다. 
 앙상블 DQN은 DQN과의 차이점은 Linear Layer 부분입니다.
-앙상블 DQN은 k개의 Linear Layer를 구성하고 이를 Head라고 부릅니다.
+앙상블 DQN은 **k개의 Linear Layer를 구성**하고 이를 Head라고 부릅니다.
 Convolution Network를 통해 나온 특징벡터는 각각 Head에 들어가 행동(방향키)에 대한 가치로 변환됩니다.
 즉 앙상블 DQN은 Convolution Network를 공유하지만 Linear Network는 따로 설계함으로써 서로 다른 행동(방향키)를 출력할 수 있도록 만든 앙상블 모델입니다.
 
@@ -181,8 +181,8 @@ Bootstrapped DQN은 Bootstrapping을 적용하기 위하여 학습 데이터를 
 테그 정보는 binomial 분포를 통해 0 또는 1이 부여됩니다.
 같은 Replay 데이터가 여러개의 Head로 할당 될 수 있습니다.
 위의 그림에서 처럼 Head가 2개이고 Head1을 학습할 때 사용하는 Replay 데이터는 $h_1$ 이 1로 태깅된 데이터 입니다.
-테깅을 통해 앙상블 DQN의 각 Head를 서로 다른 데이터로 학습할 수 있습니다. 
-이는 데이터를 복원 추출함으로써 Bootstrapping을 적용하는 일반적인 앙상블의 학습 과정과 비슷한 장치로 볼 수 있습니다. 
+**테깅을 통해 앙상블 DQN의 각 Head를 서로 다른 데이터로 학습**할 수 있습니다. 
+이는 데이터를 복원 추출함으로써 <u>Bootstrapping을 적용</u>하는 일반적인 앙상블의 학습 과정과 비슷한 장치로 볼 수 있습니다. 
 
 ##### [3] 앙상블 DQN 행동 선택 방법(수집)
 
@@ -194,8 +194,8 @@ Bootstrapped DQN은 Bootstrapping을 적용하기 위하여 학습 데이터를 
 게임을 시작한 후 끝나게 되는 지점까지를 episod라고 부릅니다.
 일반적으로 환경과 상호작용할 때 여러번 episod를 반복하여 수행합니다.
 DQN의 경우 head가 1개이기 때문에 target DQN의 가치에 따라 행동을 결정하여 episod를 진행하면 됩니다.
-앙상블 DQN의 경우 head가 여러개이기 때문에 한개의 episod를 진행할 때 어떤 head를 사용해야 할지를 결정합니다.
-즉 각 episod에서 행동을 결정할 때 쓰는 DQN의 head는 1개로 고정하고 사용합니다.
+앙상블 DQN의 경우 head가 여러개이기 때문에 **episod를 진행할 때 어떤 head를 사용해야 할지를 결정**합니다.
+즉 <u>각 episod</u>에서 행동을 결정할 때 쓰는 **DQN의 head는 1개로 고정**하고 사용합니다.
 이렇게 함으로써 episod별 다양한 데이터를 확보할 수 있다는 장점을 갖고 있습니다.
 
 ##### [4] 앙상블 DQN 행동 선택 방법(평가)
@@ -203,9 +203,9 @@ DQN의 경우 head가 1개이기 때문에 target DQN의 가치에 따라 행동
 ![](/img/in-post/2020/2020-12-06/ensemble_action(evaluate).png)
 <center><b>앙상블 DQN 행동 선택(Evaluate)</b></center>
 
-학습한 앙상블 DQN을 이용하여 평가할 때 행동을 선택하는 방법은 Voting입니다.
+학습한 앙상블 DQN을 이용하여 평가할 때 행동을 선택하는 방법은 **Voting**입니다.
 상태(게임화면)을 입력으로 넣으면 앙상블 모델의 각 head로 부터 행동의 가치가 추출됩니다.
-각 head별 행동의 가치가 높은 행동(방향키)을 각각 도출한 후 각 행동의 빈도가 가장 많은 행동을 최종 행동으로 선택합니다. 
+각 head별 행동의 가치가 높은 행동(방향키)을 각각 도출한 후 각 행동의 빈도가 **가장 많은 행동을 최종 행동으로 선택**합니다. 
 
 
 ## 코드 구현
@@ -774,6 +774,10 @@ class DQNSolver():
 `env.reset()` 함수를 이용하여 환경을 초기화 하고 게임 화면을 하나씩 받아 `memory.push` 함수를 이용하여 Replay Memory에 저장합니다.
 저장된 데이터가 일정 갯수를 초과하면 `replay` 함수를 호출하여 Replay Memory에 저장된 데이터로 Policy DQN을 학습 합니다.
 이렇게 학습을 반복하면서 가장 성능이 높은 모델을 저장하고 종료합니다.
+
+##### 6. 결과화면
+준비중... 잠시만 기다려 주세요....
+
 
 ## 결론
 앙상블 DQN은 DQN에 Bootstrapping을 적용한 모델입니다.
