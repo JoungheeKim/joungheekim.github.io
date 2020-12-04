@@ -89,6 +89,9 @@ $R$ 은 상태($s$)에서 행동($s$)를 취했을 때 받을 수 있는 즉각�
 
 이제 실제 게임과 연결지어 앞서 설명한 내용을 적용하는 방법에 대해 생각해 보겠습니다. 
 
+>DQN의 핵심을 간략하게 서술했기 때문에 기반지식 없이 이해하기 어려울 수 있습니다.
+>강화학습의 자세한 내용은 [강화학습 알아보기 BLOG](https://greentec.github.io/reinforcement-learning-second/) 를 방문하시어 확인하시기 바랍니다.
+
 ![](/img/in-post/2020/2020-12-06/game_data.png)
 
 컴퓨터 또는 사람이 게임한 내용을 저장하고 있다고 가정합니다. 
@@ -106,6 +109,7 @@ DQN은 Deep Neural Network를 이용하여 `Q함수`를 근사한 아키텍처�
 이를 딥러닝 아키텍처로 표현한 DQN은 아래와 같습니다.
 
 ![](/img/in-post/2020/2020-12-06/q_architecture.png)
+<center><b>DQN 아키텍처</b></center>
 
 DQN은 크게 Convolution Network와 Linear Layer로 구성되어 있습니다.
 입력으로 게임 이미지(환경)가 3개의 Convolution Network를 통과하면 특징벡터가 생성됩니다.
@@ -144,105 +148,98 @@ Policy DQN과 Target DQN을 따로 만들고 전이하는 과정을 적용한 �
 
 ### Bootstrapped DQN 이란?
 
-Bootsrapped DQN이란 DQN에서 설명한 강화학습 구조에 Bootsrapping 방법을 적용하여 만든 앙상블 모델입니다.
-Bootsrapped DQN은 DQN과 총 3부분이 다릅니다.
+Bootstrapped DQN이란 DQN에서 설명한 강화학습 구조에 Bootstrapping 방법을 적용하여 만든 앙상블 모델입니다.
+Bootstrapped DQN은 DQN과 총 3부분이 다릅니다.
 
 ![](/img/in-post/2020/2020-12-06/overview_ensemble.png)
+<center><b>Bootstrapped DQN 강화학습 과정 Overview</b></center>
 
-1. DQN 모델의 구조
+1. 앙상블 DQN 모델의 구조
 2. Replay Memory 저장 구조
-3. 환경과 상호작용 시 DQN의 행동을 선택하는 방법
+3. 데이터 수집할 때 앙상블 DQN의 행동을 선택하는 방법
+4. 평가 할 때 앙상블 DQN의 행동을 선택하는 방법
+
+##### [1] 앙상블 DQN 아키텍처
+
+![](/img/in-post/2020/2020-12-06/ensemble_architecture.png)
+<center><b>앙상블 DQN 아키텍처</b></center>
+
+앙상블 DQN의 입력과 출력은 DQN과 동일합니다.
+앙상블 DQN은 입력으로 이미지(게임화면)을 받고 Neural 각 행동(방향키)에 대한 가치를 출력합니다. 
+앙상블 DQN은 DQN과의 차이점은 Linear Layer 부분입니다.
+앙상블 DQN은 k개의 Linear Layer를 구성하고 이를 Head라고 부릅니다.
+Convolution Network를 통해 나온 특징벡터는 각각 Head에 들어가 행동(방향키)에 대한 가치로 변환됩니다.
+즉 앙상블 DQN은 Convolution Network를 공유하지만 Linear Network는 따로 설계함으로써 서로 다른 행동(방향키)를 출력할 수 있도록 만든 앙상블 모델입니다.
+
+##### [2] Replay Memory with Bootstrapping
+
+![](/img/in-post/2020/2020-12-06/ensemble_memory.png)
+<center><b>Bootstrapped Replay Memory</b></center>
+
+Bootstrapped DQN은 Bootstrapping을 적용하기 위하여 학습 데이터를 저장하고 있는 Replay Memory에 한가지 태그 정보($h_1, h_2, ..., h_k$)를 추가합니다.
+태그 정보가 의미하는 것은 특정 Replay 데이터를 Bootstrapped DQN의 특정 Head의 학습에 사용할지 여부입니다.
+테그 정보는 binomial 분포를 통해 0 또는 1이 부여됩니다.
+같은 Replay 데이터가 여러개의 Head로 할당 될 수 있습니다.
+위의 그림에서 처럼 Head가 2개이고 Head1을 학습할 때 사용하는 Replay 데이터는 $h_1$ 이 1로 태깅된 데이터 입니다.
+테깅을 통해 앙상블 DQN의 각 Head를 서로 다른 데이터로 학습할 수 있습니다. 
+이는 데이터를 복원 추출함으로써 Bootstrapping을 적용하는 일반적인 앙상블의 학습 과정과 비슷한 장치로 볼 수 있습니다. 
+
+##### [3] 앙상블 DQN 행동 선택 방법(수집)
+
+![](/img/in-post/2020/2020-12-06/ensemble_action(train).png)
+<center><b>앙상블 DQN 행동 선택(Train)</b></center>
+
+게임과 같은 강화학습의 구조는 시작과 끝이 있습니다.
+게임에서 공을 놓쳐 life가 0이 되거나 특정 시간이 지나면 게임이 종료 됩니다.
+게임을 시작한 후 끝나게 되는 지점까지를 episod라고 부릅니다.
+일반적으로 환경과 상호작용할 때 여러번 episod를 반복하여 수행합니다.
+DQN의 경우 head가 1개이기 때문에 target DQN의 가치에 따라 행동을 결정하여 episod를 진행하면 됩니다.
+앙상블 DQN의 경우 head가 여러개이기 때문에 한개의 episod를 진행할 때 어떤 head를 사용해야 할지를 결정합니다.
+즉 각 episod에서 행동을 결정할 때 쓰는 DQN의 head는 1개로 고정하고 사용합니다.
+이렇게 함으로써 episod별 다양한 데이터를 확보할 수 있다는 장점을 갖고 있습니다.
+
+##### [4] 앙상블 DQN 행동 선택 방법(평가)
+
+![](/img/in-post/2020/2020-12-06/ensemble_action(evaluate).png)
+<center><b>앙상블 DQN 행동 선택(Evaluate)</b></center>
+
+학습한 앙상블 DQN을 이용하여 평가할 때 행동을 선택하는 방법은 Voting입니다.
+상태(게임화면)을 입력으로 넣으면 앙상블 모델의 각 head로 부터 행동의 가치가 추출됩니다.
+각 head별 행동의 가치가 높은 행동(방향키)을 각각 도출한 후 각 행동의 빈도가 가장 많은 행동을 최종 행동으로 선택합니다. 
 
 
-
-
-
-
-거시적 관점으로 보면 Bootsrapped DQN은 DQN의 구조를 변형한 모델입니다.
-
-
-
-논문에서 활용한 base 모델인 DQN(Deep Q Network)에 대한 짧은 개념을 먼저 소개하고 논문리뷰를 시작하겠습니다.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- `Q함수`
-
-
-
- $t$ 시점의 화면($s$)과 그것을 
-즉 게임을 한 과거 데이터() 
-
-
-
-
-감가율을 적용한 위의 식으
-다만 미래 가치는 시간에 따라 
-
-
-
-
-
-
-
-
-
-게임의 경우 
-
-
-이를 이용하여 `Q함수`를 
-
-다음 시점의 상태를 $\grave{s}$ 라고 하고 다음 시점의 행동을 $\grave{a}$ 라고 한다면 그 행동으로 
-
-`Q함수`를 통해 도출 된 값은 현재 $s$에 대해 $a$를 선택했을 때 가치로 해석 할 수 있다.
-
-
-
-`Q함수`가 특정 상태에서 특정 행위에 대한 가치를 반영하기 위해서는 미래의 가치를 고려하여야 한다.
-즉 
-
-
-
-
-미래 보상의 기댓값은
-
-
-
-
-이를 모델링하는 방법은 다음과 같습니다.
-<center>실제갗</center>
-
-
-<center>$Q(s,a) = Q(s,a) + \alpha (R + \gamma max Q(\grave{s}, \grave{a} - Q(s,a)))$</center>
-
-
-
-
->좀 더 자세한 강화학습에 대해 알기 원하시는 분은 [강화학습 알아보기 BLOG](https://greentec.github.io/reinforcement-learning-second/) 를 방문하시기 바랍니다.
-
+## 코드 구현
 
 ##### 1. 라이브러리 Import & 설치
-``` python
+```python
 import gym
+from torch import nn, optim
+import torch.nn.functional as F
 import torch
+from collections import deque
+import numpy as np
+import os
+from tqdm import tqdm
+import logging
+from model import EnsembleNet
+from properties import build_parser, CONSOLE_LEVEL, LOG_FILE, LOGFILE_LEVEL
+from repository import historyDataset, memoryDataset
+import sys
+import traceback
+from PIL import Image
+from collections import Counter
+from argparse import ArgumentParser
+from collections import deque
+from collections import namedtuple
+import numpy as np
+import random
+from skimage.transform import rescale
+from skimage.transform import resize
 ```
 모델을 구현하는데 필요한 기본 라이브러리를 Import 합니다.
 Import 에러가 발생하면 해당 **라이브러리를 설치한 후 진행**해야 합니다.
 
-강화학습에 환경에 해당하는 게임은 `GYM` 이라는 라이브러리를 사용함으로써 해결 할 수 있습니다.
+강화학습의 환경에 해당하는 게임은 `GYM` 이라는 라이브러리를 사용함으로써 해결 할 수 있습니다.
 `GYM`은 **OpenAI** 에서 제공하고 있는 가상환경 라이브러리 입니다. 
 이 라이브러리는 다양한 환경을 제공하고 있으나 본 튜토리얼에서는 아타리 게임 중 하나인 breakout_4 를 활용하겠습니다.
 
@@ -251,7 +248,7 @@ Import 에러가 발생하면 해당 **라이브러리를 설치한 후 진행**
 Windows OS에서 GYM 라이브러리 설치하는 방법은 [[GYM 설치방법 안내]](https://talkingaboutme.tistory.com/entry/RL-Windows-10%EC%97%90%EC%84%9C-OpenAI-Gym-Baselines-%EC%84%A4%EC%B9%98%ED%95%98%EA%B8%B0) 를 참고하시기 바랍니다.
 
 `GYM` 라이브러리를 정상정으로 설치한 후 게임이 잘 작동하는지 확인해 봅니다.
-``` python
+```python
 import gym
 from PIL import Image
 
@@ -280,18 +277,514 @@ env.close()
 ![](/img/in-post/2020/2020-12-06/play_breakout.gif)
 <center><b>GYM을 활용한 벽돌깨기 게임 예시</b></center>
 
+##### 2. 앙상블 DQN 구현
+
+![](/img/in-post/2020/2020-12-06/ensemble_architecture.png)
+<center><b>앙상블 DQN 아키텍처</b></center>
+
+앙상블 DQN은 CoreNet과 여러개의 head로 구성되어 있습니다.
+CoreNet은 이미지로부터 특징벡터를 추출해 주는 3개의 Convolution Network입니다.
+head는 Linear Layer로 구성되어 있습니다.
+앙상블 DQN에 기본이 되는 CoreNet과 HeadNet을 구현합니다.
+
+```python
+class HeadNet(nn.Module):
+    def __init__(self, reshape_size, n_actions=4):
+        super(HeadNet, self).__init__()
+        self.fc1 = nn.Linear(reshape_size, 512)
+        self.fc2 = nn.Linear(512, n_actions)
+
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+
+class CoreNet(nn.Module):
+    def __init__(self, h, w, num_channels=4):
+        super(CoreNet, self).__init__()
+        self.num_channels = num_channels
+        self.conv1 = nn.Conv2d(self.num_channels, 32, 8, 4)
+        self.conv2 = nn.Conv2d(32, 64, 4, 2)
+        self.conv3 = nn.Conv2d(64, 64, 3, 1)
+
+        # Number of Linear input connections depends on output of conv2d layers
+        # and therefore the input image size, so compute it.
+        def conv2d_size_out(size, kernel_size=5, stride=2):
+            return (size - (kernel_size - 1) - 1) // stride + 1
+
+        convw = conv2d_size_out(conv2d_size_out(conv2d_size_out(w, 8, 4), 4, 2), 3, 1)
+        convh = conv2d_size_out(conv2d_size_out(conv2d_size_out(h, 8, 4), 4, 2), 3, 1)
+        self.reshape_size = convw * convh * 64
+
+    def forward(self, x):
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        # size after conv3
+        x = x.view(-1, self.reshape_size)
+        return x
+
+class EnsembleNet(nn.Module):
+    def __init__(self, n_ensemble, n_actions, h, w, num_channels):
+        super(EnsembleNet, self).__init__()
+        self.core_net = CoreNet(h=h, w=w, num_channels=num_channels)
+        reshape_size = self.core_net.reshape_size
+        self.net_list = nn.ModuleList([HeadNet(reshape_size=reshape_size, n_actions=n_actions) for k in range(n_ensemble)])
+
+    def _core(self, x):
+        return self.core_net(x)
+
+    def _heads(self, x):
+        return [net(x) for net in self.net_list]
+
+    def forward(self, x, k=None):
+        if k is not None:
+            return self.net_list[k](self.core_net(x))
+        else:
+            core_cache = self._core(x)
+            net_heads = self._heads(core_cache)
+            return net_heads
+```
+
+##### 3. historyDataset 구현
+
+비디오 게임의 정지된 화면을 보고 다음 어떤 상황이 일어날 것인지를 예측하는 것은 매우 어렵습니다.
+일반적으로 게임의 이전 몇시점의 화면을 봐야 공의 움직임과 캐릭터의 움직임 등을 파악할 수 있습니다.
+따라서 DQN에 입력으로 사용하는 이미지는 1개가 아니라 특정 시점으로 부터 n 시점 이전까지의 생성된 n개의 이미지입니다.
+**queue** 형태의 `HistoryDataSet`을 만들어 생성된 이미지를 쌓을 수 있게 만들고 출력으로 과거에 생성된 n 개의 이미지를 추출할 수 있도록 구성합니다.
+
+```python
+class historyDataset(object):
+    def __init__(self, history_size, img):
+        self.history_size = history_size
+
+        state = self.convert_channel(img)
+        self.height, self.width = state.shape
+
+        temp = []
+        for _ in range(history_size):
+            temp.append(state)
+        self.history = temp
+
+    def convert_channel(self, img):
+        # input type : |img| = (Height, Width, channel)
+        # remove useless item
+        img = img[31:193, 8:152]
+        #img = rescale(img, 1.0 / 2.0, anti_aliasing=False, multichannel=False)
+        img = resize(img, output_shape=(84, 84))
+
+        # conver channel(3) -> channel(1)
+        img = np.any(img, axis=2)
+        # |img| = (Height, Width)  boolean
+        return img
+
+    def push(self, img):
+        temp = self.history
+        state = self.convert_channel(img)
+        temp.append(state)
+        self.history = temp[1:]
+
+    def get_state(self):
+        #return self.history
+        return copy.deepcopy(self.history)
+```
+
+`push 함수`는 게임과 상호작용으로 생성된 게임 이미지 1개씩을 넣을 수 있도록 만든 함수입니다.
+이 함수는 이미지를 변환하는 작업(`convert_channel`)을 포함하고 있습니다.
+`convert_channel 함수`는 게임의 이미지에서 중요한 부분을 추출하여 자르는 과정과 자른 이미지를 특정크기로 변환하는 과정을 포함하고 있습니다.  
+
+![](/img/in-post/2020/2020-12-06/image_preprocess.png)
+<center><b>이미지 전처리</b></center>
+
+전처리된 이미지는 리스트에 저장됩니다.
+사용자가 지정한 n를 유지하도록 되어 있으므로 리스트에 n개가 있을 때 새로운 이미지가 들어오면 앞에 있던 이미지는 퇴출 됩니다.
+Replay Memory에 저장할 때에는 `get_state 함수`를 호출하여 해당 시점에서 과거 n개의 이미지를 가져옵니다.
+Replay Memory에 이를 저장하고 학습하는데 활용합니다.
 
 
+##### 4. memoryDataset 구현
+```python
+
+class memoryDataset(object):
+    def __init__(self, maxlen, n_ensemble=1, bernoulli_prob=0.9):
+        self.memory = deque(maxlen=maxlen)
+        self.n_ensemble = n_ensemble
+        self.bernoulli_prob = bernoulli_prob
+
+        ## if ensemble is 0 then no need to apply mask
+        if n_ensemble==1:
+            self.bernoulli_prob = 1
+
+        self.subset = namedtuple('Transition', ('state', 'action', 'next_state', 'reward', 'done', 'life', 'terminal', 'mask'))
 
 
+    def push(self, state, action, next_state, reward, done, life, terminal):
+
+        state = np.array(state)
+        action = np.array([action])
+        reward = np.array(reward)
+        next_state = np.array(next_state)
+        done = np.array([done])
+        life = np.array([life])
+        terminal = np.array([terminal])
+        mask = np.random.binomial(1, self.bernoulli_prob, self.n_ensemble)
+
+        self.memory.append(self.subset(state, action, next_state, reward, done, life, terminal, mask))
+
+    def __len__(self):
+        return len(self.memory)
+
+    def sample(self, batch_size):
+        batch = random.sample(self.memory, min(len(self.memory), batch_size))
+        batch = self.subset(*zip(*batch))
+
+        state = torch.tensor(np.stack(batch.state), dtype=torch.float)
+        action = torch.tensor(np.stack(batch.action), dtype=torch.long)
+        reward = torch.tensor(np.stack(batch.reward), dtype=torch.float)
+        next_state = torch.tensor(np.stack(batch.next_state), dtype=torch.float)
+
+        done = torch.tensor(np.stack(batch.done), dtype=torch.long)
+        ##Life : 0,1,2,3,4,5
+        life = torch.tensor(np.stack(batch.life), dtype=torch.float)
+        terminal = torch.tensor(np.stack(batch.terminal), dtype=torch.long)
+        mask = torch.tensor(np.stack(batch.mask), dtype=torch.float)
+        batch = self.subset(state, action, next_state, reward, done, life, terminal, mask)
+
+        return batch
+
+```
+
+![](/img/in-post/2020/2020-12-06/replay_memory.png)
+<center><b>Replay Memory</b></center>
+
+Replay 메모리에 저장되는 정보는 상태(state), 행동(action), 다음상태(next_state), 보상(reward), 재시작여부(done), 목숨(life), 종료여부(terminal) 가 있습니다.
+Replay 메모리는 데이터를 저장하는 기능과 Batch 사이즈로 데이터를 추출하는 기능을 갖고 있어야 합니다.
+`push 함수`는 게임기와 앙상블 DQN을 통해 생성된 데이터를 저장하는 함수입니다.
+데이터가 들어오면 numpy 형태로 변환되며 Collection 라이브러리의 `deque`에 저장되므로 지정한 갯수(Memory size)만큼만 저장됩니다.
+데이터가 들어올때 각 데이터가 앙상블 DQN의 어떤 Head에 속할지를 Binomial 확률을 통해 결정합니다.
+numpy.random 라이브러리에 `binomial 함수`를 제공하고 있으므로 이를 활용합니다.
+
+`sample 함수`는 앙상블 DQN을 학습하기 위하여 batch 형태로 데이터를 불러오는 기능입니다.
+numpy 형태로 된 데이터를 불러온 후 batch로 쌓은 후 `torch.tensor`로 변형합니다.
+이후 사용하기 쉽게 미리 지정한 `subset` tuple 형태로 만들어 제공합니다.
+
+##### 5. DQNSolver 구현
+
+DQNSolver은 크게 2개로 구성되어 있습니다.
+앙상블 DQN과 게임기와의 상호 작용하는 부분과 Replay Memory로 앙상블 DQN을 학습하는 부분입니다.
+해당 class에 많은 내용을 포함하고 있으므로 나누어 설명드리겠습니다.
+전체 모습은 [Github 구현체](https://github.com/JoungheeKim/toy_reinforcement_learning) 를 통해 확인하시기 바랍니다.
+
+```python
+class DQNSolver():
+
+    def __init__(self, config):
+        self.device = config.device
+        self.env = gym.make(config.env)
+        self.valid_env = gym.make(config.env)
+        self.memory_size = config.memory_size
+        self.update_freq = config.update_freq
+        self.learn_start = config.learn_start
+        self.history_size = config.history_size
+
+        self.batch_size = config.batch_size
+        self.ep = config.ep
+        self.eps_end = config.eps_end
+        self.eps_endt = config.eps_endt
+        self.eps_start = self.learn_start
+
+        self.lr = config.lr
+        self.discount = config.discount
+
+        self.agent_type = config.agent_type
+        self.max_steps = config.max_steps
+        self.eval_freq = config.eval_freq
+        self.eval_steps = config.eval_steps
+        self.target_update = config.target_update
+        self.max_eval_iter = config.max_eval_iter
+
+        ##Breakout Setting
+        if config.pretrained_dir is not None:
+            pretrained_config = load_saved_config(config.pretrained_dir)
+            config.n_ensemble = pretrained_config.n_ensemble
+            config.class_num = pretrained_config.class_num
+            config.resize_unit = pretrained_config.resize_unit
+
+            policy_model = build_model(config)
+            target_model = build_model(config)
+            self.policy_model = load_saved_model(policy_model, config.pretrained_dir)
+            self.target_model = load_saved_model(target_model, config.pretrained_dir)
 
 
+        else:
+            config.resize_unit = (84, 84)
+            config.class_num = 4
+            self.policy_model = build_model(config)
+            self.target_model = build_model(config)
 
+        self.resize_unit = config.resize_unit
+        self.class_num = config.class_num
+        self.n_ensemble = config.n_ensemble
 
+        self.policy_model.to(config.device)
+        self.target_model.to(config.device)
 
+        self.optimizer = optim.Adam(params=self.policy_model.parameters(), lr=self.lr)
 
+        ##Replay Memory Init
+        self.memory = memoryDataset(maxlen=config.memory_size, n_ensemble=config.n_ensemble,
+                                    bernoulli_prob=config.bernoulli_prob)
 
+        ##INIT LOGGER
+        if not logging.getLogger() == None:
+            for handler in logging.getLogger().handlers[:]:  # make a copy of the list
+                logging.getLogger().removeHandler(handler)
+        logging.basicConfig(filename=LOG_FILE, level=LOGFILE_LEVEL) ## set log config
+        console = logging.StreamHandler() # console out
+        console.setLevel(CONSOLE_LEVEL) # set log level
+        logging.getLogger().addHandler(console)
 
+        ##save options
+        self.out_dir = config.out_dir
+        if not os.path.isdir(config.out_dir):
+            os.mkdir(config.out_dir)
+
+        self.test_score_memory = []
+        self.test_length_memory = []
+        self.train_score_memory = []
+        self.train_length_memory = []
+
+        ##중간시작
+        self.start_steps = config.start_steps
+        self.learn_start = self.learn_start + self.start_steps
+        self.eval_steps = self.eval_steps + self.start_steps
+
+        self.config = config
+        save_config(config, self.out_dir)
+```
+
+상호작용하는 모습을 구현하기 위하여 필요한 설정과 모델을 생성하는 단계입니다.
+중요한 내용은 `Replay Memory 생성`, `policy model 생성`, `target model 생성` 입니다. 
+
+```python
+class DQNSolver():
+    def __init__(self, config):
+        ...
+
+    def choose_action(self, history, header_number:int=None, epsilon=None):
+        if epsilon is not None:
+            if np.random.random() <= epsilon:
+                return self.env.action_space.sample()
+            else:
+                with torch.no_grad():
+                    state = torch.tensor(history.get_state(), dtype=torch.float).unsqueeze(0).to(self.device)
+                    if header_number is not None:
+                        action = self.target_model(state, header_number).cpu()
+                        return int(action.max(1).indices.numpy())
+                    else:
+                        # vote
+                        actions = self.target_model(state)
+                        actions = [int(action.cpu().max(1).indices.numpy()) for action in actions]
+                        actions = Counter(actions)
+                        action = actions.most_common(1)[0][0]
+                        return action
+        else:
+            with torch.no_grad():
+                state = torch.tensor(history.get_state(), dtype=torch.float).unsqueeze(0).to(self.device)
+                if header_number is not None:
+                    action = self.policy_model(state, header_number).cpu()
+                    return int(action.max(1).indices.numpy())
+                else:
+                    # vote
+                    actions = self.policy_model(state)
+                    actions = [int(action.cpu().max(1).indices.numpy()) for action in actions]
+                    actions = Counter(actions)
+                    action = actions.most_common(1)[0][0]
+                    return action
+```
+
+![](/img/in-post/2020/2020-12-06/action_choice.png)
+<center><b>행동(action) 선택 방법 예시</b></center>
+
+다음은 환경(게임기)와 상호작용 시 앙상블 DQN을 이용하여 행동을 추출하는 부분입니다.
+학습 단계에서는 특정 head를 선택하여 그 head에서 생성된 행동의 가치가 가장 높은 행동을 선택하도록 되어 있습니다.
+추론 단계에서는 모든 head로부터 각각 행동의 가치를 추출하고 각각 가치가 높은 행동을 선택한 다음 Vote하여 가장 많이 나온 행동을 선택하도록 되어 있습니다. 
+
+```python
+class DQNSolver():
+    def __init__(self, config):
+        ...
+    
+    def choose_action(self, history, header_number:int=None, epsilon=None):
+        ...
+    
+    def replay(self, batch_size):
+        self.optimizer.zero_grad()
+
+        batch = self.memory.sample(batch_size)
+
+        state = batch.state.to(self.device)
+        action = batch.action.to(self.device)
+        next_state = batch.next_state.to(self.device)
+        reward = batch.reward
+        reward = reward.type(torch.bool).type(torch.float).to(self.device)
+
+        done = batch.done.to(self.device)
+        life = batch.life.to(self.device)
+        terminal = batch.terminal.to(self.device)
+        mask = batch.mask.to(self.device)
+
+        with torch.no_grad():
+            next_state_action_values = self.policy_model(next_state)
+        state_action_values = self.policy_model(state)
+
+        total_loss = []
+        for head_num in range(self.n_ensemble):
+            total_used = torch.sum(mask[:, head_num])
+            if total_used > 0.0:
+                next_state_value = torch.max(next_state_action_values[head_num], dim=1).values.view(-1, 1)
+                reward = reward.view(-1, 1)
+                target_state_value = torch.stack([reward + (self.discount * next_state_value), reward], dim=1).squeeze().gather(1, terminal)
+                state_action_value = state_action_values[head_num].gather(1, action)
+                loss = F.smooth_l1_loss(state_action_value, target_state_value, reduction='none')
+                loss = mask[:, head_num] * loss
+                loss = torch.sum(loss / total_used)
+                total_loss.append(loss)
+
+        if len(total_loss) > 0:
+            total_loss = sum(total_loss)/self.n_ensemble
+            total_loss.backward()
+            self.optimizer.step()
+
+```
+
+다음은 Policy DQN을 학습하는 단계입니다.
+Replay 메모리에 어느정도 게임 플레이된 데이터가 쌓여 있으면 `replay 함수`를 호출하여 앙상블 DQN을 학습합니다.
+`repaly 함수`는 Replay Memory로 부터 batch 크기의 데이터를 불러오는 `self.memory.sample` 기능과 Policy Network로 Action을 도출하여 Loss를 구하는 부분으로 구성되어 있습니다.
+
+Loss의 식을 보면 위에서 언급한 것처럼 현재 $Q(s,a)$와 $R + \gamma \cdot max Q(\grave{s}, \grave{a})$ 의 차이로 구성되 있는 것을 확인할 수 있습니다.
+이 둘을 아래와 같이 구성하여 점진적으로 학습하는 것이 강화학습의 목표입니다.
+
+<center>Q함수 = Q함수 + 비율 * 차이</center>
+<center>$Q(s,a) = Q(s,a) + \alpha( R + \gamma \cdot max Q(\grave{s}, \grave{a}) - Q(s, a) )$</center>
+
+```python
+class DQNSolver():
+    def __init__(self, config):
+        ...
+    
+    def choose_action(self, history, header_number:int=None, epsilon=None):
+        ...
+    
+    def replay(self, batch_size):
+        ...
+
+    def train(self):
+        progress_bar = tqdm(range(self.start_steps, self.max_steps))
+        state = self.env.reset()
+        history = historyDataset(self.history_size, state)
+        done = False
+
+        ##Report
+        train_scores = deque(maxlen=10)
+        train_lengths = deque(maxlen=10)
+        episode = 0
+        max_score = 0
+
+        ##If it is done everytime init value
+        train_score = 0
+        train_length = 0
+        last_life = 0
+        terminal = True
+
+        ## number of ensemble
+        heads = list(range(self.n_ensemble))
+        active_head = heads[0]
+
+        try:
+            for step in progress_bar:
+
+                ## model update
+                if step > self.learn_start and step % self.target_update == 0:
+                    self.target_model.load_state_dict(self.policy_model.state_dict())
+
+                ## game is over
+                if done:
+
+                    np.random.shuffle(heads)
+                    active_head = heads[0]
+
+                    state = self.env.reset()
+                    history = historyDataset(self.history_size, state)
+                    train_scores.append(train_score)
+                    train_lengths.append(train_length)
+                    episode += 1
+
+                    ##If it is done everytime init value
+                    train_score = 0
+                    train_length = 0
+                    last_life = 0
+                    terminal = True
+
+                action = self.choose_action(history, active_head, self.get_epsilon(step))
+                if terminal: ## There is error when it is just started. So do action = 1 at first
+                    action = 1
+                next_state, reward, done, life = self.env.step(action)
+                state = history.get_state()
+                history.push(next_state)
+                next_state = history.get_state()
+                life = life['ale.lives']
+                train_length = train_length + 1
+
+                ## Terminal options
+                if life < last_life:
+                    terminal = True
+                else :
+                    terminal = False
+                last_life = life
+
+                self.memory.push(state, action, next_state, reward, done, life, terminal)
+                if step > self.learn_start and step % self.update_freq == 0:
+                    self.replay(self.batch_size)
+
+                train_score = train_score + reward
+
+                if step > self.eval_steps and step % self.eval_freq == 0:
+                    train_mean_score = np.mean(train_scores)
+                    train_mean_length = np.mean(train_lengths)
+                    self.train_score_memory.append(train_mean_score)
+                    self.train_length_memory.append(train_mean_length)
+
+                    save_numpy(self.train_score_memory, self.out_dir, 'train_score')
+                    save_numpy(self.train_length_memory, self.out_dir, 'train_length_memory')
+
+                    valid_score, valid_length = self.valid_run()
+                    self.test_score_memory.append(valid_score)
+                    self.test_length_memory.append(valid_length)
+
+                    save_numpy(self.test_score_memory, self.out_dir, 'test_score')
+                    save_numpy(self.test_length_memory, self.out_dir, 'test_length_memory')
+```
+
+![](/img/in-post/2020/2020-12-06/train_function.png)
+<center><b>앙상블 DQN 강화학습 과정</b></center>
+
+다음은 전체 학습 과정을 포함하는 `train` 함수 입니다.
+이 함수가 하는 역할을 크게 분할하면 게임기와 상호작용하여 행동을 선택하고 데이터를 저장하는 부분과 Replay Memory를 이용하여 DQN을 학습하는 부분으로 나뉘어 있습니다.
+`env.reset()` 함수를 이용하여 환경을 초기화 하고 게임 화면을 하나씩 받아 `memory.push` 함수를 이용하여 Replay Memory에 저장합니다.
+저장된 데이터가 일정 갯수를 초과하면 `replay` 함수를 호출하여 Replay Memory에 저장된 데이터로 Policy DQN을 학습 합니다.
+이렇게 학습을 반복하면서 가장 성능이 높은 모델을 저장하고 종료합니다.
+
+## 결론
+앙상블 DQN은 DQN에 Bootstrapping을 적용한 모델입니다.
+DQN은 학습이 더디고 학습이 불안정하다는 단점을 갖고 있습니다.
+앙상블 모델을 이용하여 학습할 경우 DQN보다 안정적이게 학습할 수 있기 때문에 유용하다고 생각 됩니다.
+튜토리얼에서는 DQN의 학습 효율을 올릴 수 있는 여러가지 테크닉(Dueling DQN, Double DQN)을 사용하지 않았습니다.
+해당 방법을 적용하면 더 안전하게 학습이 가능하다는 것이 실험적으로 증명되었으므로 관심이 있으신 분들은 확인하시기 바랍니다.
+Dueling 테크닉이 적용된 Bootstrapped DQN의 Pytorch 구현체가 존재하므로 해당 구현체를 확인하고 싶으신 분은 [LINK](https://github.com/johannah/bootstrap_dqn) 를 참고하시기 바랍니다.  
+
+> [[Bootstrapped DQN]](/img/in-post/2020/2020-11-14/Anomaly Detection with LSTM AutoEncoder Tutorial.ipynb)에서 튜토리얼에서 구현한 전체 파일을 제공하고 있습니다.
+> 해당 Github를 방문하시어 구현물 전체 모습을 확인바랍니다.
 
 
 ## Reference
