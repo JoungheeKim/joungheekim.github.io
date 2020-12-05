@@ -149,7 +149,7 @@ Policy DQN과 Target DQN을 따로 만들고 전이하는 과정을 적용한 �
 ### Bootstrapped DQN 이란?
 
 Bootstrapped DQN이란 DQN에서 설명한 강화학습 구조에 Bootstrapping 방법을 적용하여 만든 앙상블 모델입니다.
-Bootstrapped DQN은 DQN과 총 **3부분**이 다릅니다.
+Bootstrapped DQN은 DQN과 총 **4부분**이 다릅니다.
 
 ![](/img/in-post/2020/2020-12-06/overview_ensemble.png)
 <center><b>Bootstrapped DQN 강화학습 과정 Overview</b></center>
@@ -276,6 +276,12 @@ env.close()
 ```
 ![](/img/in-post/2020/2020-12-06/play_breakout.gif)
 <center><b>GYM을 활용한 벽돌깨기 게임 예시</b></center>
+
+위의 예를 통해 게임이 잘 작동한다는 것을 확인할 수 있습니다.
+`gym.make` 함수를 이용하여 원하는 게임의 가상환경을 불러올 수 있습니다.
+`gym.render`는 게임의 화면을 이미지로 받아오는 기능을 담당합니다.
+`env.step(action)`은 가상환경에 행동(action)을 넣으면 그 이후 발생될 화면과, 보상 그리고 게임이 끝낫는지 여부를 반환합니다. 
+
 
 ##### 2. 앙상블 DQN 구현
 
@@ -610,6 +616,11 @@ class DQNSolver():
 학습 단계에서는 특정 head를 선택하여 그 head에서 생성된 행동의 가치가 가장 높은 행동을 선택하도록 되어 있습니다.
 추론 단계에서는 모든 head로부터 각각 행동의 가치를 추출하고 각각 가치가 높은 행동을 선택한 다음 Vote하여 가장 많이 나온 행동을 선택하도록 되어 있습니다. 
 
+주의해야 할 점은 아직 학습이 완료되지 않은 DQN을 이용하면 점수를 획득할 수 있는 좋은 움직임을 보여주지 못할 확률이 높습니다.
+또한 매번 동일한 행동만을 반복하므로 이를 해결하기 위하여 `epsilon`을 조건에 포함시킵니다.
+`epsilon`은 0과 1 사이의 값을 가지며 랜덤으로 0과 1사이의 값을 생성한 후 `epsilon` 보다 낮은 숫자가 나오면 랜덤으로 숫자를 생성하도록 조정합니다.
+이를 이용하여 동일한 환경에서 다른 행동을 취하게 하고 다양한 데이터를 확보하는 장치로 사용합니다.
+
 ```python
 class DQNSolver():
     def __init__(self, config):
@@ -668,6 +679,7 @@ Loss의 식을 보면 위에서 언급한 것처럼 현재 $Q(s,a)$와 $R + \gam
 <center>Q함수 = Q함수 + 비율 * 차이</center>
 <center>$Q(s,a) = Q(s,a) + \alpha( R + \gamma \cdot max Q(\grave{s}, \grave{a}) - Q(s, a) )$</center>
 
+앙상블 DQN의 경우 여러개의 Head에서 위와 같은 수식으로 Loss를 구할 수 있으므로 이를 합쳐서 Batch로 Update합니다.
 
 ```python
 class DQNSolver():
@@ -776,7 +788,70 @@ class DQNSolver():
 저장된 데이터가 일정 갯수를 초과하면 `replay` 함수를 호출하여 Replay Memory에 저장된 데이터로 Policy DQN을 학습 합니다.
 이렇게 학습을 반복하면서 가장 성능이 높은 모델을 저장하고 종료합니다.
 
-##### 6. 결과화면
+##### 6. 파라미터 설정
+```python
+def build_parser():
+    parser = ArgumentParser()
+
+    parser.add_argument("--mode", dest="mode", metavar="mode", default="train")
+
+
+    parser.add_argument("--device", dest="device", metavar="device", default="gpu")
+    parser.add_argument("--env",dest="env", metavar="env", default="BreakoutDeterministic-v4")
+    parser.add_argument("--memory_size", dest="memory_size", metavar="memory_size", type=int, default=int(1e6))
+    parser.add_argument("--update_freq", dest="update_freq", metavar="update_freq", type=int, default=4)
+    parser.add_argument("--learn_start", dest="learn_start", metavar="learn_start", type=int, default=50000)
+    parser.add_argument("--history_size", dest="history_size", metavar="history_size", type=int, default=4)
+    parser.add_argument("--target_update", dest="target_update", metavar="target_update", type=int, default=10000)
+
+    parser.add_argument("--n_ensemble", dest="n_ensemble", type=int, default=9)
+    parser.add_argument("--bernoulli_prob", dest="bernoulli_prob", type=float, default=0.9)
+
+    ##Learning rate
+    parser.add_argument("--batch_size", dest="batch_size", metavar="batch_size", type=int, default=32)
+    parser.add_argument("--ep", dest="ep", metavar="ep", type=int, default=1)
+    parser.add_argument("--eps_end", dest="eps_end", metavar="eps_end", type=float, default=0.01)
+    parser.add_argument("--eps_endt", dest="eps_endt", metavar="eps_endt", type=int, default=int(1e6))
+    parser.add_argument("--lr", dest="lr", metavar="lr", type=float, default=0.00025)
+    parser.add_argument("--discount", dest="discount", metavar="discount", type=float, default=0.99)
+
+
+    parser.add_argument("--agent_type", dest="agent_type", metavar="agent_type", default="DQN")
+    parser.add_argument("--max_steps", dest="max_steps", metavar="max_steps", type=int, default=int(5e7))
+    parser.add_argument("--start_steps", dest="start_steps", metavar="start_steps", type=int, default=0)
+
+    parser.add_argument("--eval_freq", dest="eval_freq", metavar="eval_freq", type=int, default=50000)
+    parser.add_argument("--eval_steps", dest="eval_steps", metavar="eval_steps", type=int, default=50000)
+
+    parser.add_argument("--max_eval_iter", dest="max_eval_iter", metavar="max_eval_iter", type=int, default=10000)
+
+    parser.add_argument("--pretrained_dir", dest="pretrained_dir", metavar="pretrained_dir", type=str, default=None)
+    parser.add_argument("--out_dir", dest="out_dir", metavar="out_dir", type=str, default=None, required=True)
+
+    return parser
+```
+
+논문에서 제시한 Default Setting입니다.
+`memory_size`가 크기 때문에 64GB RAM으로도 학습이 어려울 수 있습니다.
+따라서 몇가지 파라미터를 조정하여 학습하는데 활용하시기 바랍니다.
+
+##### 7. 강화학습 시작
+```shell
+python breakout.py \
+      --env=BreakoutDeterministic-v4 \
+      --device=gpu \
+      --memory_size=1e5 \
+      --n_ensemble=9 \
+      --out_dir=results
+```
+ 
+메모리 사이즈를 1e5로 줄이고 앙상블의 크기를 9로 설정하여 벽돌깨기 게임의 강화학습을 돌리는 코드입니다.
+이외에도 다양한 설정이 있으니 위에 Setting을 참고하시어 변경하기 바랍니다.
+
+![](/img/in-post/2020/2020-12-06/training_breakout.gif)
+<center><b>벽돌깨기 강화학습</b></center>
+
+##### 8. 결과화면
 준비중... 잠시만 기다려 주세요....
 
 
