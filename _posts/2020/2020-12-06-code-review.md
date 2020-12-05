@@ -852,7 +852,7 @@ python breakout.py \
 <center><b>벽돌깨기 강화학습</b></center>
 
 ##### 8. 결과화면
-준비중... 잠시만 기다려 주세요....
+![](/img/in-post/2020/2020-12-06/Breakout_result.gif)
 
 
 ## 결론
@@ -860,10 +860,9 @@ python breakout.py \
 DQN은 학습이 더디고 학습이 불안정하다는 단점을 갖고 있습니다.
 앙상블 모델을 이용하여 학습할 경우 DQN보다 안정적이게 학습할 수 있기 때문에 유용하다고 생각 됩니다.
 튜토리얼에서는 DQN의 학습 효율을 올릴 수 있는 여러가지 테크닉(Dueling DQN, Double DQN)을 사용하지 않았습니다.
-해당 방법을 적용하면 더 안전하게 학습이 가능하다는 것이 실험적으로 증명되었으므로 관심이 있으신 분들은 확인하시기 바랍니다.
-Dueling 테크닉이 적용된 Bootstrapped DQN의 Pytorch 구현체가 존재하므로 해당 구현체를 확인하고 싶으신 분은 [LINK](https://github.com/johannah/bootstrap_dqn) 를 참고하시기 바랍니다.  
+해당 방법을 적용하면 더 안전하게 학습이 가능하다는 것이 실험적으로 증명되었으므로 관심이 있으신 분들은 [LINK](https://github.com/johannah/bootstrap_dqn)를 확인하시기 바랍니다. 
 
-> [[Bootstrapped DQN]](https://github.com/JoungheeKim/toy_reinforcement_learning) 에서 튜토리얼에서 구현한 전체 파일을 제공하고 있습니다.
+> [[Bootstrapped DQN]](https://github.com/JoungheeKim/bootsrapped-dqn) 에서 튜토리얼에서 구현한 전체 파일을 제공하고 있습니다.
 > 해당 Github를 방문하시어 구현물 전체 모습을 확인바랍니다.
 
 
