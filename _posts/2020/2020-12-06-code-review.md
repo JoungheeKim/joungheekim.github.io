@@ -872,7 +872,8 @@ Voting을 통해 하나의 행동(방향)으로 움직여 벽돌깨기 게임을
 앙상블 DQN은 DQN에 Bootstrapping을 적용한 모델입니다.
 DQN은 학습이 더디고 학습이 불안정하다는 단점을 갖고 있습니다.
 앙상블 모델을 이용하여 학습할 경우 DQN보다 안정적이게 학습할 수 있기 때문에 유용하다고 생각 됩니다.
-튜토리얼에서는 DQN의 학습 효율을 올릴 수 있는 여러가지 테크닉(Dueling DQN, Double DQN)을 사용하지 않았습니다.
+하지만 여전히 성능 향상이 불안정하고 지속적으로 상승하지 않는 현상을 보이고 있습니다.
+튜토리얼에서는 DQN의 학습 효율을 올릴 수 있는 여러가지 테크닉(Dueling DQN, Double DQN)을 사용하지 않았기 때문에 해당 테크닉을 적용시 어느정도 불안정한 학습 형태가 변할 가능성이 있습니다.
 해당 방법을 적용하면 더 안전하게 학습이 가능하다는 것이 실험적으로 증명되었으므로 관심이 있으신 분들은 [LINK](https://github.com/johannah/bootstrap_dqn)를 확인하시기 바랍니다. 
 
 > [[Bootstrapped DQN]](https://github.com/JoungheeKim/bootsrapped-dqn) 에서 튜토리얼에서 구현한 전체 파일을 제공하고 있습니다.
