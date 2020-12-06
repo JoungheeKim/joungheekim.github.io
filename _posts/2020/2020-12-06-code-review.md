@@ -16,7 +16,7 @@ tags:
 이후 많은 사람들이 당시 대결로부터 큰 충격과 영감을 받았으며 딥러닝과 강화학습의 가능성에 큰 기대를 갖고 투자를 시작하여 현재 해당 분야는 많은 발전을 이루었습니다.
 
 ![](https://lh3.googleusercontent.com/kFsqNQX_cQ2bLof_G_2UKCuSwDT34PcZpC8nNHDwaiGFteedmYbJODRnUXz8t_zdCemoWPAX_JxtkjfFHdBKhf819GDxiruo4HYYug=w1440-rw-v1)
-<center><b>다양한 게임에 도전하는 알파고<a href="https://deepmind.com/blog/article/alphazero-shedding-new-light-grand-games-chess-shogi-and-go">[(출처 : DeepMind Blog)]</a></b></center>
+<center><b>다양한 게임에 도전하는 알파고<a href="https://deepmind.com/blog/article/alphazero-shedding-new-light-grand-games-chess-shogi-and-go">(출처 : DeepMind Blog)</a></b></center>
 
 현재는 다양한 강화학습 모델이 존재하고 있으며 다양한 분야에 활용되고 있습니다. 강화학습의 종류는 **[여기](https://dreamgonfly.github.io/blog/rl-taxonomy/)** 를 참조하시기 바랍니다.
 오늘 포스팅에서는 강화학습 모델 중 하나인 DQN(Deep Q Network)에 bootstrapping 방법을 적용한 Ensemble 모델인 `Bootstrapped DQN` 에 대해 다루도록 하겠습니다.
@@ -849,18 +849,18 @@ python breakout.py \
 이외에도 다양한 설정이 있으니 위에 Setting을 참고하시어 변경하기 바랍니다.
 
 ![](/img/in-post/2020/2020-12-06/training_breakout.gif)
-<center><b>벽돌깨기 강화학습</b></center>
+<center><b>벽돌깨기 강화학습 코드 예시</b></center>
 
 ##### 8. 결과화면
 ![](/img/in-post/2020/2020-12-06/Breakout_result.gif)
-<center><b>벽돌깨기 강화학습</b></center>
+<center><b>벽돌깨기 강화학습 결과</b></center>
 
 학습한 강화학습 모델을 이용하여 벽돌깨기 게임을 시각화 한 모습입니다.
 총 9개의 앙상블 DQN 모델로 구성되어 있으며 각 모델로부터 매 시점별 최선의 행동(방향)이 추출합니다.
 Voting을 통해 하나의 행동(방향)으로 움직여 벽돌깨기 게임을 진행합니다.
 
 ![](/img/in-post/2020/2020-12-06/performance.png)
-<center><b>iteration 마다 모델의 성능 평가</b></center>
+<center><b>iteration 마다 모델의 성능 변화</b></center>
 
 위 그림은 학습 횟수에 따른 성능의 변화를 나타낸 그래프입니다. 
 실험 환경은 논문에서 제시한 환경과 동일하지 않습니다.
