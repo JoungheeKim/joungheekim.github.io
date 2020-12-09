@@ -228,6 +228,10 @@ WaveNet은 수용범위(receptive field)를 넓히기 위하여 많은 dilation 
 하지만 <u>WaveNet으로부터 생성된 음성</u>의 품질은 뛰어나지만 너무 **느리다는 단점**을 갖고 있습니다.
 따라서 실시간으로 음성을 생성하기에는 보안이 필요해 보입니다.  
 
+> [타코트론2 세미나 영상](https://www.youtube.com/watch?v=BmD8OA9FGR0&list=PLetSlH8YjIfWk_PBAXKWqQM4pqzMMENrb&index=37) 을 제작하였습니다.
+> 또한 실제 목소리와 타코트론2로 생성한 목소리를 비교할 수 있도록 [타코트론2로 만든 세미나 영상](https://www.youtube.com/watch?v=tM7vYfI3Uog&list=PLetSlH8YjIfWk_PBAXKWqQM4pqzMMENrb&index=38) 도 제작하였습니다.
+> 영상 제작으로 사용된 음성모델은 타코트론2 + WaveGlow 입니다. [Pytorch Github](https://github.com/NVIDIA/tacotron2) 에서 음성모델 개발에 필요한 아키텍처를 제공하고 있습니다.
+
 
 ## Reference
 - [[PAPER]](https://arxiv.org/abs/1712.05884v2) Natural TTS Synthesis By Conditioning WAVENET On Mel Spectrogram Predictions, Jonathan Shen at el.
