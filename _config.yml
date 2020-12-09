@@ -6,7 +6,7 @@ email: joungkee_kim@korea.ac.kr
 description: "Machine Learning Engineer"
 keyword: "Code Journey, Machine Learning, Natural Language Process, Deep Learning, 머신러닝, 딥러닝"
 url: "https://joungheekim.github.io"              # your host, for absolute URL
-baseurl: ""                             # for example, '/blog' if your blog hosted on 'host/blog'
+baseurl: "https://joungheekim.github.io"                             # for example, '/blog' if your blog hosted on 'host/blog'
 
 # Publish posts or collection documents with a future date.
 future: true
