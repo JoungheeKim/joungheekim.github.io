@@ -22,7 +22,7 @@ Machine Translation, Sentiment Analysis, Question And Answering(Q&A) 등 일부 
 데이터의 양은 딥러닝 모델의 성능과 비례관계가 있기 때문에 얼마나 데이터를 확보했는가에 따라 딥러닝 모델의 성능이 달라집니다.
 따라서 다양한 분야에 딥러닝을 적용하여도 Labeled 데이터가 부족하기 때문에 좋은 성능의 모델을 만들 수 없습니다.
 
-이를 해결하기 위하여 Semi-supervised Learning을 사용합니다.
+이를 해결하기 위하여 Semi-supervised Learning을 주로 적용합니다.
 이 방법론은 Labeled 데이터 뿐만 아니라 Unlabeled 데이터를 활용하여 모델의 성능을 향상시키는 방법론입니다.
 오늘 포스팅에서는 최근 Semi-superivsed Learning 방법론 중 좋은 성능을 보이고 있는 `UDA` 에 대해 다루도록 하겠습니다.
 이 글은 **[Unsupervised Data Augmentation for Consistency Training](https://arxiv.org/abs/1904.12848)** 논문을 참고하여 정리하였음을 먼저 밝힙니다.
@@ -33,17 +33,21 @@ Machine Translation, Sentiment Analysis, Question And Answering(Q&A) 등 일부 
 #### Short Summary
 이 논문의 큰 특징 3가지는 아래와 같습니다.
 
-1. Vision, NLP 분야에서 효과적인 Data Augmenation 방법론을 제시하고 이를 Semi-superivsed Learning에 활용합니다. 
-2. Consistancy Loss와 Supervised Loss를 이용하여 모델을 학습하는 Semi-supervised Learning 방법론을 제안합니다.  
-3. Labeled 데이터를 10% 정도 사용하여도 해당방법론이 Fully Superivsed 방법론 보다 좋은 성능을 보일 수 있다는 것을 실험적으로 증명하였습니다.
+1. Vision, NLP 분야에서 효과적인 **Data Augmenation** 방법론을 제시하고 이를 Semi-superivsed Learning에 활용합니다. 
+2. **Consistency Loss와 Supervised Loss를 이용**하여 모델을 학습하는 Semi-supervised Learning 방법론을 제안합니다.  
+3. Labeled 데이터를 10% 정도 사용하여도 해당방법론이 Fully Superivsed 방법론 보다 **좋은 성능**을 보일 수 있다는 것을 실험적으로 증명하였습니다.
 
 ## 논문 리뷰
 
-해당 논문에서는 제시한 방법론을 두가지 분야(NLP, Vision) 에 적용하였습니다.
-이 글에서는 NLP를 기준으로 UDA 논문을 리뷰하며 의도적으로 Vision에 대한 내용을 배제합니다.
+해당 논문에서는 제시한 방법론을 두가지 분야(NLP, Vision) 에 적용하고 실험결과를 제시합니다.
+이 글에서는 UDA논문을 NLP에 적용하는 방법에 대해 자세하게 다루기 위하여 Vision에 대한 내용은 포함하고 있지 않습니다.
 따라서 Vision 분야에 UDA를 적용하는 방법을 알고 싶으신 분들은 [Youngerous BLOG]() 를 참조하시기 바랍니다.
 
-#### [1] BackGround
+### Overview
+![](/img/in-post/2020/2020-12-13/overview.png)
+<center>UDA Loss</center>
+UDA의 
+
 
 ##### Unsupervised Data Augmentation
 
@@ -80,7 +84,7 @@ Temperature Sampling 이란 번역기의 Decoder에서 생성된 단어의 생�
 문장을 넣으면 Encoder는 문장의 정보를 압축하고 Deocder는 autoregressive하게 매 시점 특정 token(단어)이 현 시점에서 등장할지에 대한 확률이 추출됩니다.
 Temperature라는 파라미터를 이용하여 추출된 확률을 변화할 수 있습니다. 
 
-<center>$\hat{p_i} = f_{\tau}(p)_i = \frac{p_i^{\frac{1}{\tau}}}{\sum_j p_j^{\frac{1}{\tau}}$</center>
+<center>$\hat{p_i} = f_{\tau}(p)_i = \frac{p_i^{\frac{1}{\tau}}}{\sum_j p_j^{\frac{1}{\tau}}}$</center>
 $p_i$ : 번역기 decoder에서 추출된 단어 $i$가 등장할 확률  
 $\hat{p_i}$ : Temperatue가 적용된 단어 $i$가 등장할 확률  
 $\tau$ : Temperatue를 의미하며 사용자 설정 파라미터  
@@ -93,12 +97,49 @@ Temperature가 1보다 크면 등장할 확률이 낮은 단어와 높은 단어
 
 ##### Consistency Training
 
-Consistency Training 이란 모델이 데이터의 작은 변화에 민감하지 않게 regulization을 추가하여 Robust하게 만드는 방법입니다.
-예를 들어 문장에 임의의 단어를 선택하여 삭제하고 원본문장의 label과 동일 학습하는 방법이 있습니다.
+Consistency Training 이란 모델이 데이터의 작은 변화에 민감하지 않게(Robust) 만드는 방법입니다.
+작은 변화란 사람이 봤을 때 label에 큰 영향을 주지 않을 정도의 noise를 의미합니다.
 
+![](/img/in-post/2020/2020-12-13/adversarial_training.png)
+<center>Adversarial Training 예시</center>
+
+예를 들어 팬더의 그림이 있을 때 Gaussian Noise를 추가할 경우 사람이 봤을 때는 여전히 팬더라고 대부분 생각합니다.
+반면 딥러닝 모델은 사람과는 다르게 이러한 미묘한 변화를 크게 받아들이며 분류 모델인 경우 팬더가 아닌 다른 것으로 예측합니다.
+이를 극복하기 위하여 일반적으로 Regulization Term을 추가하거나 변형한 데이터가 원본의 Label을 예측할 수 있도록 학습하여 Consistancy Training을 적용합니다.
+
+![](/img/in-post/2020/2020-12-13/fixmatch_example.png)
 <center>FixMatch Consistency Training 예시</center>
 
-다른 예로는 
+Semi-supervised Learning에서 Consistency Tranining은 조금 다른 뜻으로 활용됩니다.
+Unlabeled 데이터를 모델 학습에 활용하기 위하여 노이즈가 추가된 데이터와 추가되지 않은 데이터가 동일한 label을 갖어야 한다는 Consistaency Training의 원리를 활용합니다.
+위 그림은 FixMatch의 Consistency Traning 예시입니다.
+Unlabeled 데이터를 이용하여 Strong Augmented 데이터와, Week Augmented 데이터를 만듭니다.
+그리고 구축한 딥러닝 모델에 넣어 각 데이터가 어떤 것을 예측하였는지 확률을 추출합니다.
+이 확률을 기반으로 두 augmented 데이터의 label이 같도록 학습하는 것이 semi-supervised Learning에서 Consistency Traing을 활용하는 방법입니다.
+
+본 논문 역시 생성된 문장(Augmented Data)과 원본 데이터(Raw Data)의 예측 분포가 일치하도록 학습 Loss를 구성합니다.
+
+
+
+ 
+
+
+을 이용하여 unlabeled 데이터를 학습할 때 loss로써 이용합니다.
+
+
+
+
+Semi-supervised Learning에서는 Unlabeled 데이터에 노이즈를 추가하고 모델이 
+
+
+
+Semi-supervised Learning에서 noise가 추가된 데이터가 원본데이터와 label
+
+Unlabeled 데이터의 label은 
+
+
+
+
 
 
 
