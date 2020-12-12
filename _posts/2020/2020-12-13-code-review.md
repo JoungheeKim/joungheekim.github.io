@@ -44,10 +44,26 @@ Machine Translation, Sentiment Analysis, Question And Answering(Q&A) 등 일부 
 따라서 Vision 분야에 UDA를 적용하는 방법을 알고 싶으신 분들은 [Youngerous BLOG]() 를 참조하시기 바랍니다.
 
 ### Overview
-![](/img/in-post/2020/2020-12-13/overview.png)
-<center>UDA Loss</center>
-UDA의 
 
+![](/img/in-post/2020/2020-12-13/overview.png)
+<center>UDA overview</center>
+
+UDA는 Labeled 데이터와 Unlabeled 데이터를 함께 학습에 활용하는 Semi-supervised Learning 방법론입니다.
+Labeled 데이터를 활용하여 Supervised Loss를 구성하고 Unlabeled 데이터를 이용하여 Consistency Loss를 구성합니다.
+이 두개의 Loss를 합쳐서 Final Loss를 구성하고 이를 학습에 활용합니다.
+
+Supervised Loss는 일반적인 분류 학습에 활용하는 Cross_entropy Loss이므로 Labeled 데이터의 문장 $x_l$와 라벨 $y$가 있으면 쉽게 구성할 수 있습니다.
+반면 Consistency Loss를 만들기 위해서는 두개의 의미가 비슷한 문장이 필요합니다.
+따라서 Unlabeled 데이터의 문장 $x_u$ 뿐만 아니라 $x_u$와 비슷한 의미를 지니지만 문법적, 단어의 표현이 다른 문장 $\hat{x_u}$을 생성해야 합니다.
+UDA는 이를 위하여 Back Translation, TD-IDF 등의 Data Augmentation 방법을 제시합니다.
+
+Data Augmentation을 통해 생성된 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포 $p_{\theta}(y|\hat{x})$를 추출할 수 있습니다.
+또한 원본 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포 $p_{\theta}(y|x)$를 추출할 수 있습니다.
+이 두 분포의 차이인 KL-Divergence $D( p_{\theta}(y|x) || p_{\theta}(y|\hat{x} )$ 를 계산하여 Consistency Loss로 활용합니다.
+
+이 방법을 활용하면 적은 Label 데이터와 많은 Unlabeled 데이터로 좋은 성능을 도출할 수 있습니다.
+
+### BackGround
 
 ##### Unsupervised Data Augmentation
 
@@ -106,37 +122,43 @@ Consistency Training 이란 모델이 데이터의 작은 변화에 민감하지
 예를 들어 팬더의 그림이 있을 때 Gaussian Noise를 추가할 경우 사람이 봤을 때는 여전히 팬더라고 대부분 생각합니다.
 반면 딥러닝 모델은 사람과는 다르게 이러한 미묘한 변화를 크게 받아들이며 분류 모델인 경우 팬더가 아닌 다른 것으로 예측합니다.
 이를 극복하기 위하여 일반적으로 Regulization Term을 추가하거나 변형한 데이터가 원본의 Label을 예측할 수 있도록 학습하여 Consistancy Training을 적용합니다.
+Semi-supervised Learning에서 Consistency Tranining 은 조금 다른 뜻으로 활용됩니다.
+Unlabeled 데이터를 모델 학습에 활용하기 위하여 노이즈가 추가된 데이터와 추가되지 않은 데이터가 동일한 label을 갖어야 한다는 Consistaency Training의 아이디어를 활용합니다.
 
 ![](/img/in-post/2020/2020-12-13/fixmatch_example.png)
 <center>FixMatch Consistency Training 예시</center>
 
-Semi-supervised Learning에서 Consistency Tranining은 조금 다른 뜻으로 활용됩니다.
-Unlabeled 데이터를 모델 학습에 활용하기 위하여 노이즈가 추가된 데이터와 추가되지 않은 데이터가 동일한 label을 갖어야 한다는 Consistaency Training의 원리를 활용합니다.
 위 그림은 FixMatch의 Consistency Traning 예시입니다.
 Unlabeled 데이터를 이용하여 Strong Augmented 데이터와, Week Augmented 데이터를 만듭니다.
 그리고 구축한 딥러닝 모델에 넣어 각 데이터가 어떤 것을 예측하였는지 확률을 추출합니다.
-이 확률을 기반으로 두 augmented 데이터의 label이 같도록 학습하는 것이 semi-supervised Learning에서 Consistency Traing을 활용하는 방법입니다.
+이 확률을 기반으로 두 augmented 데이터의 label이 같도록 학습하는 것이 semi-supervised Learning에서 Consistency Training을 활용하는 방법입니다.
 
-본 논문 역시 생성된 문장(Augmented Data)과 원본 데이터(Raw Data)의 예측 분포가 일치하도록 학습 Loss를 구성합니다.
+![](/img/in-post/2020/2020-12-13/consistency_training.png)
+<center>Unsupervised Consistency Loss 예시</center>
+
+본 논문 역시 noise가 추가된 문장과 원본 문장(Raw Data)의 label이 같도록 학습하는 방식으로 Consistency Training을 적용합니다.
+여기서 Noise가 추가된 문장은 Back-translation을 이용하여 원본 데이터로부터 생성된 인공문장을 의미합니다.
+두 데이터를 동일한 모델에 넣고 각각 분포를 추출한 다음 두 분포가 일치하도록 KL-Divergence를 이용하여 Loss를 구성하고 학습합니다.
+즉 두 데이터의 분포를 일치 시킴으로써 두 데이터 사이의 Label 정보를 일치 시키는 것으로 볼 수 있습니다.
+Consistency Loss의 식은 아래와 같습니다.
+
+<center>$D( p_{\theta}(y|x) || p_{\theta}(y|x,e)$</center>
+$e$ : 인공 문장을 생성할 때 삽입된 Noise  
+$p_{\theta}(y|x)$ : 원본 문장의 분류 확률 분포    
+$p_{\theta}(y|x,e)$ : 인공 문장의 분류 확률 분포     
+
+##### Final Loss
+
+UDA에서 제시한 방법론의 핵심은 <u>Label 데이터</u>로는 **Supervised Loss**를 구성하고 <u>Unlabeled 데이터</u>로는 **Consistency Loss**를 구성한 후 이 두개의 Loss를 합하여 모델을 학습하는 것입니다.
 
 
 
- 
+Label 데이터로 Supervised Loss를 만드는 방법은 일반적인 Cross-Entropy Loss를 만드는 방법과 같습니다.
+Label 데이터의 문장 $x$을 모델에 넣어 실제 라벨인 $y$ 에 대한 확률 $p_{\theta}(y|x)$를 추출하고 이를 이용하여 Cross-Entropy Loss $-log p_{\theta}(y|x)$ 를 구성합니다.
 
-
-을 이용하여 unlabeled 데이터를 학습할 때 loss로써 이용합니다.
-
-
-
-
-Semi-supervised Learning에서는 Unlabeled 데이터에 노이즈를 추가하고 모델이 
-
-
-
-Semi-supervised Learning에서 noise가 추가된 데이터가 원본데이터와 label
-
-Unlabeled 데이터의 label은 
-
+Unlabel 데이터로 Consistency Loss를 구성하는 방법은 원본데이터와 인공데이터 사이의 KL-Divergence Loss를 계산하는 것 입니다.
+TD-IDF, Back Translation 등을 활용하여 Unlabel 데이터의 문장 $x$으로부터 인공 문장 $\hat{x}$ 을 생성합니다.
+인공문장 $\hat{x}$ 파라미터 $\theta$ 가 고정되어 있는 모델에 넣어 $p_{\theta}(y|x)$
 
 
 
