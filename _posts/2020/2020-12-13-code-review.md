@@ -93,28 +93,28 @@ Back-translation 과정은 원본문장을 번역기A에 넣고 그 번역된 �
 번역기의 품질이 매우 뛰어나더라도 언어간 미묘한 간극에 의하여 번역이 달라질 수 있으며 동일한 의미를 지니더라도 번역기의 학습데이터에 따라 다르게 표현될 수 있습니다.
 즉 원본문장과 의미, 의도(label)는 비슷하지만 표현이 다른 인공문장을 생성할 수 있습니다.
 
-본 논문에서는 원본문장과 인공문장의 차이(diversity)를 크게 하기 위하여 번역기B에 Temperature Sampling 방법을 적용합니다.
-Temperature Sampling 이란 번역기의 Decoder에서 생성된 단어의 생성 확률을 특정 비율(temperature)로 조정한 다음 sampling 방법을 이용하여 문장을 번역하는 것을 의미합니다.
+본 논문에서는 원본문장과 인공문장의 차이(diversity)를 크게 하기 위하여 번역기B에 temperaturesSampling 방법을 적용합니다.
+temperature sampling 이란 번역기의 Decoder에서 생성된 단어의 생성 확률을 특정 비율(temperature)로 조정한 다음 sampling 방법을 이용하여 문장을 번역하는 것을 의미합니다.
 
 ![](/img/in-post/2020/2020-12-13/teperatue_sampling.png)
 <center>Temperature Sampling 예시</center>
 
 좀더 구체적으로 설명해보자면 번역기는 일반적으로 Encoder와 Deocder로 구성된 Sequence to Sequence 모델입니다.
-문장을 넣으면 Encoder는 문장의 정보를 압축하고 Deocder는 autoregressive하게 매 시점 특정 token(단어)이 현 시점에서 등장할지에 대한 Socre가 추출됩니다.
-이 추출된 Score에 Softmax 함수를 적용하면 각 단어가 등장할 확률을 계산할 수 있습니다.
+문장을 넣으면 Encoder는 문장의 정보를 압축하고 Deocder는 autoregressive하게 매 시점 특정 token(단어)이 현 시점에서 등장할지에 대한 점수가 추출됩니다.
+추출된 점수에 Softmax 함수를 적용하면 각 단어가 등장할 확률을 계산할 수 있습니다.
 이때 temperature 적용하면 확률을 변화시킬 수 있습니다. 
 
-<center>$\hat{p_i} = f_{\tau}(p_i) = \frac{s_i / \tau}{ \sum_j s_j / \tau }$</center>
+<center>$\hat{p_i} = f_{\tau}(p_i) = \frac{exp(s_i / \tau)}{ \sum_j exp(s_j / \tau) }$</center>
 $p_i$ : 번역기 decoder에서 추출된 단어 $i$가 등장할 확률
 $s_i$ : 번역기 decoder에서 추출된 단어 $i$가 등장할 확률과 관련된 점수
-$\hat{p_i}$ : Temperatue가 적용된 단어 $i$가 등장할 확률  
-$\tau$ : Temperatue를 의미하며 사용자 설정 파라미터  
+$\hat{p_i}$ : temperature가 적용된 단어 $i$가 등장할 확률  
+$\tau$ : temperature를 의미하며 사용자 설정 파라미터  
 
-Temperature가 1보다 작으면 등장할 확률이 높은 단어의 확률을 높이는 역할을 하며
-Temperature가 1보다 크면 등장할 확률이 낮은 단어와 높은 단어의 차이를 적게 하는 역할을 합니다.
-따라서 Temperatue를 증가시켜 Sampling하면 다양한(Diversity) 문장을 생성할 수 있으며, Temperatue를 감소시켜 Sampling하면 문법에(Robust) 비교적 맞는 문장을 생성할 수 있습니다.  
+temperature가 1보다 작으면 등장할 확률이 높은 단어의 확률을 높이는 역할을 하며
+temperature가 1보다 크면 등장할 확률이 낮은 단어와 높은 단어의 차이를 적게 하는 역할을 합니다.
+따라서 temperature를 증가시켜 sampling하면 다양한(Diversity) 문장을 생성할 수 있으며, temperatue를 감소시켜 sampling하면 문법에 비교적 맞는(robust) 문장을 생성할 수 있습니다.  
 
-본 논문에서는 Temperatue를 0.9로 고정하고 Back-translation을 이용하여 인공문장을 생성합니다.
+본 논문에서는 temperature를 0.9로 고정하고 Back-translation을 이용하여 인공문장을 생성합니다.
 
 ##### Consistency Training
 
@@ -144,11 +144,12 @@ Unlabeled 데이터를 이용하여 Strong Augmented 데이터와, Week Augmente
 본 논문 역시 noise가 추가된 문장과 원본 문장(Raw Data)의 label이 같도록 학습하는 방식으로 Consistency Training을 적용합니다.
 여기서 Noise가 추가된 문장은 Back-translation을 이용하여 원본 데이터로부터 생성된 인공문장을 의미합니다.
 두 데이터를 동일한 모델에 넣고 각각 확률분포를 추출한 다음 두 분포가 일치하도록 KL-Divergence를 이용하여 Loss를 구성하고 학습합니다.
-즉 두 데이터의 확률분포를 일치 시킴으로써 미세한 Noise와 관계 없이 두 데이터가 동일한 Label을 예측하도록 조정하는 것으로 생각할 수 있습니다.  
+즉 두 데이터의 확률분포를 일치 시킴으로써 미세한 Noise와 관계 없이 두 데이터가 동일한 Label을 예측하도록 조정하는 것으로 생각할 수 있습니다. 
+
 Consistency Loss의 식은 아래와 같습니다.
 
-<center>$D( p_{\theta}(y|x) || p_{\theta}(y|x,e)$</center>
-$e$ : 인공 문장을 생성할 때 삽입된 Noise  
+<center>$D( p_{\theta}(y|x) || p_{\theta}(y|x,\epsilone)$</center>
+$\epsilone$ : 인공 문장을 생성할 때 삽입된 Noise  
 $p_{\theta}(y|x)$ : 원본 문장의 분류 확률 분포    
 $p_{\theta}(y|x,e)$ : 인공 문장의 분류 확률 분포     
 
@@ -163,7 +164,7 @@ UDA에서 제시한 방법론의 핵심은 <u>Label 데이터</u>로는 **Superv
 Label 데이터로 Supervised Loss를 만드는 방법은 일반적인 Cross-Entropy Loss를 만드는 방법과 같습니다.
 Label 데이터의 문장 $x_1$을 모델에 넣어 실제 라벨인 $y_1$ 에 대한 확률 $p_{\theta}(y_1|x)$를 추출하고 이를 이용하여 Cross-Entropy Loss인 $-log p_{\theta}(y_1|x_1)$ 를 구성합니다.
 논문에서는 극단적으로 적은 Label 데이터를 이용하여 학습에 활용합니다. 예를들어 IMDB 데이터(Movie Sentiment Analysis)의 경우 20개만을 사용합니다.
-즉 매 batch iteration 마다 전체 20개에서 batch sampling 하여 학습에 활용합니다.
+즉 매 batch iteration 마다 전체 20개의 데이터로부터 batch sampling 하여 학습에 활용합니다.
 
 Unlabel 데이터로 Consistency Loss를 구성하는 방법은 원본데이터와 인공데이터 사이의 KL-Divergence Loss를 계산하는 것 입니다.
 TD-IDF, Back Translation 등을 활용하여 Unlabel 데이터의 문장 $x_2$으로부터 인공 문장 $\hat{x}$ 을 생성합니다.
@@ -281,7 +282,7 @@ print(data['train']['text'][0])
 위와 같이 `load_dataset` 함수를 이용하여 imdb 데이터를 호출하면 데이터가 cache로 남아 있을 경우 재활용하고 cache를 찾을 수 없는 경우 인터넷을 통해 자동으로 다운로드 받습니다.
 데이터를 load한 후 출력하여 데이터가 잘 load 되었는지 확인해 봅니다.
 
-#### A. Data Augmentation
+#### [1] Data Augmentation
 
 UDA 방법을 적용하기 위해서는 Unlabeled 데이터의 인공데이터(augmented Data)가 필요합니다.
 본 튜토리얼에서는 Back-translation을 이용하여 인공데이터를 생성하는 방법에 다룹니다.
@@ -289,14 +290,14 @@ UDA 방법을 적용하기 위해서는 Unlabeled 데이터의 인공데이터(a
 
 Back-translation 과정을 요약하면 다음과 같습니다.
 
-1. 번역기 불러오기
-2. IMDB 데이터 불러오기
-3. IMDB 데이터 전처리
-4. 문장 단위로 데이터 나누기
-5. Back-Translation 데이터 생성
-6. Back-Translation 데이터 저장
+A. 번역기 불러오기
+B. IMDB 데이터 불러오기
+C. IMDB 데이터 전처리
+D. 문장 단위로 데이터 나누기
+E. Back-Translation 데이터 생성
+F. Back-Translation 데이터 저장
 
-##### [1] 번역기 불러오기
+##### A. 번역기 불러오기
 Back-translation을 활용하기 위하여 번역기 2개가 필요합니다.
 번역기를 직접 만드는 것은 많은 자원과 시간이 필요하므로 torch hub에서 제공하는 번역기를 활용합니다.
 [fairseq Github](https://github.com/pytorch/fairseq) 에는 다양한 pytorch 구현체를 제공하고 있습니다.
@@ -384,7 +385,7 @@ torch.hub는 pytorch에서 제공하고 있는 라이브러리로써 github와 �
 번역기 모델이 Local에 저장되어 있으면 Local에서 불러오고 없으면 외부에서 다운로드 되도록 설정 되어 있기 때문에 간단한 `load` 명령어로 쉽게 사용할 수 있습니다.
 > torch.hub에 대한 글은 [이곳](https://jybaek.tistory.com/813) 에서 참고 하시기 바랍니다.
 
-##### [2] IMDB 데이터 불러오기
+##### B. IMDB 데이터 불러오기
 ```python
 data = datasets.load_dataset('imdb')
 data_list = ['train', 'test', 'unsupervised']
@@ -398,7 +399,7 @@ for dataname in tqdm(data_list, desc='data name'):
 또한 각 데이터에는 'text'와 'label'을 포함하고 있습니다.
 각 요소들을 불러오는 코드를 작성하여 번역할 문장(temp_docs)을 지정합니다.
 
-##### [3] IMDB 데이터 전처리
+##### C. IMDB 데이터 전처리
 
 IMDB 데이터는 전처리 과정이 필요합니다. 
 그 이유는 IMDB 문장에는 HTML tag를 포함하고 있기 때문입니다.
@@ -435,7 +436,7 @@ temp_docs = [clean_web_text(temp_sent) for temp_sent in temp_docs]
 해당 코드는 google-research 에서 비공식으로 제공하고 있는 UDA 코드를 참고하여 개발하였습니다.
 위 [링크](https://github.com/google-research/uda/blob/master/text/utils/imdb_format.py) 를 통해 참고하시기 바랍니다.
 
-##### [4] 문장 단위로 데이터 나누기
+##### D. 문장 단위로 데이터 나누기
 
 일반적으로 근래에 개발되는 번역기는 Sequence to Sequence 구조를 갖고 있으며 auto-regressive 특징을 갖고 있습니다.
 이 말은 위와 같은 번역기를 사용하면 번역을 할 때 Decoder에서 <b style="color:red">멈춤 조건</b>이 발생하기 전 token을 한개씩 생성하는 한다는 것입니다.
@@ -516,7 +517,7 @@ for temp_doc in temp_docs:
 라이브러리를 이용하여 문장으로 나누었음에도 불구하고 일부 문장은 여전히 번역하기에 긴 문제가 있습니다.
 이를 해결하기 위하여 길이가 긴 일부 문장만 추출하여 특정 특수문자(".", ";", ",") 를 기준으로 다시 한번 나눕니다.
 
-##### [5] Back-Translation 데이터 생성
+##### E. Back-Translation 데이터 생성
 
 ```python
 backtranslated_contents = []
@@ -544,7 +545,7 @@ for contents in tqdm(batch(new_contents, args.batch_size), total=int(len(new_con
 >위 번역기를 이용하여 IMDB 데이터를 번역하는데 많은 시간이 소요됩니다.
 >2080ti 기준 train 데이터를 번역하는데 약 10시간이 소요됩니다.
 
-##### [6] Back-Translation 데이터 저장
+##### F. Back-Translation 데이터 저장
 
 ```python
 merge_backtranslated_contents=[]
@@ -578,7 +579,7 @@ save_pickle(save_path, save_data)
 이 데이터를 이용하여 이후 학습을 진행합니다.
 
 
-#### B. Train with EDA Setting
+#### [2] Train with EDA Setting
 
 Back-translated 데이터를 이용하여 Supervised Loss와 Consistency Loss 구성하는 방법과 학습하는 방법에 대해 다루겠습니다.
 
