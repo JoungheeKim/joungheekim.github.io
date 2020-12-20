@@ -100,11 +100,13 @@ Temperature Sampling 이란 번역기의 Decoder에서 생성된 단어의 생�
 <center>Temperature Sampling 예시</center>
 
 좀더 구체적으로 설명해보자면 번역기는 일반적으로 Encoder와 Deocder로 구성된 Sequence to Sequence 모델입니다.
-문장을 넣으면 Encoder는 문장의 정보를 압축하고 Deocder는 autoregressive하게 매 시점 특정 token(단어)이 현 시점에서 등장할지에 대한 확률이 추출됩니다.
-Temperature라는 파라미터를 이용하여 추출된 확률을 변화할 수 있습니다. 
+문장을 넣으면 Encoder는 문장의 정보를 압축하고 Deocder는 autoregressive하게 매 시점 특정 token(단어)이 현 시점에서 등장할지에 대한 Socre가 추출됩니다.
+이 추출된 Score에 Softmax 함수를 적용하면 각 단어가 등장할 확률을 계산할 수 있습니다.
+이때 temperature 적용하면 확률을 변화시킬 수 있습니다. 
 
-<center>$\hat{p_i} = f_{\tau}(p)_i = \frac{p_i^{\frac{1}{\tau}}}{\sum_j p_j^{\frac{1}{\tau}}}$</center>
-$p_i$ : 번역기 decoder에서 추출된 단어 $i$가 등장할 확률  
+<center>$\hat{p_i} = f_{\tau}(p_i) = \frac{s_i / \tau}{ \sum_j s_j / \tau }$</center>
+$p_i$ : 번역기 decoder에서 추출된 단어 $i$가 등장할 확률
+$s_i$ : 번역기 decoder에서 추출된 단어 $i$가 등장할 확률과 관련된 점수
 $\hat{p_i}$ : Temperatue가 적용된 단어 $i$가 등장할 확률  
 $\tau$ : Temperatue를 의미하며 사용자 설정 파라미터  
 
