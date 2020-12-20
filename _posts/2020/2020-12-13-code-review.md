@@ -61,16 +61,14 @@ UDA 방법론은 Back Translation, TD-IDF 등의 Data Augmentation 방법을 제
 KL Divergence를 최소화 하는 것은 Cross Entropy를 최소화 하는것과 같으므로 해당 식은 아래와 같이 변경될 수 있습니다.
 
 Data Augmentation을 통해 생성된 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포를 추출할 수 있습니다.
+
 <center>$p_{\theta} (y|\hat{x})$</center>
 
+또한 원본 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포를 추출할 수 있습니다.
 
+<center>$p_{\theta} (y|x)$</center>
 
-
-Data Augmentation을 통해 생성된 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포 $p_{\theta}(y|\hat{x})$ 를 추출할 수 있습니다.
-또한 원본 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포 $p_{\theta}(y|x)$ 를 추출할 수 있습니다.
-이 두 분포의 차이인 $ KL-Divergence = D( p_{\theta}(y|x) || p_{\theta}(y|\hat{x} )$ 를 계산하여 Consistency Loss로 활용합니다.
-
-
+이 두 분포의 차이인 KL Divergence $KL( p_{\tilde{\theta}}(y|x_2)) || p_{\theta}(y|\hat{x})) )$ 를 계산하여 Consistency Loss로 활용합니다.
 이 방법을 활용하면 적은 Label 데이터와 많은 Unlabeled 데이터로 좋은 성능을 도출할 수 있습니다.
 
 ### [1] Consistency Loss
@@ -606,13 +604,279 @@ save_pickle(save_path, save_data)
 #### [2] Train with EDA Setting
 
 Back-translated 데이터를 이용하여 Supervised Loss와 Consistency Loss 구성하는 방법과 학습하는 방법에 대해 다루겠습니다.
+튜토리얼의 Semi-Supervised Learning 에 해당하는 전체 코드는 [`train.py`](https://github.com/JoungheeKim/uda_pytorch/blob/main/src/train.py) 에서 참고하시기 바랍니다.
+
+Semi-Supervised Learning 과정의 중요한 부분을 요약하면 다음과 같습니다.
+
+A. IMDB 데이터 분할
+B. IMDB 데이터 전처리
+C. Supervised Loss 구성
+D. Consistency Loss 구성
+E. Final Loss 구성 및 학습
+F. 결과 확인
+
+##### A. IMDB 데이터 분할
+
+![](/img/in-post/2020/2020-12-13/data_split.png)
+<center>데이터 나누기 예시</center>
+
+Back-Translation을 통하여 인공데이터가 포함된 Labeled Dataset, Unlabeled Dataset, Test Dataset을 생성하고 저장하였습니다.
+이 데이터를 supervised Loss 구성에 필요한 학습용 데이터, Consistency Loss 구성에 필요한 학습용 데이터, 검증용 데이터로 나누는 과정입니다.
+
+```python
+def split_files(args):
+    assert os.path.isfile(args.label_file), 'there is no label files, --label_file [{}]'.format(args.label_file)
+    dirname, filename  = os.path.split(args.label_file)
+    data = load_pickle(args.label_file)
+
+    ## Split labeled data
+    train_idx, leftover_idx, _, leftover_label = train_test_split(list(range(len(data['label']))), data['label'],train_size=args.labeled_data_size, stratify=data['label'])
+    if len(leftover_idx) > args.valid_data_size:
+        valid_idx, unlabel_idx, _, _ = train_test_split(leftover_idx, leftover_label, train_size=args.valid_data_size, stratify=leftover_label)
+    else:
+        valid_idx = leftover_idx
+        unlabel_idx = []
+
+    train_data = dict((key, np.array(item)[train_idx].tolist()) for key, item in zip(data.keys(), data.values()))
+    valid_data = dict((key, np.array(item)[valid_idx].tolist()) for key, item in zip(data.keys(), data.values()))
+    unlabel_data = dict((key, np.array(item)[unlabel_idx].tolist()) for key, item in zip(data.keys(), data.values()))
+    
+    ## add unlabeled data
+    if args.unlabel_file is not None and os.path.isfile(args.unlabel_file):
+        additional_data = load_pickle(args.unlabel_file)
+        for key in unlabel_data.keys():
+            unlabel_data[key] += additional_data[key]
+
+    train_path = os.path.join(dirname, TRAIN_NAME.format(args.labeled_data_size, args.valid_data_size))
+    save_pickle(train_path, train_data)
+    try:
+        os.remove(os.path.join(dirname, "cache_" + TRAIN_NAME.format(args.labeled_data_size, args.valid_data_size)))
+    except:
+        pass
+
+    valid_path = os.path.join(dirname, VALID_NAME.format(args.labeled_data_size, args.valid_data_size))
+    save_pickle(valid_path, valid_data)
+    try:
+        os.remove(os.path.join(dirname, "cache_" + VALID_NAME.format(args.labeled_data_size, args.valid_data_size)))
+    except:
+        pass
+
+    augment_path = os.path.join(dirname, AUGMENT_NAME.format(args.labeled_data_size, args.valid_data_size))
+    save_pickle(augment_path, unlabel_data)
+    try:
+        os.remove(os.path.join(dirname, "cache_" + AUGMENT_NAME.format(args.labeled_data_size, args.valid_data_size)))
+    except:
+        pass
+
+    args.train_file = train_path
+    args.valid_file = valid_path
+    args.augment_file = augment_path
+```
+
+데이터를 나누는 코드는 다음과 같습니다.
+supervised 학습용 데이터는 label 정보가 필요합니다. 
+따라서 Labeled Dataset에서 일부를 sampling 하여 Supervised 학습용 데이터를 구성합니다.(IMDB는 20개를 사용)
+검증용 데이터 역시 label 정보가 필요하므로 Labeled Dataset에서 3000개를 sampling하여 구성합니다.
+
+나머지는 Consistency 학습용 데이터를 구성하는데 활용합니다.
+Consistency 학습용 데이터는 label 정보를 필요로 하지 않으므로 Unlabeled Dataset도 포함하여 데이터를 구성합니다.
+
+##### B. IMDB 데이터 전처리
+
+전처리 과정에는 문장을 token 형태로 자르고 one-hot encoding하는 과정을 포함하고 있습니다.
+token 형태로 자르기 위해서는 vocab을 포함한 tokenizer가 필요합니다.
+본 튜토리얼 및 UDA 논문에서는 pre-trained BERT를 활용하므로 BERT와 함께 생성된 BertTokenizer를 이용합니다.
+
+```python
+class IMDBDataset(Dataset):
+    def __init__(self, file_path, tokenizer, max_len):
+
+        assert os.path.isfile(file_path), 'there is no file please check again. [{}]'.format(file_path)
+
+        self.max_len = max_len
+
+        dirname, filename = os.path.split(file_path)
+        cache_filename = "cache_{}".format(filename)
+        cache_path = os.path.join(dirname, cache_filename)
+        if os.path.isfile(cache_path):
+            logger.info("***** load cache dataset [{}] *****".format(cache_path))
+            
+            ## load cache file
+            label, text, augment_text = load_pickle(cache_path)
+        else:
+            logger.info("***** tokenize dataset [{}] *****".format(file_path))
+
+            data = load_pickle(file_path)
+            label = data['label']
+            text = data['clean_text']
+            augment_text = data['backtranslated_text']
+
+            logger.info("***** dataset size [{}] *****".format(str(len(text))))
+            
+            ## tokenizing
+            augment_text = [tokenizer.convert_tokens_to_ids(tokenizer.tokenize(t)) for t in augment_text]
+            augment_text = [tokenizer.build_inputs_with_special_tokens(t) for t in augment_text]
+            
+            ## one-hot Encoding
+            text = [tokenizer.convert_tokens_to_ids(tokenizer.tokenize(t)) for t in text]
+            text = [tokenizer.build_inputs_with_special_tokens(t) for t in text]
+
+            ## save tokenized file
+            save_pickle(cache_path, (label, text, augment_text))
+
+        self.augment_text = augment_text
+        self.text = text
+        self.label = label
+
+    def __len__(self):
+        return len(self.label)
+    
+    ## 데이터 불러오기
+    def __getitem__(self, item):
+        ## [원본문장] 길이가 길면 뒤에서부터 자르기
+        if len(self.text[item]) > self.max_len:
+            text = torch.tensor(
+                [self.text[item][0]]
+                + self.text[item][-(self.max_len - 1): -1]
+                + [self.text[item][-1]],
+                dtype=torch.long,
+            )
+        else:
+            text = torch.tensor(self.text[item], dtype=torch.long)
+
+        ## [인공문장] 길이가 길면 뒤에서부터 자르기
+        if len(self.augment_text[item]) > self.max_len:
+            augment_text = torch.tensor(
+                [self.augment_text[item][0]]
+                + self.augment_text[item][-(self.max_len - 1): -1]
+                + [self.augment_text[item][-1]],
+                dtype=torch.long,
+            )
+        else:
+            augment_text = torch.tensor(self.augment_text[item], dtype=torch.long)
+
+        ## label
+        label = torch.tensor(self.label[item], dtype=torch.long)
+        return text, augment_text, label
+```
+
+위 코드는 `pytorch` 라이브러리의 `Dataset`을 상속받아 만든 데이터셋 클래스입니다.
+해당 클래스는 전처리 과정으로 tokenizing과 one-hot encoding을 포함하고 있습니다.
+많은 문장을 tokenizing 하는 것은 상당히 긴 시간을 필요로 하므로 전처리 한 후 cache 형태로 저장합니다.
+만일 cache 파일이 존재하면 전처리를 하지 않고 해당 파일을 읽어 시간을 단축할 수 있도록 설계하였습니다.
+
+`def __getitem__` 는 해당 클래스를 이용하여 데이터를 불러올 때 사용하는 함수입니다.
+이 함수를 살펴보면 tokenizing 된 문장의 최대길이가 사용자가 지정한 수준(max_len)을 넘으면 뒤에서부터 자르도록 설정 되어 있습니다.
+논문에서도 짧게 언급되었지만 IMDB의 경우 문장의 뒷부분을 이용하여 학습할 경우 성능이 더 좋기 때문에 다음과 같이 구성하였습니다.
 
 
+##### C. Supervised Loss 구성
 
+Semi-Supervised Learning은 학습단계에서 Supervised Loss와 Consistency Loss를 구성하여 학습합니다.
+Supervised Loss는 label 정보가 있는 Supervised 데이터를 이용하여 계산합니다.
 
+```python
+## TSA 함수
+def get_tsa_threshold(global_step, t_total, num_labels, tsa='linear'):
+    tsa = tsa.lower()
+    if tsa == 'log':
+        a_t = 1 - np.exp(-(global_step / t_total) * 5)
+    elif tsa == 'exp':
+        a_t = np.exp(-(1 / t_total) * 5)
+    else:
+        a_t = (global_step / t_total)
+    threshold=a_t * (1-(1/num_labels)) + (1/num_labels)
+    return threshold
 
+## 학습 함수
+def train(...):
+    ...
+    ## Supervised 데이터 생성
+    train_dataloader = DataLoader(
+        train_dataset, shuffle=True, batch_size=args.label_batch_size, collate_fn=collate
+    )
+    ## loss function 생성
+    cross_entropy_fn = torch.nn.CrossEntropyLoss(reduction="none")
+    ...
+    
+    for labeled_batch in train_dataloader:
+        
+        labeled_batch = tuple(t.to(args.device) for t in labeled_batch)
+        labeled_texts, _, labels = labeled_batch
+        label_outputs = model(input_ids=labeled_texts)
+        ## get [CLS] token output
+        label_outputs = label_outputs[0]
+        
+        ## Supervised Loss 생성
+        cross_entropy_loss = cross_entropy_fn(label_outputs, labels)
+        
+        if args.tsa is not None:
+            ## Get tsa Threshold
+            tsa_threshold = get_tsa_threshold(global_step=global_step, t_total=t_total, num_labels=args.num_labels, tsa=args.tsa)
 
+            ## selected Label prob
+            label_prob = torch.exp(-cross_entropy_loss)
 
+            ## selected pro less then threshold
+            tsa_mask = label_prob.le(tsa_threshold)
+            cross_entropy_loss = cross_entropy_loss * tsa_mask
+
+        final_loss = cross_entropy_loss.mean()
+    ...
+```
+
+`CrossEntropyLoss` 함수를 이용하여 모델에서 나온 결과와 라벨정보를 활용하여 supervised Loss를 계산할 수 있습니다.
+학습 과정에서 Sueprvsied 데이터에 너무 overfitting 되지 않도록 TSA 기능을 적용하였습니다.
+TSA를 적용하는 과정은 다음과 같습니다.
+
+1. 현재 iteration 기준으로 TSA threshold를 생성합니다.
+2. 모델로부터 추출된 정답 라벨의 확률을 계산합니다.
+3. 정답라벨의 확률이 threshold를 넘는 데이터에 대하여 0을 부여하고 그렇지 않으면 1을 부여하는 MASK를 생성합니다.
+4. MASK와 Supervised Loss를 곱하여 threshold를 넘은 데이터의 영향력을 없애줍니다.
+
+##### D. Consistency Loss 구성
+
+```python
+def kl_divergence_fn(unlabeled_logits, augmented_logits, sharpen_ratio=1.0):
+    loss_fn = torch.nn.KLDivLoss(reduction="none")
+    return loss_fn(F.log_softmax(augmented_logits, dim=1), F.softmax(unlabeled_logits/sharpen_ratio, dim=1)).sum(dim=1)
+
+## 학습 함수
+def train(...):
+    ...
+    ## Supervised 데이터 생성
+    train_dataloader = DataLoader(
+        train_dataset, shuffle=True, batch_size=args.label_batch_size, collate_fn=collate
+    )
+    ## loss function 생성
+    cross_entropy_fn = torch.nn.CrossEntropyLoss(reduction="none")
+    ...
+    
+    for labeled_batch in train_dataloader:
+        
+        labeled_batch = tuple(t.to(args.device) for t in labeled_batch)
+        labeled_texts, _, labels = labeled_batch
+        label_outputs = model(input_ids=labeled_texts)
+        ## get [CLS] token output
+        label_outputs = label_outputs[0]
+        
+        ## Supervised Loss 생성
+        cross_entropy_loss = cross_entropy_fn(label_outputs, labels)
+        
+        if args.tsa is not None:
+            ## Get tsa Threshold
+            tsa_threshold = get_tsa_threshold(global_step=global_step, t_total=t_total, num_labels=args.num_labels, tsa=args.tsa)
+
+            ## selected Label prob
+            label_prob = torch.exp(-cross_entropy_loss)
+
+            ## selected pro less then threshold
+            tsa_mask = label_prob.le(tsa_threshold)
+            cross_entropy_loss = cross_entropy_loss * tsa_mask
+
+        final_loss = cross_entropy_loss.mean()
+    ...
+```
 
 
 
