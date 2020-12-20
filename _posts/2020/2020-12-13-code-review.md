@@ -250,7 +250,7 @@ Sharpening Prediction은 모델로부터 추출된 Logits을 Softmax 함수를 �
 $\tau < 1$ 일 경우 추출된 확률분포는 $\tau$를 적용하기 전 확률분포보다 각 Class 끼리 차이가 커집니다.
 반면 $\tau > 1$ 인 경우 추출된 확률 분포는 $\tau$를 적용하기 전 확률분포보다 각 Class 끼리 차이가 작아집니다.
 
-[](/img/in-post/2020/2020-12-13/sharpening_prediction.png)
+![](/img/in-post/2020/2020-12-13/sharpening_prediction.png)
 <center>Sharpening Prediction 예시</center>
 
 Sharpening Prediction은 $0< \tau < 1$ 사이의 $\tau$를 적용하여 각 Class 끼리의 차이가 커지게 함으로써 Consistency Loss를 증가 시킵니다.
