@@ -282,11 +282,25 @@ print(data['train']['text'][0])
 위와 같이 `load_dataset` 함수를 이용하여 imdb 데이터를 호출하면 데이터가 cache로 남아 있을 경우 재활용하고 cache를 찾을 수 없는 경우 인터넷을 통해 자동으로 다운로드 받습니다.
 데이터를 load한 후 출력하여 데이터가 잘 load 되었는지 확인해 봅니다.
 
+#### 코드 개발 Flow
+
+UDA 논문에서 제시한 성능을 온전히 구현하기 위해서는 총 3가지 과정이 필요합니다.
+
+1. Data Augmentation(Back-Translation)
+2. Masked Language Model Fine-tuning
+3. Semi-Supervised Learning(UDA)
+
+1번 과정은 Back-Translation을 통해 인공데이터를 생성하는 단계입니다.
+2번 과정은 Pre-trained BERT(uncased)를 Masked Language Modeling를 이용하여 Unlabled 데이터에 학습시키고 Task에 Pre-trained 된 BERT 모델을 생성하는 단계입니다.
+3번 과정은 인공데이터와 Pre-trained BERT 모델을 이용하여 Semi-superivsed Learning을 적용하는 단계입니다.
+
+모델의 성능을 논문에서 제시한 수준까지 향상시키기 위해서는 2번 과정이 필수이지만 시간관계상 튜토리얼에서는 2번 과정은 생략하겠습니다.
+
 #### [1] Data Augmentation
 
 UDA 방법을 적용하기 위해서는 Unlabeled 데이터의 인공데이터(augmented Data)가 필요합니다.
 본 튜토리얼에서는 Back-translation을 이용하여 인공데이터를 생성하는 방법에 다룹니다.
-튜토리얼의 Back-translation 에 해당하는 전체 코드는 [`back_translation.py`](https://github.com/JoungheeKim/uda_pytorch/blob/main/back_translation.py) 에서 참고하시기 바랍니다.
+튜토리얼의 Back-translation 에 해당하는 전체 코드는 [`back_translation.py`](https://github.com/JoungheeKim/uda_pytorch/blob/main/src/back_translation.py) 에서 참고하시기 바랍니다.
 
 Back-translation 과정을 요약하면 다음과 같습니다.
 
@@ -582,6 +596,8 @@ save_pickle(save_path, save_data)
 #### [2] Train with EDA Setting
 
 Back-translated 데이터를 이용하여 Supervised Loss와 Consistency Loss 구성하는 방법과 학습하는 방법에 대해 다루겠습니다.
+
+
 
 
 
