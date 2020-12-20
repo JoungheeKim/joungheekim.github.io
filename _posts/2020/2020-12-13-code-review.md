@@ -39,9 +39,9 @@ Machine Translation, Sentiment Analysis, Question And Answering(Q&A) 등 일부 
 
 ## 논문 리뷰
 
-해당 논문에서는 제시한 방법론을 두가지 분야(NLP, Vision) 에 적용하고 실험결과를 제시합니다.
-이 글에서는 UDA논문을 NLP에 적용하는 방법에 대해 자세하게 다루기 위하여 Vision에 대한 내용은 포함하고 있지 않습니다.
-따라서 Vision 분야에 UDA를 적용하는 방법을 알고 싶으신 분들은 [Youngerous BLOG]() 를 참조하시기 바랍니다.
+해당 논문에서는 제시한 방법론을 <u>두가지 분야(NLP, Vision) 에 적용</u>하고 실험결과를 제시합니다.
+이 글에서는 `UDA` 방법론을 **NLP에 적용하는 방법**에 대해 자세하게 다루기 위하여 Vision에 대한 내용은 포함하고 있지 않습니다.
+따라서 Vision 분야에 UDA를 적용하는 방법을 알고 싶으신 분들은 **[Youngerous BLOG]()** 를 참조하시기 바랍니다.
 
 ### Overview
 
@@ -55,11 +55,11 @@ Labeled 데이터를 활용하여 Supervised Loss를 구성하고 Unlabeled 데�
 Supervised Loss는 일반적인 분류 학습에 활용하는 Cross_entropy Loss이므로 Labeled 데이터의 문장 $x_l$와 라벨 $y$가 있으면 쉽게 구성할 수 있습니다.
 반면 Consistency Loss를 만들기 위해서는 두개의 의미가 비슷한 문장이 필요합니다.
 따라서 Unlabeled 데이터의 문장 $x_u$ 뿐만 아니라 $x_u$와 비슷한 의미를 지니지만 문법적, 단어의 표현이 다른 문장 $\hat{x_u}$을 생성해야 합니다.
-UDA는 이를 위하여 Back Translation, TD-IDF 등의 Data Augmentation 방법을 제시합니다.
+UDA 방법론은 Back Translation, TD-IDF 등의 Data Augmentation 방법을 제시합니다.
 
-Data Augmentation을 통해 생성된 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포 $p_{\theta}(y|\hat{x})$를 추출할 수 있습니다.
+Data Augmentation을 통해 생성된 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포 $p_{\theta}( y | \hat{x} )$를 추출할 수 있습니다.
 또한 원본 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포 $p_{\theta}(y|x)$를 추출할 수 있습니다.
-이 두 분포의 차이인 $ KL-Divergence $D( p_{\theta}(y|x) || p_{\theta}(y|\hat{x} )$ 를 계산하여 Consistency Loss로 활용합니다.
+이 두 분포의 차이인 $ KL-Divergence = D( p_{\theta}(y|x) || p_{\theta}(y|\hat{x} )$ 를 계산하여 Consistency Loss로 활용합니다.
 
 이 방법을 활용하면 적은 Label 데이터와 많은 Unlabeled 데이터로 좋은 성능을 도출할 수 있습니다.
 
