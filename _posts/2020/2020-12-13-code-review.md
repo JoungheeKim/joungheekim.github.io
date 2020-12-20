@@ -57,10 +57,7 @@ Supervised Loss는 일반적인 분류 학습에 활용하는 Cross_entropy Loss
 따라서 Unlabeled 데이터의 문장 $x_u$ 뿐만 아니라 $x_u$와 비슷한 의미를 지니지만 문법적, 단어의 표현이 다른 문장 $\hat{x_u}$을 생성해야 합니다.
 UDA 방법론은 Back Translation, TD-IDF 등의 Data Augmentation 방법을 제시합니다.
 
-추출된 두 분포의 차이 Metric인 KL-Divergence는 $KL( p_{\tilde{\theta}}(y|x_2)) || p_{\theta}(y|\hat{x})) )$ 를 계산하여 차이를 줄이도록 학습합니다.
-KL Divergence를 최소화 하는 것은 Cross Entropy를 최소화 하는것과 같으므로 해당 식은 아래와 같이 변경될 수 있습니다.
-
-Data Augmentation을 통해 생성된 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포를 추출할 수 있습니다.
+Data Augmentation을 통해 생성된 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포 $p_{\theta} (y|\hat{x})$ 를 추출할 수 있습니다.
 
 <center>$p_{\theta} (y|\hat{x})$</center>
 
@@ -68,7 +65,7 @@ Data Augmentation을 통해 생성된 문장을 분류모델에 넣으면 특정
 
 <center>$p_{\theta} (y|x)$</center>
 
-이 두 분포의 차이인 KL Divergence $KL( p_{\tilde{\theta}}(y|x_2)) || p_{\theta}(y|\hat{x})) )$ 를 계산하여 Consistency Loss로 활용합니다.
+이 두 분포의 차이인 KL Divergence $D( p_{\tilde{\theta}}(y|x_2)) || p_{\theta}(y|\hat{x})) )$ 를 계산하여 Consistency Loss로 활용합니다.
 이 방법을 활용하면 적은 Label 데이터와 많은 Unlabeled 데이터로 좋은 성능을 도출할 수 있습니다.
 
 ### [1] Consistency Loss
@@ -844,40 +841,56 @@ def kl_divergence_fn(unlabeled_logits, augmented_logits, sharpen_ratio=1.0):
 ## 학습 함수
 def train(...):
     ...
-    ## Supervised 데이터 생성
-    train_dataloader = DataLoader(
-        train_dataset, shuffle=True, batch_size=args.label_batch_size, collate_fn=collate
+    ## UnSupervised 데이터
+    unlabeled_dataloader = DataLoader(
+            unlabeled_dataset, shuffle=True, batch_size=args.unlabel_batch_size, collate_fn=collate
     )
-    ## loss function 생성
-    cross_entropy_fn = torch.nn.CrossEntropyLoss(reduction="none")
+    unlabeled_iter = iter(unlabeled_dataloader)
     ...
     
+    
     for labeled_batch in train_dataloader:
-        
-        labeled_batch = tuple(t.to(args.device) for t in labeled_batch)
-        labeled_texts, _, labels = labeled_batch
-        label_outputs = model(input_ids=labeled_texts)
-        ## get [CLS] token output
-        label_outputs = label_outputs[0]
-        
-        ## Supervised Loss 생성
-        cross_entropy_loss = cross_entropy_fn(label_outputs, labels)
-        
-        if args.tsa is not None:
-            ## Get tsa Threshold
-            tsa_threshold = get_tsa_threshold(global_step=global_step, t_total=t_total, num_labels=args.num_labels, tsa=args.tsa)
-
-            ## selected Label prob
-            label_prob = torch.exp(-cross_entropy_loss)
-
-            ## selected pro less then threshold
-            tsa_mask = label_prob.le(tsa_threshold)
-            cross_entropy_loss = cross_entropy_loss * tsa_mask
-
+        ...
         final_loss = cross_entropy_loss.mean()
+        ...
+        
+        ## Unsupervised 데이터 불러오기
+        unlabeled_batch = next(unlabeled_iter)
+        unlabeled_batch = tuple(t.to(args.device) for t in unlabeled_batch)
+        unlabeled_texts, augmented_texts, _ = unlabeled_batch
+        
+        ##augment 데이터 확률분포 추출
+        augment_outputs = model(input_ids=augmented_texts)
+        augment_outputs = augment_outputs[0]
+        
+        ##unlabled 데이터 확률분포 추출
+        model.eval()
+        with torch.no_grad():
+            unlabeled_outputs = model(input_ids=unlabeled_texts)
+            ## get [CLS] token output
+            unlabeled_outputs = unlabeled_outputs[0]
+        model.train()
+        
+        ## KL divergence 구성
+        consistency_loss = kl_divergence_fn(unlabeled_outputs, augment_outputs)
+
+        ## confidence beta 적용
+        unlabeled_prob = F.softmax(unlabeled_outputs).max(dim=1)[0]
+        unlabeled_mask = unlabeled_prob.ge(args.confidence_beta)
+        consistency_loss = consistency_loss * unlabeled_mask
+
+        final_loss += args.uda_coeff * consistency_loss.mean()
     ...
 ```
 
+Consistency Loss를 구성하기 위하여 인공문장(Augmented)과 원본문장(Unlabeled)이 필요합니다.
+데이터 분할 과정에서 만든 Consistency 학습용 데이터로부터 인공문장과 원본문장을 불러온 후 모델에 넣습니다.
+원본문장의 경우 모델에 Loss가 전파되지 않게 모델을 고정시켜야 합니다.
+따라서 `model.eval()` 명령어와 `with torch.no_grad():` 를 활용하여 해당 구간에서는 backpropagation이 되지 않도록 조치합니다.
+모델을 활용하여 두 문장으로부터 추출된 확률분포를 `kl_divergence_fn` 함수를 넣으면 두 분포의 차이인 Consistency Loss를 계산할 수 있습니다.
+
+계산한 Consistency Loss를 Final Loss에 바로 더하지 않고 Confidence를 확인합니다.
+모델의 예측 실뢰도가 높은 데이터에 한에서 Loss를 구성하는 방식입니다.
 
 
 
