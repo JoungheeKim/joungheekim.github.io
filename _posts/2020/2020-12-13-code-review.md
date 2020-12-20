@@ -59,7 +59,7 @@ UDA 방법론은 Back Translation, TD-IDF 등의 Data Augmentation 방법을 제
 
 Data Augmentation을 통해 생성된 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포 $p_{\theta}(y|\hat{x})$를 추출할 수 있습니다.
 
-Data Augmentation을 통해 생성된 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포 $ p_{\theta}(y|\hat{x}) $를 추출할 수 있습니다.
+
 또한 원본 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포 $p_{\theta}(y|x)$를 추출할 수 있습니다.
 이 두 분포의 차이인 $ KL-Divergence = D( p_{\theta}(y|x) || p_{\theta}(y|\hat{x} )$ 를 계산하여 Consistency Loss로 활용합니다.
 
