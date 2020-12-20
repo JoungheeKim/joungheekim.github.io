@@ -326,7 +326,7 @@ Back-translation을 활용하기 위하여 번역기 2개가 필요합니다.
 'wmt19.en-de' 모델은 영어를 독일어로 번역해 주는 transformer 아키택처 번역기 입니다.
 'wmt19.de-en' 모델은 독일어를 영어로 번역해 주는 transformer 아키택처 번역기 입니다.
 이 두개의 모델을 이용하여 영어를 독일어로 그리고 다시 독일어를 영어로 번역하여 새로운 문장을 생성합니다.
-번역기와 관련된 자세한 사항은 [공식 DOCS](https://github.com/pytorch/fairseq/tree/master/examples/translation) 를 참고바랍니다.
+번역기와 관련된 자세한 사항은 [공식 Docs](https://github.com/pytorch/fairseq/tree/master/examples/translation) 를 참고바랍니다.
 
 두 번역기를 불러오기 위하여 우선 기본 사항을 Setting 합니다.
 
