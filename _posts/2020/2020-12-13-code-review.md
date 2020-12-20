@@ -57,7 +57,7 @@ Supervised Loss는 일반적인 분류 학습에 활용하는 Cross_entropy Loss
 따라서 Unlabeled 데이터의 문장 $x_u$ 뿐만 아니라 $x_u$와 비슷한 의미를 지니지만 문법적, 단어의 표현이 다른 문장 $\hat{x_u}$을 생성해야 합니다.
 UDA 방법론은 Back Translation, TD-IDF 등의 Data Augmentation 방법을 제시합니다.
 
-Data Augmentation을 통해 생성된 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포 $p_{\theta}( y | \hat{x} )$를 추출할 수 있습니다.
+Data Augmentation을 통해 생성된 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포 $ p_{\theta}(y|\hat{x}) $를 추출할 수 있습니다.
 또한 원본 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포 $p_{\theta}(y|x)$를 추출할 수 있습니다.
 이 두 분포의 차이인 $ KL-Divergence = D( p_{\theta}(y|x) || p_{\theta}(y|\hat{x} )$ 를 계산하여 Consistency Loss로 활용합니다.
 
@@ -148,8 +148,8 @@ Unlabeled 데이터를 이용하여 Strong Augmented 데이터와, Week Augmente
 
 Consistency Loss의 식은 아래와 같습니다.
 
-<center>$D( p_{\theta}(y|x) || p_{\theta}(y|x,\epsilone)$</center>
-$\epsilone$ : 인공 문장을 생성할 때 삽입된 Noise  
+<center>$D( p_{\theta}(y|x) || p_{\theta}(y|x,\epsilon)$</center>
+$\epsilon$ : 인공 문장을 생성할 때 삽입된 Noise  
 $p_{\theta}(y|x)$ : 원본 문장의 분류 확률 분포    
 $p_{\theta}(y|x,e)$ : 인공 문장의 분류 확률 분포     
 
