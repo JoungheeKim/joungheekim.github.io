@@ -309,12 +309,12 @@ UDA 방법을 적용하기 위해서는 Unlabeled 데이터의 인공데이터(a
 
 Back-translation 과정을 요약하면 다음과 같습니다.
 
-A. 번역기 불러오기
-B. IMDB 데이터 불러오기
-C. IMDB 데이터 전처리
-D. 문장 단위로 데이터 나누기
-E. Back-Translation 데이터 생성
-F. Back-Translation 데이터 저장
+A. 번역기 불러오기  
+B. IMDB 데이터 불러오기  
+C. IMDB 데이터 전처리  
+D. 문장 단위로 데이터 나누기  
+E. Back-Translation 데이터 생성  
+F. Back-Translation 데이터 저장  
 
 ##### A. 번역기 불러오기
 Back-translation을 활용하기 위하여 번역기 2개가 필요합니다.
@@ -605,12 +605,12 @@ Back-translated 데이터를 이용하여 Supervised Loss와 Consistency Loss �
 
 Semi-Supervised Learning 과정의 중요한 부분을 요약하면 다음과 같습니다.
 
-A. IMDB 데이터 분할
-B. IMDB 데이터 전처리
-C. Supervised Loss 구성
-D. Consistency Loss 구성
-E. Final Loss 구성 및 학습
-F. 결과 확인
+A. IMDB 데이터 분할  
+B. IMDB 데이터 전처리  
+C. Supervised Loss 구성  
+D. Consistency Loss 구성  
+E. Final Loss 구성 및 학습  
+F. 결과 확인  
 
 ##### A. IMDB 데이터 분할
 
