@@ -61,7 +61,7 @@ UDA 방법론은 Back Translation, TD-IDF 등의 Data Augmentation 방법을 제
 KL Divergence를 최소화 하는 것은 Cross Entropy를 최소화 하는것과 같으므로 해당 식은 아래와 같이 변경될 수 있습니다.
 
 Data Augmentation을 통해 생성된 문장을 분류모델에 넣으면 특정 라벨에 속할 확률분포를 추출할 수 있습니다.
-<center>$p_{\theta}$</center>
+<center>$p_{\theta} (y|\hat{x})$</center>
 
 
 
