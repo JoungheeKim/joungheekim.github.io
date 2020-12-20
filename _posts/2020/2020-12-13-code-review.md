@@ -12,18 +12,18 @@ tags:
 
 # [코드리뷰] - [Unsupervised Data Augmentation for Consistency Training](https://arxiv.org/abs/1904.12848), NIPS 2019
 
-딥러닝은 다양한 분야에서 기존 방법론 보다 좋은 성과를 보여주고 있습니다.
-Machine Translation, Sentiment Analysis, Question And Answering(Q&A) 등 일부 자연어처리 분야에서는 전통적인 방법론 보다 월등히 앞선 성능을 보이고 있습니다.
+딥러닝은 다양한 분야에서 기존 방법론 보다 **좋은 성과**를 보여주고 있습니다.
+Machine Translation, Sentiment Analysis, Question And Answering(Q&A) 등 일부 자연어처리 분야에서는 전통적인 방법론 보다 <u>월등히 앞선 성능</u>을 보이고 있습니다.
 따라서 기업들이 앞 다투어 딥러닝을 다양한 분야에 적용하고 서비스를 출시하려고 노력하고 있습니다.
-하지만 안타깝게도 딥러닝이 적용된 서비스는 생각보다 찾아보기 힘들며 그 품질 역시 소비자를 만족시키기에 부족합니다.
+하지만 안타깝게도 딥러닝이 적용된 서비스는 생각보다 찾아보기 힘들며 그 <u>품질 역시 소비자를 만족시키기에 부족</u>합니다.
 
-품질하락의 다양한 이유가 있지만 딥러닝 관점에서 이유를 찾아보면 근본적인 문제는 해당 분야에 대한 Labeled 데이터가 부족하다는 것입니다.
-일반적으로 딥러닝 모델를 학습하기 위해서는 많은 Labeled 데이터가 필요합니다.
-데이터의 양은 딥러닝 모델의 성능과 비례관계가 있기 때문에 얼마나 데이터를 확보했는가에 따라 딥러닝 모델의 성능이 달라집니다.
+품질하락의 다양한 이유가 있지만 딥러닝 관점에서 이유를 찾아보면 근본적인 문제는 해당 분야에 대한 **Labeled 데이터가 부족**하다는 것입니다.
+일반적으로 딥러닝 모델를 학습하기 위해서는 <u>많은 Labeled 데이터가 필요</u>합니다.
+**데이터의 양은 딥러닝 모델의 성능과 비례**관계가 있기 때문에 얼마나 데이터를 확보했는가에 따라 딥러닝 모델의 성능이 달라집니다.
 따라서 다양한 분야에 딥러닝을 적용하여도 Labeled 데이터가 부족하기 때문에 좋은 성능의 모델을 만들 수 없습니다.
 
-이를 해결하기 위하여 Semi-supervised Learning을 주로 적용합니다.
-이 방법론은 Labeled 데이터 뿐만 아니라 Unlabeled 데이터를 활용하여 모델의 성능을 향상시키는 방법론입니다.
+이를 해결하기 위하여 다양한 Semi-supervised Learning 방법론이 연구되고 있습니다. 
+이 방법론은 Labeled 데이터 뿐만 아니라 Unlabeled 데이터를 활용하여 모델의 성능을 향상시키는 방법입니다.
 오늘 포스팅에서는 최근 Semi-superivsed Learning 방법론 중 좋은 성능을 보이고 있는 `UDA` 에 대해 다루도록 하겠습니다.
 이 글은 **[Unsupervised Data Augmentation for Consistency Training](https://arxiv.org/abs/1904.12848)** 논문을 참고하여 정리하였음을 먼저 밝힙니다.
 논문을 간단하게 리뷰하고 pytorch 라이브러리를 이용하여 코드를 구현한 내용을 자세히 설명드리겠습니다.
@@ -35,7 +35,7 @@ Machine Translation, Sentiment Analysis, Question And Answering(Q&A) 등 일부 
 
 1. Vision, NLP 분야에서 효과적인 **Data Augmenation** 방법론을 제시하고 이를 Semi-superivsed Learning에 활용합니다. 
 2. **Consistency Loss와 Supervised Loss를 이용**하여 모델을 학습하는 Semi-supervised Learning 방법론을 제안합니다.  
-3. Labeled 데이터를 10% 정도 사용하여도 해당방법론이 Fully Superivsed 방법론 보다 **좋은 성능**을 보일 수 있다는 것을 실험적으로 증명하였습니다.
+3. <u>Labeled 데이터를 10% 정도 사용</u>하여도 해당방법론이 Fully Superivsed 방법론 보다 **좋은 성능**을 보일 수 있다는 것을 실험적으로 증명하였습니다.
 
 ## 논문 리뷰
 
