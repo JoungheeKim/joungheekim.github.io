@@ -707,8 +707,7 @@ Semi-Supervised Learning 과정의 중요한 부분을 요약하면 다음과 �
 A. IMDB 데이터 전처리  
 B. Supervised Loss 구성  
 C. Consistency Loss 구성  
-D. Final Loss 구성 및 학습  
-E. 결과 확인  
+D. 학습 및 결과 확인
 
 ##### A. IMDB 데이터 전처리
 
@@ -924,10 +923,37 @@ Consistency Loss를 구성하기 위하여 인공문장(Augmented)과 원본문�
 계산한 Consistency Loss를 Final Loss에 바로 더하지 않고 Confidence를 확인합니다.
 모델의 예측 실뢰도가 높은 데이터에 한에서 Loss를 구성하는 방식입니다.
 
-##### D. Final Loss 구성 및 학습  
+기존 Supervised Loss에 Consistency Loss를 더하여 Final Loss를 구성합니다.
+Cosistency Loss에 상수(`uda_coeff`)를 곱하여 전체 Loss에서 Supervised Loss와 Cosistency Loss의 비율을 조정합니다. 
 
+##### D. 학습 및 결과 확인
 
+```python
+## 학습하기
+def run(...):
+    ...
+    if args.do_train:
+        train_dataset = IMDBDataset(args.train_file, tokenizer, args.train_max_len)
+        valid_dataset = IMDBDataset(args.valid_file, tokenizer, args.train_max_len)
+        unlabeled_dataset = None
+        if args.do_uda:
+            unlabeled_dataset = IMDBDataset(args.augment_file, tokenizer, args.train_max_len)
 
+        train_results = train(
+            args, train_dataset, valid_dataset, unlabeled_dataset, model, tokenizer
+        )
+        results.update(**train_results)
+    ...
+```
+
+앞서 자세히 설명한 조건에 따라 학습하면 다음과 같은 결과를 도출할 수 있습니다.
+
+## 결론
+UDA 방법론은 labeled 데이터를 함께 사용한다는 점에서 매우 유용합니다.
+하지만 대부분의 Semi-supervised Learning이 그렇듯 하이퍼파라미터에 매우 민감합니다.
+학습이 매우 불안정하여 학습 도중에 발산하기도 하고 동일한 파라미터이더로 학습하더라도 seed에 따라 성능이 매우 다릅니다.
+초기 20개의 sample에 따라 모델의 성능차이도 존재합니다.
+따라서 이 방법론을 유용하게 사용하기 위해서는 하이퍼파라미터 탐색에 많은 시간을 투자해야 할 것 같습니다.
 
 > [[UDA Pytorch]](https://github.com/JoungheeKim/uda_pytorch) 에서 튜토리얼에서 구현한 전체 파일을 제공하고 있습니다.
 > 해당 Github를 방문하시어 구현물 전체 모습을 확인바랍니다.
