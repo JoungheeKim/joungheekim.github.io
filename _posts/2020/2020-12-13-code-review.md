@@ -287,17 +287,17 @@ print(data['train']['text'][0])
 
 #### 코드 개발 Flow
 
-UDA 논문에서 제시한 성능을 온전히 구현하기 위해서는 총 3가지 과정이 필요합니다.
+UDA 논문에서 제시한 성능을 온전히 구현하기 위해서는 총 4가지 과정이 필요합니다.
 
 1. Data Augmentation(Back-Translation)
+2. Data Split
 2. Masked Language Model Fine-tuning
 3. Semi-Supervised Learning(UDA)
 
 1번 과정은 Back-Translation을 통해 인공데이터를 생성하는 단계입니다.
-2번 과정은 Pre-trained BERT(uncased)를 Masked Language Modeling를 이용하여 Unlabled 데이터에 학습시키고 Task에 Pre-trained 된 BERT 모델을 생성하는 단계입니다.
-3번 과정은 인공데이터와 Pre-trained BERT 모델을 이용하여 Semi-superivsed Learning을 적용하는 단계입니다.
-
-모델의 성능을 논문에서 제시한 수준까지 향상시키기 위해서는 2번 과정이 필수이지만 시간관계상 튜토리얼에서는 2번 과정은 생략하겠습니다.
+2번 과정은 Supervised loss를 구성할 학습용 데이터, Cosistency Loss를 구성할 학습용 데이터, 검증용 데이터를 분할하는 단계입니다. 
+3번 과정은 Pre-trained BERT(uncased)를 Masked Language Modeling를 이용하여 Unlabled 데이터에 학습시키고 Task에 Pre-trained 된 BERT 모델을 생성하는 단계입니다.
+4번 과정은 인공데이터와 Pre-trained BERT 모델을 이용하여 Semi-superivsed Learning을 적용하는 단계입니다.
 
 #### [1] Data Augmentation
 
@@ -595,22 +595,9 @@ save_pickle(save_path, save_data)
 저장된 데이터를 살펴보면 'Back-translated 문장'과 '원본 문장'은 뜻은 비슷하지만 단어와 문법의 형태가 조금씩 다른 것을 확인할 수 있습니다.
 이 데이터를 이용하여 이후 학습을 진행합니다.
 
+#### [2] Data Split
 
-#### [2] Train with EDA Setting
-
-Back-translated 데이터를 이용하여 Supervised Loss와 Consistency Loss 구성하는 방법과 학습하는 방법에 대해 다루겠습니다.
-튜토리얼의 Semi-Supervised Learning 에 해당하는 전체 코드는 [`train.py`](https://github.com/JoungheeKim/uda_pytorch/blob/main/src/train.py) 에서 참고하시기 바랍니다.
-
-Semi-Supervised Learning 과정의 중요한 부분을 요약하면 다음과 같습니다.
-
-A. IMDB 데이터 분할  
-B. IMDB 데이터 전처리  
-C. Supervised Loss 구성  
-D. Consistency Loss 구성  
-E. Final Loss 구성 및 학습  
-F. 결과 확인  
-
-##### A. IMDB 데이터 분할
+튜토리얼의 Data Split 에 해당하는 전체 코드는 [`divide.py`](https://github.com/JoungheeKim/uda_pytorch/blob/main/src/divide.py) 에서 참고하시기 바랍니다.
 
 ![](/img/in-post/2020/2020-12-13/data_split.png)
 <center>데이터 나누기 예시</center>
@@ -676,7 +663,52 @@ supervised 학습용 데이터는 label 정보가 필요합니다.
 나머지는 Consistency 학습용 데이터를 구성하는데 활용합니다.
 Consistency 학습용 데이터는 label 정보를 필요로 하지 않으므로 Unlabeled Dataset도 포함하여 데이터를 구성합니다.
 
-##### B. IMDB 데이터 전처리
+##### Additional. 데이터 분할의 중요성
+
+본 논문에서는 20 labled sample을 이용하여 좋은 성능을 낼 수 있다고 주장합니다.
+개인적으로 이 주장은 반은 맞고 반은 틀리다고 생각합니다.
+왜냐하면 20 labeled sample이 어떤 것이냐에 따라 성능의 차이가 커질 수 있기 때문입니다.
+20개의 labeled sample은 모델 가중치에 가장 많은 영향을 미치는 데이터이며 학습 성능에 큰 영향을 끼칩니다.
+따라서 초기에 좋은 20개의 sample을 선택하는 것이 중요합니다.
+
+![](/img/in-post/2020/2020-12-13/seed_accuracy.png)
+<center>Seed에 따른 성능변화</center>
+
+위 그림은 IMDB 20개의 labeled sample만 가지고 pre-trained BERT(bert-base-uncased)를 이용하여 학습한 결과입니다.
+seed의 변화에 따라 성능(Accuracy)가 크게 달라지는 것(0.511부터 0.706까지 변화)을 확인 할 수 있습니다. 
+즉 seed에 따라 서로 다른 20개의 sample이 추출되고 각 sample로 학습한 모델의 성능은 큰 차이를 보입니다.
+
+>UDA를 통해 학습이 잘 되지 않을 경우 seed에 따라 랜덤으로 선택된 sample이 유효한지 확인하는 과정이 필요해보입니다.
+
+#### [3] Masked Language Model Fine-tuning
+
+이 과정은 pre-trained BERT를 IMDB 데이터에 한번더 Masked Language Modeling(MLM)을 통해 학습시키는 과정입니다.
+[BERT Paper](https://arxiv.org/abs/1810.04805) 에 따르면 pre-tranined BERT는 다양한 도메인의 corpus로 부터 학습되었습니다.
+즉 다양한 task에서 좋은 성능을 보이지만 특정 domain에 특화되어 있는 모델이 아닙니다.
+따라서 pre-trained BERT를 IMDB 도메인에 unsupervised learning 방법론(MLM)으로 학습하여 domain-specific BERT 모델을 만들어 EDA에 활용합니다.
+
+![](/img/in-post/2020/2020-12-13/bert_pretraining.png)
+<center>BERT pre-training 과정 예시</center>
+
+Masked Lanugage Modeling(MLM)과 관련된 코드는 [huggingface Github](https://github.com/huggingface/transformers) 에서 제공하고 있습니다.
+본 튜토리얼에서는 huggingface에서 제공하고 있는 example [`run_mlm.py`](https://github.com/huggingface/transformers/blob/master/examples/language-modeling/run_mlm.py) 을 수정하여 제작하였습니다.
+따라서 Masked Language Modeling 과 관련된 자세한 사항은 [huggingface Docs](https://github.com/huggingface/transformers/tree/master/examples/language-modeling) 에서 확인하시기 바랍니다.
+수정된 IMDB MLM에 해당하는 전체 코드는 [`train_mlm.py`](https://github.com/JoungheeKim/uda_pytorch/blob/main/src/train_mlm.py) 에서 참고하시기 바랍니다.
+
+#### [4] Train EDA
+
+Back-translated 데이터를 이용하여 Supervised Loss와 Consistency Loss 구성하는 방법과 학습하는 방법에 대해 다루겠습니다.
+튜토리얼의 Semi-Supervised Learning 에 해당하는 전체 코드는 [`train.py`](https://github.com/JoungheeKim/uda_pytorch/blob/main/src/train.py) 에서 참고하시기 바랍니다.
+
+Semi-Supervised Learning 과정의 중요한 부분을 요약하면 다음과 같습니다.
+
+A. IMDB 데이터 전처리  
+B. Supervised Loss 구성  
+C. Consistency Loss 구성  
+D. Final Loss 구성 및 학습  
+E. 결과 확인  
+
+##### A. IMDB 데이터 전처리
 
 전처리 과정에는 문장을 token 형태로 자르고 one-hot encoding하는 과정을 포함하고 있습니다.
 token 형태로 자르기 위해서는 vocab을 포함한 tokenizer가 필요합니다.
@@ -765,7 +797,7 @@ class IMDBDataset(Dataset):
 논문에서도 짧게 언급되었지만 IMDB의 경우 문장의 뒷부분을 이용하여 학습할 경우 성능이 더 좋기 때문에 다음과 같이 구성하였습니다.
 
 
-##### C. Supervised Loss 구성
+##### B. Supervised Loss 구성
 
 Semi-Supervised Learning은 학습단계에서 Supervised Loss와 Consistency Loss를 구성하여 학습합니다.
 Supervised Loss는 label 정보가 있는 Supervised 데이터를 이용하여 계산합니다.
@@ -829,7 +861,7 @@ TSA를 적용하는 과정은 다음과 같습니다.
 3. 정답라벨의 확률이 threshold를 넘는 데이터에 대하여 0을 부여하고 그렇지 않으면 1을 부여하는 MASK를 생성합니다.
 4. MASK와 Supervised Loss를 곱하여 threshold를 넘은 데이터의 영향력을 없애줍니다.
 
-##### D. Consistency Loss 구성
+##### C. Consistency Loss 구성
 
 ```python
 def kl_divergence_fn(unlabeled_logits, augmented_logits, sharpen_ratio=1.0):
@@ -890,7 +922,7 @@ Consistency Loss를 구성하기 위하여 인공문장(Augmented)과 원본문�
 계산한 Consistency Loss를 Final Loss에 바로 더하지 않고 Confidence를 확인합니다.
 모델의 예측 실뢰도가 높은 데이터에 한에서 Loss를 구성하는 방식입니다.
 
-
+##### D. Final Loss 구성 및 학습  
 
 
 
