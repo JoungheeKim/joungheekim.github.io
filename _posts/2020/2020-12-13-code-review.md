@@ -10,7 +10,7 @@ tags:
   - NLP(Natural Language Process) 
 ---
 
-# [코드리뷰] - [Unsupervised Data Augmentation for Consistency Training](https://arxiv.org/abs/1904.12848), NIPS 2019
+# [코드리뷰] - [Unsupervised Data Augmentation for Consistency Training](https://arxiv.org/abs/1904.12848), NeurIPS 2020
 
 딥러닝은 다양한 분야에서 기존 방법론 보다 **좋은 성과**를 보여주고 있습니다.
 Machine Translation, Sentiment Analysis, Question And Answering(Q&A) 등 일부 자연어처리 분야에서는 전통적인 방법론 보다 <u>월등히 앞선 성능</u>을 보이고 있습니다.
@@ -27,7 +27,7 @@ Machine Translation, Sentiment Analysis, Question And Answering(Q&A) 등 일부 
 오늘 포스팅에서는 최근 Semi-superivsed Learning 방법론 중 좋은 성능을 보이고 있는 `UDA` 에 대해 다루도록 하겠습니다.
 이 글은 **[Unsupervised Data Augmentation for Consistency Training](https://arxiv.org/abs/1904.12848)** 논문을 참고하여 정리하였음을 먼저 밝힙니다.
 논문을 간단하게 리뷰하고 pytorch 라이브러리를 이용하여 코드를 구현한 내용을 자세히 설명드리겠습니다.
-논문 그대로를 리뷰하기보다는 *생각을 정리하는 목적으로 제작*하고 있기 때문에 실제 내용과 다른점이 존재할 수 있습니다. 
+논문 그대로를 리뷰하기보다는 <u>*생각을 정리하는 목적으로 제작*</u>하고 있기 때문에 실제 내용과 다른점이 존재할 수 있습니다. 
 혹시 제가 잘못 알고 있는 점이나 보안할 점이 있다면 댓글 부탁드립니다.
 
 #### Short Summary
@@ -286,6 +286,8 @@ print(data['train']['text'][0])
 데이터를 load한 후 출력하여 데이터가 잘 load 되었는지 확인해 봅니다.
 
 #### 코드 개발 Flow
+
+![](/img/in-post/2020/2020-12-13/overview_architecture.png)
 
 UDA 논문에서 제시한 성능을 온전히 구현하기 위해서는 총 4가지 과정이 필요합니다.
 
@@ -926,6 +928,9 @@ Consistency Loss를 구성하기 위하여 인공문장(Augmented)과 원본문�
 
 
 
+
+> [[UDA Pytorch]](https://github.com/JoungheeKim/uda_pytorch) 에서 튜토리얼에서 구현한 전체 파일을 제공하고 있습니다.
+> 해당 Github를 방문하시어 구현물 전체 모습을 확인바랍니다.
 
 ## Reference
 - [[BLOG]](https://nlp.stanford.edu/blog/maximum-likelihood-decoding-with-rnns-the-good-the-bad-and-the-ugly/#:~:text=Temperature%20sampling%20is%20a%20standard,semantic%20distortions%20in%20the%20process.) Maximum Likelihood Decoding with RNNs - the good, the bad, and the ugly
