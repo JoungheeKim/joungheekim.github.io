@@ -957,7 +957,7 @@ BERT(task adapted)     | 20                         | 6.50                  | 8.
 UDA(task adapted)      | 20                         | **4.20**              | **8.09** 
 
 이 결과는 논문과는 다르게 batch size를 32로 max token length를 128로 줄여서 실험한 결과입니다.
-논문에서는 TPU를 이용하여 큰 batch size와 긴 Sequence Length를 하이퍼파라미터로 진행하였습니다.
+논문에서는 큰 batch size와 긴 Sequence Length를 하이퍼파라미터로 세팅하고 실험을 진행하였기 때문에 본 실험결과보다 더 좋은 성능을 도출할 수 있었습니다.
 
 결과를 살펴보면 비록 작은 테스트이지만 **UDA 방법론을 이용하여 학습**했을 때 <u>월등하게 성능이 향상</u>되는 것을 확인할 수 있습니다.
 독특하게도 IMDB에 대해 한번 더 pre-training하는 task adapted 모델의 경우 20개의 sample Fully Supervised Learning을 진행했을 때 눈에 띄는 성능 향상이 있다는 것을 확인할 수 있습니다.
