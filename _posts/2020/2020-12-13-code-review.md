@@ -27,7 +27,7 @@ Machine Translation, Sentiment Analysis, Question And Answering(Q&A) 등 일부 
 오늘 포스팅에서는 최근 Semi-superivsed Learning 방법론 중 좋은 성능을 보이고 있는 `UDA` 에 대해 다루도록 하겠습니다.
 이 글은 **[Unsupervised Data Augmentation for Consistency Training](https://arxiv.org/abs/1904.12848)** 논문을 참고하여 정리하였음을 먼저 밝힙니다.
 논문을 간단하게 리뷰하고 pytorch 라이브러리를 이용하여 코드를 구현한 내용을 자세히 설명드리겠습니다.
-논문 그대로를 리뷰하기보다는 <u>*생각을 정리하는 목적으로 제작*</u>하고 있기 때문에 실제 내용과 다른점이 존재할 수 있습니다. 
+논문 그대로를 리뷰하기보다는 *<u>생각을 정리하는 목적으로 제작</u>*하고 있기 때문에 실제 내용과 다른점이 존재할 수 있습니다. 
 혹시 제가 잘못 알고 있는 점이나 보안할 점이 있다면 댓글 부탁드립니다.
 
 #### Short Summary
@@ -108,8 +108,8 @@ temperature sampling 이란 번역기의 Decoder에서 생성된 단어의 생�
 이때 temperature 적용하면 확률을 변화시킬 수 있습니다. 
 
 <center>$\hat{p_i} = f_{\tau}(p_i) = \frac{exp(s_i / \tau)}{ \sum_j exp(s_j / \tau) }$</center>
-$p_i$ : 번역기 decoder에서 추출된 단어 $i$가 등장할 확률
-$s_i$ : 번역기 decoder에서 추출된 단어 $i$가 등장할 확률과 관련된 점수
+$p_i$ : 번역기 decoder에서 추출된 단어 $i$가 등장할 확률  
+$s_i$ : 번역기 decoder에서 추출된 단어 $i$가 등장할 확률과 관련된 점수  
 $\hat{p_i}$ : temperature가 적용된 단어 $i$가 등장할 확률  
 $\tau$ : temperature를 의미하며 사용자 설정 파라미터  
 
@@ -152,8 +152,8 @@ Unlabeled 데이터를 이용하여 Strong Augmented 데이터와, Week Augmente
 Consistency Loss의 식은 아래와 같습니다.
 
 <center>$D( p_{\theta}(y|x) || p_{\theta}(y|x,\epsilon)$</center>
-$\epsilon$ : 인공 문장을 생성할 때 삽입된 Noise  
-$p_{\theta}(y|x)$ : 원본 문장의 분류 확률 분포    
+$\epsilon$ : 인공 문장을 생성할 때 삽입된 Noise   
+$p_{\theta}(y|x)$ : 원본 문장의 분류 확률 분포     
 $p_{\theta}(y|x,e)$ : 인공 문장의 분류 확률 분포     
 
 ### [2] Final Loss
@@ -198,9 +198,9 @@ Labeled 데이터의 개수가 매우 적기 때문에 명확한 방향을 갖�
 
 본 논문에서는 총 3가지 학습 테크닉을 제시합니다.
 
-1. **Training Signal Annealing** :  상대적으로 적은 Labeled 데이터에 모델이 빠르게 과적합되지 않도록 방지하는 방법
-2. **Confidence-based masking** : 모델의 예측 확률에 기반하여 확실한 Unlabeled 데이터만 이용하는 방법   
-3. **Sharpening Prediction** : Unlabeled 데이터의 확률분포를 변형하여 Consistency Loss를 증가시키는 방법
+1. **Training Signal Annealing** :  상대적으로 적은 Labeled 데이터에 모델이 빠르게 과적합되지 않도록 방지하는 방법  
+2. **Confidence-based masking** : 모델의 예측 확률에 기반하여 확실한 Unlabeled 데이터만 이용하는 방법    
+3. **Sharpening Prediction** : Unlabeled 데이터의 확률분포를 변형하여 Consistency Loss를 증가시키는 방법  
 
 ##### A. Training Signal Annealing
 
@@ -687,7 +687,7 @@ seed의 변화에 따라 성능(Accuracy)가 크게 달라지는 것(0.511부터
 이 과정은 pre-trained BERT를 IMDB 데이터에 한번더 Masked Language Modeling(MLM)을 통해 학습시키는 과정입니다.
 [BERT Paper](https://arxiv.org/abs/1810.04805) 에 따르면 pre-tranined BERT는 다양한 도메인의 corpus로 부터 학습되었습니다.
 즉 다양한 task에서 좋은 성능을 보이지만 특정 domain에 특화되어 있는 모델이 아닙니다.
-따라서 pre-trained BERT를 IMDB 도메인에 unsupervised learning 방법론(MLM)으로 학습하여 domain-specific BERT 모델을 만들어 EDA에 활용합니다.
+따라서 pre-trained BERT를 IMDB 도메인에 unsupervised learning 방법론(MLM)으로 학습하여 domain-specific BERT 모델을 만들어 UDA에 활용합니다.
 
 ![](/img/in-post/2020/2020-12-13/bert_pretraining.png)
 <center>BERT pre-training 과정 예시</center>
@@ -697,7 +697,7 @@ Masked Lanugage Modeling(MLM)과 관련된 코드는 [huggingface Github](https:
 따라서 Masked Language Modeling 과 관련된 자세한 사항은 [huggingface Docs](https://github.com/huggingface/transformers/tree/master/examples/language-modeling) 에서 확인하시기 바랍니다.
 수정된 IMDB MLM에 해당하는 전체 코드는 [`train_mlm.py`](https://github.com/JoungheeKim/uda_pytorch/blob/main/src/train_mlm.py) 에서 참고하시기 바랍니다.
 
-#### [4] Train EDA
+#### [4] Train UDA
 
 Back-translated 데이터를 이용하여 Supervised Loss와 Consistency Loss 구성하는 방법과 학습하는 방법에 대해 다루겠습니다.
 튜토리얼의 Semi-Supervised Learning 에 해당하는 전체 코드는 [`train.py`](https://github.com/JoungheeKim/uda_pytorch/blob/main/src/train.py) 에서 참고하시기 바랍니다.
@@ -948,8 +948,26 @@ def run(...):
 
 앞서 자세히 설명한 조건에 따라 학습하면 다음과 같은 결과를 도출할 수 있습니다.
 
+Model                  | Number of labeled examples | Error rate(**Paper**) | Error rate(this implementation)
+---------------------- | :------------------------: | :-------------------: | :-----------------------------: 
+BERT                   | 25,000                     | 4.51                  | 5.69
+BERT                   | 20                         | 11.72                 | 29.22
+UDA                    | 20                         | 4.78                  | 9.98
+BERT(task adapted)     | 20                         | 6.50                  | 8.79
+UDA(task adapted)      | 20                         | **4.20**              | **8.09** 
+
+이 결과는 논문과는 다르게 batch size를 32로 max token length를 128로 줄여서 실험한 결과입니다.
+논문에서는 TPU를 이용하여 큰 batch size와 긴 Sequence Length를 하이퍼파라미터로 진행하였습니다.
+
+결과를 살펴보면 비록 작은 테스트이지만 **UDA 방법론을 이용하여 학습**했을 때 <u>월등하게 성능이 향상</u>되는 것을 확인할 수 있습니다.
+독특하게도 IMDB에 대해 한번 더 pre-training하는 task adapted 모델의 경우 20개의 sample Fully Supervised Learning을 진행했을 때 눈에 띄는 성능 향상이 있다는 것을 확인할 수 있습니다.
+
+>개인적으로 여러번 실험을 반복한 결과 IMDB 데이터에 한번더 pre-training한 task-adapted 모델은 다양한 하이퍼파라미터에서 비슷한 결과과 도출됩니다.
+>반면 task adapted를 하지 않은 모델(bert-base-uncased)은 파라미터에 큰 영향을 받는 것을 확인할 수 있습니다.
+>즉 UDA 방법론을 안정적이게 활용하기 위해서는 task adapted pre-training은 필수적이라고 보여집니다.
+
 ## 결론
-UDA 방법론은 labeled 데이터를 함께 사용한다는 점에서 매우 유용합니다.
+UDA 방법론은 unlabeled 데이터를 함께 사용한다는 점에서 매우 유용합니다.
 하지만 대부분의 Semi-supervised Learning이 그렇듯 하이퍼파라미터에 매우 민감합니다.
 학습이 매우 불안정하여 학습 도중에 발산하기도 하고 동일한 파라미터이더로 학습하더라도 seed에 따라 성능이 매우 다릅니다.
 초기 20개의 sample에 따라 모델의 성능차이도 존재합니다.
