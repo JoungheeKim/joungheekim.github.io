@@ -948,13 +948,13 @@ def run(...):
 
 앞서 자세히 설명한 조건에 따라 학습하면 다음과 같은 결과를 도출할 수 있습니다.
 
-Model                  | Number of labeled examples | Error rate</br>(**Paper**) | Error rate</br>(this implementation)
+Model                  | Number of labeled examples | Error rate (**Paper**) | Error rate (this implementation)
 ---------------------- | :------------------------: | :-------------------: | :-----------------------------: 
 BERT                   | 25,000                     | 4.51                  | 5.69
 BERT                   | 20                         | 11.72                 | 29.22
 UDA                    | 20                         | 4.78                  | 9.98
-BERT</br>(task adapted)     | 20                         | 6.50                  | 8.79
-UDA</br>(task adapted)      | 20                         | **4.20**              | **8.09** 
+BERT (task adapted)    | 20                         | 6.50                  | 8.79
+UDA (task adapted)     | 20                         | **4.20**              | **8.09** 
 
 이 결과는 논문과는 다르게 batch size를 32로 max token length를 128로 줄여서 실험한 결과입니다.
 논문에서는 큰 batch size와 긴 Sequence Length를 하이퍼파라미터로 세팅하고 실험을 진행하였기 때문에 본 실험결과보다 더 좋은 성능을 도출할 수 있었습니다.
