@@ -175,20 +175,36 @@ Audacity(한글버전)을 설치한 후 메뉴에서 <span style="color:#1520A6"
 여러개의 파일을 불러온 상태에서 특정 음성만 듣기 위해서는 특정음성의 왼쪽에 위치한 <span style="color:#1520A6"><b>독주</b><span> 버튼을 클릭하고 <span style="color:#1520A6"><b>마우스를 드래그</b></span>하여 음성의 일부분을 선택한 다음 <span style="color:#1520A6"><b>재생</b></span> 버튼을 클릭합니다.
 
 ![](/img/in-post/2021/2021-04-01/audacity_listen_noise.gif)
-<center><b>audacity 음성의 일부분 듣기 예시</b></center>
 
 /img/in-post/2021/2021-04-01/noise_sample.wav
 
-<center><b>녹음한 음성에서 추출한 백색소음</b></center>
-
+<center><b>audacity 음성의 일부분 듣기 예시</b></center>
 
 이 소음은 녹음기 주변 공기의 압력변화에 때문에 발생하는 백색소음(어쩔 수 없는) 일 가능성도 있고, 실제 환경에 소음이 있을 가능성도 있습니다.
+이 소음을 제거하기 위하여 해당 위치의 **음성 패턴을 추출**해야 합니다.
+먼저 노이즈(백색소음)가 발생한 부분을 드래그 하여 영역을 지정합니다.
+그 다음 메뉴에서 <span style="color:#1520A6"><b>효과(C)->노이즈 리덕션(잡음 감쇄)->노이즈 프로파일 구하기</b></span> 를 차례로 클릭하여 노이즈 패턴을 추출합니다.
+
+![](/img/in-post/2021/2021-04-01/audacity_capture_noise.gif)
+<center><b>audacity 노이즈 패턴 추출 예시</b></center>
+
+노이즈 패턴을 추출했으면 **추출된 패턴을 모든 파일에 적용**하여야 합니다.
+**Ctrl+A** 를 눌러서 전체 파일을 선택합니다.
+그리고 다시 <span style="color:#1520A6"><b>효과(C)->노이즈 리덕션(잡음 감쇄)->확인</b></span> 버튼을 차례로 클릭하여 전체 파일에 포함된 노이즈를 제거합니다.
+
+![](/img/in-post/2021/2021-04-01/audacity_noise_reduction.gif)
+<center><b>audacity 노이즈 제거 예시</b></center>
+
+이 과정을 통해 제거되지 않은 노이즈가 존재할 수 있습니다.
+**노이즈 패턴 추출, 노이즈 제거 과정**을 <u>반복</u>하면 음성에 남아있는 노이즈를 제거할 수 있습니다.
 
 
+다음은 모든 노이즈가 제거된 파일을 **한꺼번에 저장**하는 방법에 대해서 알아보겠습니다.
+메뉴에서 <span style="color:#1520A6"><b>파일(F)->내보내기(E)->다중 내보내기(M)</b></span>를 클릭합니다.
+다중 내보내기 옵션에서 파일들을 저장할 폴더를 선택하고 <span style="color:#1520A6"><b>내보내기</b></span>를 클릭하면 현재 노이즈가 제거된 모든 파일을 한꺼번에 저장할 수 있습니다.
 
-오디오 파일에서 
-
-
+![](/img/in-post/2021/2021-04-01/audacity_export.gif)
+<center><b>audacity 노이즈 제거 예시</b></center>
 
 
 
