@@ -1,7 +1,7 @@
 ---
 layout:     post
-title:      "[코드리뷰]TTS 시스템"
-subtitle:   "개인화 TTS 시스템 만들기"
+title:      "[코드리뷰]타코트론2 TTS 시스템"
+subtitle:   "타코트론2 개인화 TTS 시스템 만들기"
 mathjax: true
 audio_support: true
 tags:
@@ -10,7 +10,7 @@ tags:
   - Deep Learning
 ---
 
-# [코드리뷰] - TTS 시스템
+# [코드리뷰] - 타코트론2 TTS 시스템
 
 최근 몇년간 TTS(Text to Speech)는 빠르게 발전하여 이제는 복잡한 작업 절차 없이 데이터를 이용하여 텍스트로부터 고품질의 음성을 생성할 수 있는 방법론이 개발되었습니다.
 방법론 뿐만 아니라 코드와 데이터까지 Github, Kaggle 등과 같은 <u>공개저장소에 공개</u>되면서 이제는 **개발과정조차 간소화**되어 진정한 의미로 개인화 TTS를 개발할 수 있는 환경이 구축되었습니다.
@@ -27,8 +27,7 @@ tags:
 
 이 글은 개인적인 의견을 담고 있기 때문에 **실제 내용과 다를 수** 있습니다.
 또한 딥러닝 아키텍처에 대해 이해하고 python 프로그래밍 경험이 있는 분들은 대상으로 작성되었습니다.
- 
-글에서 사용한 코드 및 데이터는 아래 Reference Link를 참조하시기 바랍니다.
+딥러닝 아키텍처(타코트론2)에 대해 궁금하신 분이 계시다면 [이전 블로그](https://joungheekim.github.io/2020/10/08/paper-review/) 또는 [세미나 영상](https://www.youtube.com/watch?v=BmD8OA9FGR0&list=PLetSlH8YjIfWk_PBAXKWqQM4pqzMMENrb&index=8) 을 참조하시기 바랍니다.
 
 #### Short Summary
 개인화 TTS 시스템을 만드는 과정을 크게 나누면 아래와 같습니다.
