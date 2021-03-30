@@ -3,6 +3,7 @@ layout:     post
 title:      "[코드리뷰]TTS 시스템"
 subtitle:   "개인화 TTS 시스템 만들기"
 mathjax: true
+audio_support: true
 tags:
   - Text-to-Speech
   - Speech Synthesis
@@ -118,7 +119,7 @@ ESPnet은 음성인식 모델을 개발할 수 있도록 과련 개발 모델 �
 게다가 긴 길이의 음성은 직접 잘라서 프로그램에 넣어줘야 하는 불편함이 있으므로, 빠르게 데이터 생성 작업이 필요하다면 좋은 선택이 아닐 수 있습니다.
 
 ##### 1.4 데이터 수집(예시)
-저는 제 음성을 발화할 수 있는 TTS 시스템을 만들기 위하여 직접 녹음하여 데이터를 구축하였습니다.
+저는 제 음성을 발화할 수 있는 TTS 시스템을 만들기 위해서 직접 녹음하여 데이터를 구축하였습니다.
 먼저 [KSS 데이터](https://www.kaggle.com/bryanpark/korean-single-speaker-speech-dataset) 에 포함되어 있는 스크립트를 활용하기 위하여 데이터를 다운받았습니다.
 
 ![](/img/in-post/2021/2021-04-01/kss_script_example.png)
@@ -164,9 +165,40 @@ ESPnet은 음성인식 모델을 개발할 수 있도록 과련 개발 모델 �
 
 ###### 2.1 잡음 제거(예시)
 Audacity 프로그램을 활용하여 잡음 제거 하는 예시입니다.
-Audacity(한글버전)을 설치한 후 메뉴에서 파일(F)->가져오기(I)->오디오(A)를 순서대로 클릭하여 여러개의 오디오파일을 한꺼번에 불러옵니다.
+Audacity(한글버전)을 설치한 후 메뉴에서 <span style="color:#1520A6"><b>파일(F)->가져오기(I)->오디오(A)</b></span>를 순서대로 클릭하여 여러개의 오디오파일을 한꺼번에 불러옵니다.
 
 ![](/img/in-post/2021/2021-04-01/audacity_load.gif)
-<center><b>audacity 데이터 불러오기 예시</b></center> 
+<center><b>audacity 데이터 불러오기 예시</b></center>
+
+해당 데이터는 최대한 조용한 환경(집)에서 녹음하였기 때문에 겉보기에는 잡음이 전혀 없는 것처럼 보입니다.
+하지만 음성이 발화되지 않는 부분만 선택하여 들어보면 잡음(소음)이 들리는 것을 확인할 수 있습니다.
+여러개의 파일을 불러온 상태에서 특정 음성만 듣기 위해서는 특정음성의 왼쪽에 위치한 <span style="color:#1520A6"><b>독주</b><span> 버튼을 클릭하고 <span style="color:#1520A6"><b>마우스를 드래그</b></span>하여 음성의 일부분을 선택한 다음 <span style="color:#1520A6"><b>재생</b></span> 버튼을 클릭합니다.
+
+![](/img/in-post/2021/2021-04-01/audacity_listen_noise.gif)
+<center><b>audacity 음성의 일부분 듣기 예시</b></center>
+
+/img/in-post/2021/2021-04-01/noise_sample.wav
+
+<center><b>녹음한 음성에서 추출한 백색소음</b></center>
+
+
+이 소음은 녹음기 주변 공기의 압력변화에 때문에 발생하는 백색소음(어쩔 수 없는) 일 가능성도 있고, 실제 환경에 소음이 있을 가능성도 있습니다.
+
+
+
+오디오 파일에서 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
