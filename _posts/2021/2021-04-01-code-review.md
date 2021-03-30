@@ -172,9 +172,10 @@ Audacity(한글버전)을 설치한 후 메뉴에서 <span style="color:#1520A6"
 
 해당 데이터는 최대한 조용한 환경(집)에서 녹음하였기 때문에 겉보기에는 잡음이 전혀 없는 것처럼 보입니다.
 하지만 음성이 발화되지 않는 부분만 선택하여 들어보면 잡음(소음)이 들리는 것을 확인할 수 있습니다.
-여러개의 파일을 불러온 상태에서 특정 음성만 듣기 위해서는 특정음성의 왼쪽에 위치한 <span style="color:#1520A6"><b>독주</b><span> 버튼을 클릭하고 <span style="color:#1520A6"><b>마우스를 드래그</b></span>하여 음성의 일부분을 선택한 다음 <span style="color:#1520A6"><b>재생</b></span> 버튼을 클릭합니다.
+여러개의 파일을 불러온 상태에서 특정 음성만 듣기 위해서는 특정음성의 왼쪽에 위치한 <span style="color:#1520A6"><b>독주</b></span> 버튼을 클릭하고 <span style="color:#1520A6"><b>마우스를 드래그</b></span>하여 음성의 일부분을 선택한 다음 <span style="color:#1520A6"><b>재생</b></span> 버튼을 클릭합니다.
 
 ![](/img/in-post/2021/2021-04-01/audacity_listen_noise.gif)
+
 
 /img/in-post/2021/2021-04-01/noise_sample.wav
 
