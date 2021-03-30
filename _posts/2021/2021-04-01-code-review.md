@@ -167,7 +167,7 @@ Audacity 프로그램을 활용하여 잡음 제거 하는 예시입니다.
 Audacity(한글버전)을 설치한 후 메뉴에서 <span style="color:#1520A6"><b>파일(F)->가져오기(I)->오디오(A)</b></span>를 순서대로 클릭하여 여러개의 오디오파일을 한꺼번에 불러옵니다.
 
 ![](/img/in-post/2021/2021-04-01/audacity_load.gif)
-<center><b>audacity 데이터 불러오기 예시</b></center>
+<center><b>Audacity 데이터 불러오기 예시</b></center>
 
 해당 데이터는 최대한 조용한 환경(집)에서 녹음하였기 때문에 겉보기에는 잡음이 전혀 없는 것처럼 보입니다.
 하지만 음성이 발화되지 않는 부분만 선택하여 들어보면 잡음(소음)이 들리는 것을 확인할 수 있습니다.
@@ -178,7 +178,7 @@ Audacity(한글버전)을 설치한 후 메뉴에서 <span style="color:#1520A6"
 
 /img/in-post/2021/2021-04-01/noise_sample.wav
 
-<center><b>audacity 음성의 일부분 듣기 예시</b></center>
+<center><b>Audacity 음성의 일부분 듣기 예시</b></center>
 
 이 소음은 녹음기 주변 공기의 압력변화에 때문에 발생하는 백색소음(어쩔 수 없는) 일 가능성도 있고, 실제 환경에 소음이 있을 가능성도 있습니다.
 이 소음을 제거하기 위하여 해당 위치의 **음성 패턴을 추출**해야 합니다.
@@ -186,14 +186,14 @@ Audacity(한글버전)을 설치한 후 메뉴에서 <span style="color:#1520A6"
 그 다음 메뉴에서 <span style="color:#1520A6"><b>효과(C)->노이즈 리덕션(잡음 감쇄)->노이즈 프로파일 구하기</b></span> 를 차례로 클릭하여 노이즈 패턴을 추출합니다.
 
 ![](/img/in-post/2021/2021-04-01/audacity_capture_noise.gif)
-<center><b>audacity 노이즈 패턴 추출 예시</b></center>
+<center><b>Audacity 노이즈 패턴 추출 예시</b></center>
 
 노이즈 패턴을 추출했으면 **추출된 패턴을 모든 파일에 적용**하여야 합니다.
 **Ctrl+A** 를 눌러서 전체 파일을 선택합니다.
 그리고 다시 <span style="color:#1520A6"><b>효과(C)->노이즈 리덕션(잡음 감쇄)->확인</b></span> 버튼을 차례로 클릭하여 전체 파일에 포함된 노이즈를 제거합니다.
 
 ![](/img/in-post/2021/2021-04-01/audacity_noise_reduction.gif)
-<center><b>audacity 노이즈 제거 예시</b></center>
+<center><b>Audacity 노이즈 제거 예시</b></center>
 
 이 과정을 통해 제거되지 않은 노이즈가 존재할 수 있습니다.
 **노이즈 패턴 추출, 노이즈 제거 과정**을 <u>반복</u>하면 음성에 남아있는 노이즈를 제거할 수 있습니다.
@@ -204,7 +204,7 @@ Audacity(한글버전)을 설치한 후 메뉴에서 <span style="color:#1520A6"
 다중 내보내기 옵션에서 파일들을 저장할 폴더를 선택하고 <span style="color:#1520A6"><b>내보내기</b></span>를 클릭하면 현재 노이즈가 제거된 모든 파일을 한꺼번에 저장할 수 있습니다.
 
 ![](/img/in-post/2021/2021-04-01/audacity_export.gif)
-<center><b>audacity 노이즈 제거 예시</b></center>
+<center><b>audacity 다중 내보내기 예시</b></center>
 
 
 
