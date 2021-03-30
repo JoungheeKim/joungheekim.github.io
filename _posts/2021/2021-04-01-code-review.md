@@ -149,16 +149,24 @@ ESPnet은 음성인식 모델을 개발할 수 있도록 과련 개발 모델 �
 
 잡음을 제거하기 위하여 사용할 수 있는 대표적인 프로그램으로 2가지 정도를 살펴보겠습니다.
 
-[**[1] Adobe Audtion : 오디오 편집기(유료) **](https://helpx.adobe.com/kr/audition/how-to/remove-noise-audio-files.html)   
+[**[1] Adobe Audtion : 오디오 편집기(유료)**](https://helpx.adobe.com/kr/audition/how-to/remove-noise-audio-files.html)   
 오디오 편집기 중 가장 유명한 Adobe 프로그램입니다.
 유투브([잡음 제거 영상](https://www.youtube.com/watch?v=IId5KbsIaIA)) 및 블로그([어도비 오디션 강좌](https://m.blog.naver.com/PostView.nhn?blogId=fadme&logNo=220826663281&proxyReferer=https:%2F%2Fwww.google.com%2F)) 등 다양한 곳에서 튜토리얼을 제공하고 있기 때문에 간편하게 음성 데이터에서 노이즈를 제거하는 방법을 배울 수 있습니다.
 해당 프로그램을 이용하면 잡음 제거 뿐만 아니라 음성 보정(깨끗하고 선명하게)도 가능합니다. 다만 유료 프로그램이라는 단점을 갖고 있습니다.
+
+![](/img/in-post/2021/2021-04-01/audition_example.png)
+<center><b>Adobe Audition 프로그램</b></center>
 
 [**[2] Audacity : 음성 편집기(무료)**](https://www.audacityteam.org/)  
 음성 수집단계에서도 언급했던 Audacity는 유용한 무료 음성 편집기 입니다. 
 해당 편집기의 가장 큰 장점은 여러개의 음성을 한꺼번에 작업할 수 있다는 점 입니다.
 일반적으로 음성을 동일한 환경에서 직접 생성하였다면 잡음의 패턴도 비슷하기 때문에 한꺼번에 작업(잡음제거)하는 것이 전처리 시간을 단축할 수 있습니다.
 
-##
+###### 2.1 잡음 제거(예시)
+Audacity 프로그램을 활용하여 잡음 제거 하는 예시입니다.
+Audacity(한글버전)을 설치한 후 메뉴에서 파일(F)->가져오기(I)->오디오(A)를 순서대로 클릭하여 여러개의 오디오파일을 한꺼번에 불러옵니다.
+
+![](/img/in-post/2021/2021-04-01/audacity_load.gif)
+<center><b>audacity 데이터 불러오기 예시</b></center> 
 
 
