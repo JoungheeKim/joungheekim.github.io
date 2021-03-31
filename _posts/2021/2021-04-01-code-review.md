@@ -27,7 +27,9 @@ tags:
 
 이 글은 개인적인 의견을 담고 있기 때문에 **실제 내용과 다를 수** 있습니다.
 또한 딥러닝 아키텍처에 대해 이해하고 python 프로그래밍 경험이 있는 분들은 대상으로 작성되었습니다.
-딥러닝 아키텍처(타코트론2)에 대해 궁금하신 분이 계시다면 [이전 블로그](https://joungheekim.github.io/2020/10/08/paper-review/) 또는 [세미나 영상](https://www.youtube.com/watch?v=BmD8OA9FGR0&list=PLetSlH8YjIfWk_PBAXKWqQM4pqzMMENrb&index=8) 을 참조하시기 바랍니다.
+따라서 기본적인 라이브러리 설치 및 가상환경 설정 방법에 대해 다루고 있지 않습니다.
+
+딥러닝 아키텍처(타코트론2)에 대해 궁금하신 분이 계시다면 [**이전 글**](https://joungheekim.github.io/2020/10/08/paper-review/) 또는 [**세미나 영상**](https://www.youtube.com/watch?v=BmD8OA9FGR0&list=PLetSlH8YjIfWk_PBAXKWqQM4pqzMMENrb&index=8) 을 참조하시기 바랍니다.
 
 #### Short Summary
 개인화 TTS 시스템을 만드는 과정을 크게 나누면 아래와 같습니다.
@@ -210,14 +212,170 @@ Audacity(한글버전)을 설치한 후 메뉴에서 <span style="color:#1520A6"
 <center><b>audacity 다중 내보내기 예시</b></center>
 
 
+##### 2.2 공백 자르는 작업
+녹음 방법에 따라 음성의 시작과 끝에 아무런 음성이 포함되지 않는 공백이 존재할 수 있습니다.
+이것들을 어느정도 자르지 않고 모델의 입력으로 사용하면, 학습된 모델의 출력에도 긴 공백이 포함되어 있을 수 있습니다.
+또한 모델의 입력길이가 제한되어 있으므로 긴 공백은 학습 배치사이즈에 영향을 주므로 모델 학습시간을 증가시킬 수 있습니다.
+이러한 문제를 해결하고자 공백을 자르는 작업이 필요합니다.
+
+![](/img/in-post/2021/2021-04-01/preprocess_cutting_sample.png)
+<center><b>불필요한 공백 예시</b></center>
+
+앞서 설명드린 Audacity, Adobe Audition 등을 활용하면 수동으로 공백을 자를 수 있습니다.
+정확도가 높고, 혹시나 노이즈가 시작과 끝 부분에 있는 경우 제거 할 수 있다는 장점을 갖고 있습니다.
+다만 긴 작업시간이 필요하다는 단점을 갖고 있습니다.
+
+그렇기 때문에 db(decibel) 기준으로 앞 뒤를 자르는 코드를 만들어 활용하곤 합니다.
+
+<span style="color:#FF0800"><b>※ 주의할 점 ※</b></span>  
+앞 뒤 공백을 너무 타이트하게 자르고 모델을 학습시키면 학습된 모델은 공백이 없는 음성을 출력하거나 앞에 단어를 묵음처리하여 학습될 가능성이 높습니다.
+따라서 일정길이의 공백이 앞 뒤로 포함되도록 하는 것이 이상적인 형태인 것 같습니다.
+
+아래 예시는 잘못 전처리한 데이터로 학습한 모델에서 ㄱ이 잘 발음되지 않는 음성 샘플입니다.
+"그녀는 매우 성실하다." 라는 단어가 출력되야 하는데, "ㅡ녀는 매우 성실하다." 라는 음성이 출력되었습니다.
+이는 전처리할 때 음성을 너무 타이트하게 잘라서 학습된 모델이 ㄱ을 묵음처리한 것으로 판단됩니다.
+
+/img/in-post/2021/2021-04-01/fault_audio_sample.wav
+
+<center><b>잘못 학습된 모델의 음성</b></center>
+
+음성을 녹음하고 귀 기울여 듣다 보면 음성에 듣기 거북한 소리들이 존재할 수 있습니다.
+예를 들어 "그녀의" 라는 단어의 앞부분만 들어보면, ㄱ라는 자음 때문에 파열음??(정확한 명칭을 잘 몰라요 댓글로 알려주세요) 이 발생하는 걸 확인 할 수 있는데,
+이는 음성에서 큰 역할(치명적인, 없으면 잘 인식하지 못할 정도로)을 하지는 못하지만 이를 제거하고 모델을 학습시키면 모델은 처음 시작할 때 ㄱ을 묵음으로 처리할 가능성이 있습니다.
+ 
+![](/img/in-post/2021/2021-04-01/preprocess_cutting_sample2.png)
+<center><b>'ㄱ'이 발음되는 부분 예시</b></center>
+
+> 공백과 관련된 글(Trim을 이용하여 음성의 공백을 일정크기로 만들어야 한다)은 개인적인 의견입니다.
+> 여러 음성으로 타코트론2 모델을 학습하면서 발생한 문제점(앞에 소리가 묵음으로 발생하는 현상)을 보고 원인을 파악하다 보니, 데이터 전처리에 있는 거 같아 개인적인 경험을 공유드리기 위해 해당 내용을 작성하였습니다.
+> 따라서 이론적 background가 있지 않다는 점을 고려하고 글을 읽어주시기 바랍니다.
+
+###### 2.2 공백 자르는 작업(예시)
+공백을 단순히 자르는 것 뿐만 아니라 앞 뒤로 일정한 공백을 추가하는 작업이 필요합니다.
+Jupyter Notebbook 파일로 해당 작업이 가능하도록 코딩한 예시는 아래와 같습니다.
+
+```python
+## 라이브러리 Import
+import numpy as np
+import os
+from tqdm.notebook import tqdm
+import librosa
+from pathlib import Path
+import matplotlib.pyplot as plt
+import IPython.display as ipd
+import glob
+import soundfile as sf
+
+## 함수 설정
+
+## 파일 읽어오기
+def load_audio(file_path, sr=16000):
+    """
+       file_path : 파일위치
+       sr : 오디오를 읽을 때 Sampling rate 지정
+    """
+    ## 확장자 추출
+    ext = Path(file_path).suffix
+    
+    ## 파일 읽기
+    if ext in ['.wav', '.flac']:
+        wav, sr = librosa.load(file_path, sr=sr)
+    elif ext == '.pcm':
+        wav = np.memmap(file_path, dtype='h', mode='r').astype('float32') / 32767
+    elif ext in ['.raw', '.RAW']:
+        wav, sr = sf.read(file_path, channels=1, samlerate=sr, format='RAW', subtype='PCM_16')
+    else:
+        raise ValueError("Unsupported preprocess method : {0}".format(ext))
+        
+    return wav, sr
+
+## 공백 자르기(패딩 추가)
+def trim_audio(wav, top_db=10, pad_len=4000):
+    """
+    
+    """
+    ## 최대 db에 따라 음성의 자를 위치 판별
+    non_silence_indices = librosa.effects.split(wav, top_db=top_db)
+    start = non_silence_indices[0][0]
+    end = non_silence_indices[-1][1]
+    
+    ## 음성 자르기
+    wav = wav[start:end]
+    
+    ## padding 추가
+    wav = np.hstack([np.zeros(pad_len), wav, np.zeros(pad_len)])
+    
+    return wav
+
+## WAV 그려보기
+def plot_wav(wav, sr):
+    ## 그려보기
+    plt.figure(1)
+
+    plot_a = plt.subplot(211)
+    plot_a.plot(wav)
+    plot_a.set_xlabel('sample rate * time')
+    plot_a.set_ylabel('energy')
+
+    plot_b = plt.subplot(212)
+    plot_b.specgram(wav, NFFT=1024, Fs=sr, noverlap=900)
+    plot_b.set_xlabel('Time')
+    plot_b.set_ylabel('Frequency')
+
+    plt.show()
 
 
+## 시작하기
 
+## 타코트론2는 기본적으로 16000 sampling rate에서 동작하므로 16000 sampling rate에서 작업
+sampling_rate = 16000
+## 개인설정에 따라 특정 소리보다 작은 음성을 삭제하도록 설정
+decibel=10
 
+## Wav 파일 읽어오기  pcm 또는 다른 확장자도 사용 가능.
+root_path = '잡음제거'
+file_list = glob.glob(os.path.join(root_path, "*.wav"))
+#file_list = glob.glob(os.path.join(root_path, "*.pcm"))
 
+## 저장할 위치 선택
+save_path = 'temp'
+os.makedirs(save_path, exist_ok=True)
 
+for file_path in tqdm(file_list):
+    
+    ## 파일 불러오기(타코트론2는 기본적으로 16000 sampling rate에서 동작하므로 16000 sampling rate에서 작업.)
+    wav, sr = load_audio(file_path, sr=sampling_rate)
+    
+    ## 오디오 자르기(패딩 추가)
+    trimed_wav= trim_audio(wav, top_db=decibel)
+    
+    filename=Path(file_path).name
+    temp_save_path = os.path.join(save_path, filename)
+    
+    ## 저장하기
+    sf.write(temp_save_path, trimed_wav, sampling_rate)
+```
 
+앞 뒤 공백을 제거한다고 적었지만 음성 데이터에서 0인 값은 거의 없습니다.
+즉 아주 작은 소리가 담겨 있는데 그 음성은 백색소음(white noise)으로 볼 수 있습니다.
+이를 제거하기 위해서는 decibel 등의 기준을 만들고 그 기준에 따라 특정 크기 이하의 소리를 백색 소음으로 지정한 뒤 삭제해야 합니다.
 
+해당 코드는 `librosa`에서 제공하는 기능을 활용하여 특정 decibel 이하의 소리를 앞 뒤로 제거하도록 구성하였습니다.
+백색소음의 크기(decibel)은 음성을 녹음한 환경에 따라 다르므로 직접 몇가지 테스트를 해서 정해야 합니다.
+
+코드를 이용하기 전과 후의 결과를 시각화 한 후 코드의 효과를 말씀드리겠습니다.
+
+![](/img/in-post/2021/2021-04-01/before_trim.png)
+<center><b>Trim 코드 사용 전 음성 예시</b></center>
+
+Trim을 사용하기 전 음성은 앞 뒤로 공백이 있는 것을 확인 할 수 있습니다.
+또한 앞 뒤의 공백 크기가 일정하지 않은 것을 볼 수 있습니다.
+
+![](/img/in-post/2021/2021-04-01/after_trim.png)
+<center><b>Trim 코드 사용 후 음성 예시</b></center>
+
+위 코드를 사용한 후 비교적 공백의 길이가 짧아졌고, 앞뒤 공백의 길이가 일정한 것을 확인 할 수 있습니다.
+코드와 관련된 전체파일은 [Jupyter Notebook 링크](/img/in-post/2021/2021-04-01/trim_audio.ipynb) 를 눌러 다운받으실 수 있습니다.
 
 
 
