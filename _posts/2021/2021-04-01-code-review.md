@@ -222,13 +222,13 @@ ESPnet은 음성인식 모델을 개발할 수 있도록 과련 개발 모델 �
 
 #### 2.3 Sampling Rate 변경
 전처리 작업 이후 TTS 시스템을 개발하는데 사용할 모델은 Tacotron2와 WaveGlow입니다.
-해당 모델을 제시한 논문에서 Sampling Rate '16000'으로 고정하고 실험하였기 때문에 논문의 실험과 비슷하게 개발하기 위하여 녹음된 음성데이터의 Sampling Rate를 '16000'으로 변경할 필요성이 있습니다.
+해당 모델을 구현한 구현체의 대부분이 Sampling Rate '22050'으로 고정하고 있기 때문에 비슷한 환경에서 개발하기 위하여 녹음된 음성데이터의 Sampling Rate를 '22050'으로 변경할 필요성이 있습니다.
 
 ![](/img/in-post/2021/2021-04-01/sampling_rate_example.png)
 <center><b>Sampling Rate 설명</b></center>
 
 > 개인적인 궁금증 때문에 직접 3000개의 음성파일(약 90분)을 녹음하고 Sampling Rate를 변경하며 Tacotron2 모델을 학습시켜서 생성된 음성품질을 비교하였습니다.
-> 제 실험에서는 Sampling Rate가 16000, 22000이나 음질에서 큰 차이점을 느낄수 없었습니다.
+> 제 실험에서는 Sampling Rate가 16000, 22050, 44100 음질에서 큰 차이점을 느낄수 없었습니다.
 
 ## 3. 스크립트 전처리
 스크립트 전처리 작업은 스크립트 안에 있는 특수문자, 영어, 숫자를 한글로 **변환하는 작업**을 의미합니다.
@@ -388,7 +388,7 @@ def plot_wav(wav, sr):
 
 ## 시작하기
 
-## 타코트론2는 기본적으로 16000 sampling rate에서 동작하므로 16000 sampling rate에서 작업
+## 타코트론2는 기본적으로 22050 sampling rate에서 동작
 sampling_rate = 16000
 ## 개인설정에 따라 특정 소리보다 작은 음성을 삭제하도록 설정
 decibel=10
@@ -404,7 +404,7 @@ os.makedirs(save_path, exist_ok=True)
 
 for file_path in tqdm(file_list):
     
-    ## 파일 불러오기(타코트론2는 기본적으로 16000 sampling rate에서 동작하므로 16000 sampling rate에서 작업.)
+    ## 파일 불러오기(타코트론2는 기본적으로 22050 sampling rate에서 동작)
     wav, sr = load_audio(file_path, sr=sampling_rate)
     
     ## 오디오 자르기(패딩 추가)
