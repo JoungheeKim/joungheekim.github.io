@@ -1,7 +1,7 @@
 ---
 layout:     post
 title:      "[코드리뷰]타코트론2 TTS 시스템 2/2"
-subtitle:   "타코트론2 개인화 TTS 시스템 만들기 2/2"
+subtitle:   "타코트론2 개인화 TTS 시스템 만들기"
 mathjax: true
 audio_support: true
 tags:
@@ -35,7 +35,7 @@ TTS 시스템을 개발하기 위하여 어떤 모델을 선택하느냐에 따�
 5. WaveGlow 모델 학습
 
 ## 4. Tacotron2 모델
-TTS 시스템을 만들기 위해 다양한 모델을 선택할 수 있지만 이 글에서는 Tacotron2 모델을 활용하는 방법에 대해 다루고 있습니다.
+TTS 시스템을 만들기 위해 다양한 모델을 선택할 수 있지만 이 글에서는 **Tacotron2 모델을 활용**하는 방법에 대해 다루고 있습니다.
 Tacotron2 모델을 직접 개발하는 것도 좋지만 현재 개발되어 <u>공개저장소(github)에 공개</u>된 프로그램을 활용하는 것이 더 빠르고 신뢰성 있는 모델을 개발할 수 있는 방법입니다.
 대부분 영어만 지원하지만 한글 프로그램도 존재합니다.
 
@@ -71,7 +71,7 @@ Tensorflow로 개발되었기 때문에 Tensorflow에 익숙한 유저분들께 
 Tacotron2를 이용하여 모델을 학습하기 위해 아래 작업이 필요합니다.
 
 1. 타코트론2 리소스(코드) 다운
-2. 데이터 정보 파일 생성
+2. 학습 정보 파일 생성
 3. 모델 파라미터 설정
 4. 모델 학습하기
 
@@ -95,7 +95,7 @@ git clone https://github.com/NVIDIA/tacotron2.git
 <center><b>한글 전처리 과정</b></center>
 
 음절은 19개의 자음으로 구성된 초성, 21개의 모음으로 구성된 중성, 27개의 자음으로 구성된 종성으로 이루어져 있습니다.
-즉 음소 조합으로 만들 수 있는 음절은 $19 x 21 x 27 = 10,773$개 입니다.
+즉 음소 조합으로 만들 수 있는 음절은 $19 \times 21 \times 27 = 10,773$개 입니다.
 따라서 데이터가 충분하지 않다면 학습데이터에 많은 음절들이 누락되기 때문에 새로운 음절에 대해 모델이 대응하지 못하는 현상이 발생합니다.
 이를 방지하고자 음소를 기본 입력 단위로 모델을 학습시킵니다. 
 
@@ -107,15 +107,36 @@ git clone https://github.com/NVIDIA/tacotron2.git
 
 <b>어떻게 한국어 전처리 코드를 추가해야 하는가?</b>
 
-다행히 한국어 버전 Tacotron2를 제공하고 있는 hccho2 리소스와 영어 버전 Tacotron2를 제공하고 있는 Nvidia 리소스는 모두
-[keithito 코드](https://github.com/keithito/tacotron) 를 기반으로 개발되었기 때문에 호환이 가능합니다.
+다행히 한국어 버전 Tacotron2인 hccho2 리소스와 영어 버전 Tacotron2인 Nvidia 리소스는 모두
+[keithito 코드](https://github.com/keithito/tacotron) 를 기반으로 개발되었기 때문에 서로 호환이 가능합니다.
 즉 hccho2 리소스에서 한국어 전처리 코드 부분을 복사하여 Nvidia 리소스에 붙여넣기 하는 방식으로 간단하게 한국어 전처리 코드를 추가할 수 있습니다.
 
 ![](/img/in-post/2021/2021-04-02/preprocess_korean.png)
 <center><b>한국어 전처리 리소스 활용 방법</b></center>
 
-위 그림과 같은 방법으로 전처리 리소스를 추가하고, 몇가지 리소스 변경을 하면 
+NVIDIA Tacotron2 코드를 forked 한 뒤 위 그림과 같은 방법으로 전처리 리소스를 추가한 코드는 아래의 명령어를 통해 다운받을 수 있습니다. 
+```bash
+git clone https://github.com/JoungheeKim/tacotron2
+```
+
+##### Step4.2 학습 정보 파일 생성
+학습 정보 파일이란 학습에 필요한 정보(음성 파일 위치, 스크립트)를 타코트론2 모델에게 전달하기 위해 정리한 문서를 의미합니다.
+음성 파일의 위치와 해당 음성의 발화 스크립트로 구성된 병렬 데이터이며, 학습 및 검증용으로 train_data와 valid_data 2개가 필요합니다.
+
+![](/img/in-post/2021/2021-04-02/train_information_example.png)
+<center><b>학습 정보 파일 Format 예시</b></center>
+
+생성한 학습 정보 파일을 타코트론2 프로젝터 내 filelists 폴더에 위치시킵니다.
+> 설정파일(hparams.py)에서 학습 파일 위치를 설정하기 때문에 파일 위치는 변경 가능합니다.
+
+![](/img/in-post/2021/2021-04-02/filelist_information_example.png)
+<center><b>학습 정보 파일 생성 예시</b></center>
+
+##### Step4.3 모델 파라미터 설정
+타코트론 모델을 학습시키는데 많은 파라미터를 설정할 수 있습니다.
 
 
+해당 파일은 
 
 
+앞서 전처리 과정에서 

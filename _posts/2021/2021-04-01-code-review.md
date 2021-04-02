@@ -1,7 +1,7 @@
 ---
 layout:     post
 title:      "[코드리뷰]타코트론2 TTS 시스템 1/2"
-subtitle:   "타코트론2 개인화 TTS 시스템 만들기 1/2"
+subtitle:   "타코트론2 개인화 TTS 시스템 만들기"
 mathjax: true
 audio_support: true
 tags:
