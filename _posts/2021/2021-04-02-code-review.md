@@ -32,7 +32,7 @@ TTS 시스템을 개발하기 위하여 어떤 모델을 선택하느냐에 따�
 2. 음성 데이터 전처리
 3. 스크립트 전처리
 4. **Tacotron2 모델 학습**
-5. WaveGlow 모델 학습
+5. **WaveGlow 모델 학습**
 
 ## 4. Tacotron2 모델
 TTS 시스템을 만들기 위해 다양한 모델을 선택할 수 있지만 이 글에서는 **Tacotron2 모델을 활용**하는 방법에 대해 다루고 있습니다.
@@ -62,7 +62,24 @@ Tensorflow로 개발되었기 때문에 Tensorflow에 익숙한 유저분들께 
 [**[3] Nvidia-Tacotron2(Pytorch)**](https://github.com/NVIDIA/tacotron2)   
 영어만 지원하는 Tacotron2 모델입니다. NVIDIA에서 만들었기 때문에 Apex, AMP 등을 지원하도록 프로그램을 구성하였습니다.
 따라서 비교적 빠른 속도로 모델을 학습할 수 있으며 사용하기 간편합니다. 영어 Checkpoint(학습된 모델)을 제공하고 있으므로 영어 데모를 테스트해보기 간편합니다.
-간단하게 활용하는 방법에 대해 리뷰를 제공하는 [블로그 글](https://jybaek.tistory.com/811) 이 있으니 해당글을 참고하시면 프로그램을 이해하기 더 수월합니다.
+`torch hub`를 이용하여 모델을 간단하게 활용하는 방법에 대해 리뷰를 제공하는 [블로그 글](https://jybaek.tistory.com/811) 이 있으니 해당글을 참고하시면 프로그램을 이해하기 더 수월합니다.
+
+![](/img/in-post/2021/2021-04-02/nvidia_tacotron2.png)
+<center><b><a href="https://pytorch.org/hub/nvidia_deeplearningexamples_tacotron2/">Pytorch Hub Tacotron2(NVIDIA) 설명서</a></b></center>
+
+## 5. WaveGlow 모델
+WaveGlow는 Glow와 WaveNet의 아이디어를 합쳐 만든 Vocoder입니다.
+AutoRegression 형태의 아키텍처를 사용하지 않기 때문에 WaveNet보다 빠른 속도로 고품질의 음성을 합성할 수 있으며,
+간단한 Cost Function을 구성(Glow Idea)하여 빠르고 안정적이게 학습할 수 있다는 장점을 갖고 있습니다.
+WaveGlow를 통해 생성된 음성은 WaveNet보다는 약간 품질이 떨어질 수 있으나 거의 차이가 없습니다.
+
+Github에 공개된 WaveGlow 리소스가 많지만 이 글에서는 NVIDIA WaveGlow만 소개하겠습니다.
+
+[**[1] NVIDIA WaveGlow(Pytorch)**](https://github.com/NVIDIA/waveglow)   
+NVIDIA에서 공개한 WaveGlow입니다. 
+Pytorch 기반으로 개발되었으며, 코드 및 사용 설명도 매우 깔끔하게 정리되어 있어 사용하기 간편합니다.
+영어데이터 [LJ Speech Data](https://keithito.com/LJ-Speech-Dataset/) 로 개발된 CheckPoint를 제공하고 있습니다.
+약 8GB 정도 용량의 GPU를 갖고 있으면 기본 설정된 파라미터로 음성 생성모델을 학습할 수 있습니다.
 
 ![](/img/in-post/2021/2021-04-02/nvidia_demo.png)
 <center><b>NVIDIA TTS 데모 사이트</b></center>
@@ -72,7 +89,7 @@ Tacotron2를 이용하여 모델을 학습하기 위해 아래 작업이 필요�
 
 1. 타코트론2 리소스(코드) 다운
 2. 학습 정보 파일 생성
-3. 모델 학습하기
+3. 타코트론2 모델 학습하기
 
 ##### Step4.1 타코트론2 리소스 다운
 이 글에서는 NVIDIA에서 제공하는 타코트론2 모델을 활용하여 한국어를 학습하는 방법에 대해 다루고자 합니다.
@@ -82,8 +99,11 @@ Tacotron2를 이용하여 모델을 학습하기 위해 아래 작업이 필요�
 
 원본 NVIDIA 타코트론2 코드를 [Git 관리 프로그램](https://git-scm.com/) 을 이용하여 다운 받는 방법은 아래와 같습니다. 
 ```bash
+## 타코트론2 다운로드
 git clone https://github.com/NVIDIA/tacotron2.git
 ```
+리소스에 도커 파일(`Dockerfile`)과 설치 항목(`requirements.txt`)을 포함하고 있으므로 이를 활용하여 환경을 구축합니다.
+상세한 설치 카이드는 리소스 내 안내파일(`read.md`) 에서 제공하고 있습니다.
 
 원본 NVIDIA 코드는 한국어를 지원하지 않기 때문에 약간의 <u>코드 수정이 필요</u>합니다.
 코드 수정이 필요한 부분은 바로 **한국어를 전처리**하는 부분입니다.
@@ -108,15 +128,17 @@ git clone https://github.com/NVIDIA/tacotron2.git
 
 다행히 한국어 버전 Tacotron2인 hccho2 리소스와 영어 버전 Tacotron2인 Nvidia 리소스는 모두
 [keithito 코드](https://github.com/keithito/tacotron) 를 기반으로 개발되었기 때문에 서로 호환이 가능합니다.
-즉 hccho2 리소스에서 한국어 전처리 코드 부분을 복사하여 Nvidia 리소스에 붙여넣기 하는 방식으로 간단하게 한국어 전처리 코드를 추가할 수 있습니다.
+즉 [hccho2 리소스](https://github.com/hccho2/Tacotron2-Wavenet-Korean-TTS) 에서 한국어 전처리 코드 부분을 복사하여 [Nvidia 리소스](https://github.com/NVIDIA/tacotron2) 에 붙여넣기 하는 방식으로 간단하게 한국어 전처리 코드를 추가할 수 있습니다.
 
 ![](/img/in-post/2021/2021-04-02/preprocess_korean.png)
 <center><b>한국어 전처리 리소스 활용 방법</b></center>
 
 NVIDIA Tacotron2 코드를 forked 한 뒤 위 그림과 같은 방법으로 전처리 리소스를 추가한 코드는 아래의 명령어를 통해 다운받을 수 있습니다. 
 ```bash
+## 타코트론2 다운로드(한국어 전처리 코드 추가 version)
 git clone https://github.com/JoungheeKim/tacotron2
 ```
+리소스에 도커 파일(`Dockerfile`)과 설치 항목(`requirements.txt`)을 포함하고 있으므로 이를 활용하여 환경을 구축합니다.
 
 ##### Step4.2 학습 정보 파일 생성
 학습 정보 파일이란 학습에 필요한 정보(음성 파일 위치, 스크립트)를 타코트론2 모델에게 전달하기 위해 정리한 문서를 의미합니다.
@@ -143,4 +165,39 @@ python train.py \
     --validation_files=filelists/train_filelist.txt \
     --epochs=500
 ```
+- `Hyper-parameter`
+  - `output_directory` : 학습된 모델의 Checkpoint를 저장할 폴더 위치
+  - `log_directory` : 학습 로그를 저장할 폴더 위치
+  - `n_gpus` : 사용할 GPU 개수
+  - `training_files`: "학습용 정보 파일" 위치
+  - `validation_files`: "검증용 정보 파일" 위치
+  - `epochs` : 데이터를 학습할 횟수
+  - `sampling_rate` : 음성 데이터의 Sampling Rate
+  - ...
+
+위에서 기술한 것 이외에도 다양한 하이퍼파라미터 설정이 가능합니다.
+설정 가능한 하이퍼파라미터의 종류와 Default Setting을 확인하시려면 `hparams.py` 파일을 확인 바랍니다.
+
+> 음성 생성모델을 학습할 때 가장 많이 받는 질문 중 하나는 얼마나(epoch or max steps) 모델을 학습시켜야 하냐는 것 입니다.
+> 저에게 정답이 있는 건 아니지만 개인적인 의견을 남겨보자면 데이터가 풍부할 때에는 모델이 과적합 될 수 있도록 오래 학습하는 것이 좋다고 생각합니다.
+> 음성 모델의 개발 목적은 특정 인물의 음성의 특징을 나타내는 음성을 생성하는 것이므로 과적합을 시키는 것이 음성의 특징을 더 잘 나타낼 수 있는 모델을 만드는데 도움이 됩니다.
+> 따라서 epoch을 크게 설정하고 학습하되, 학습 중간마다 생성된 Checkpoint로 음성을 생성하여 직접 들어보고 학습을 중단할지 결정하는 것이 좋아보입니다.
+
+## WaveGlow 모델을 이용하여 학습 예시
+WaveGlow를 이용하여 Vocoder 모델을 학습하기 위해 아래 작업이 필요합니다.
+
+1. WaveGlow 리소스(코드) 다운
+2. 학습 정보 파일 생성
+3. WaveGlow 모델 학습하기
+
+##### Step5.1 WaveGlow 리소스 다운
+원본 NVIDIA WaveGlow 코드를 [Git 관리 프로그램](https://git-scm.com/) 을 이용하여 다운 받는 방법은 아래와 같습니다. 
+ ```bash
+## WaveGlow 다운로드
+git clone https://github.com/NVIDIA/waveglow.git
+```
+리소스에 도커 파일(`Dockerfile`)과 설치 항목(`requirements.txt`)을 포함하고 있으므로 이를 활용하여 환경을 구축합니다.
+상세한 설치 카이드는 리소스 내 안내파일(`read.md`) 에서 제공하고 있습니다.
+
+
 

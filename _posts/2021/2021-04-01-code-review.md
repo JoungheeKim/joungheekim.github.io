@@ -330,7 +330,7 @@ import soundfile as sf
 ## 함수 설정
 
 ## 파일 읽어오기(지정한 Sampling Rate로)
-def load_audio(file_path, sr=16000):
+def load_audio(file_path, sr=22050):
     """
        file_path : 파일위치
        sr : 오디오를 읽을 때 Sampling rate 지정
@@ -389,7 +389,7 @@ def plot_wav(wav, sr):
 ## 시작하기
 
 ## 타코트론2는 기본적으로 22050 sampling rate에서 동작
-sampling_rate = 16000
+sampling_rate = 22050
 ## 개인설정에 따라 특정 소리보다 작은 음성을 삭제하도록 설정
 decibel=10
 
@@ -438,7 +438,7 @@ Trim을 사용하기 전 음성은 앞 뒤로 공백이 있는 것을 확인 할
 위 코드를 사용한 후 비교적 공백의 길이가 짧아졌고, 앞뒤 공백의 길이가 일정한 것을 확인 할 수 있습니다.
 
 해당 코드에는 음성을 불러올 때 특정 Sampling Rate를 지정하도록 되어 있습니다.
-그리고 공백을 제거한 후 지정한 Sampling Rate로 저장하도록 작성되어 있으므로 저장된 음성의 Sampling Rate는 지정한 Rate로 변경된다는 것을 참고바랍니다.
+그리고 공백을 제거한 후 지정한 Sampling Rate로 저장하도록 작성되어 있으므로 저장된 음성의 Sampling Rate는 원본의 Sampling Rate와 다를 수 있다는 것을 참고바랍니다.
 
 위 코드와 관련된 파일은 [Jupyter Notebook 링크](/img/in-post/2021/2021-04-01/trim_audio.ipynb) 를 눌러 다운받으실 수 있습니다.
 
