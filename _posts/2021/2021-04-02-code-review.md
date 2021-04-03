@@ -145,7 +145,7 @@ git clone https://github.com/JoungheeKim/tacotron2
 음성 파일의 위치와 해당 음성의 발화 스크립트로 구성된 병렬 데이터이며, 학습 및 검증용으로 train_data와 valid_data 2개가 필요합니다.
 
 ![](/img/in-post/2021/2021-04-02/train_information_example.png)
-<center><b>학습 정보 파일 Format 예시</b></center>
+<center><b>Tacotron2 학습 정보 파일 Format 예시</b></center>
 
 생성한 학습 정보 파일을 타코트론2 프로젝터 내 filelists 폴더에 위치시킵니다.
 > 설정파일(hparams.py)에서 학습 파일 위치를 설정하기 때문에 파일 위치는 변경 가능합니다.
@@ -165,7 +165,7 @@ python train.py \
     --validation_files=filelists/train_filelist.txt \
     --epochs=500
 ```
-- `Hyper-parameter`
+- `Hyper-parameter` 종류
   - `output_directory` : 학습된 모델의 Checkpoint를 저장할 폴더 위치
   - `log_directory` : 학습 로그를 저장할 폴더 위치
   - `n_gpus` : 사용할 GPU 개수
@@ -173,6 +173,9 @@ python train.py \
   - `validation_files`: "검증용 정보 파일" 위치
   - `epochs` : 데이터를 학습할 횟수
   - `sampling_rate` : 음성 데이터의 Sampling Rate
+  - `iters_per_checkpoint` : checkpoint를 저장하는 iteration 단위 
+  - `text_cleaners` : 전처리 프로세스 선택(한글 or 영어)
+  - `checkpoint_path`: Pre-trained Tacotron2 모델의 checkpoint 위치
   - ...
 
 위에서 기술한 것 이외에도 다양한 하이퍼파라미터 설정이 가능합니다.
@@ -199,5 +202,178 @@ git clone https://github.com/NVIDIA/waveglow.git
 리소스에 도커 파일(`Dockerfile`)과 설치 항목(`requirements.txt`)을 포함하고 있으므로 이를 활용하면 학습 환경을 구축할 수 있습니다.
 상세한 설치 카이드는 리소스 내 안내파일(`read.md`) 에서 제공하고 있습니다.
 
+> 설치 항목에 tensorflow가 있지만 실제 쓰이고 있지는 않습니다. 참고하시기 바랍니다.
 
+##### Step5.2 학습 정보 파일 생성
+WaveGlow는 Mel-Spectrogram(멜 스펙토그램)을 통해서 Raw Audio(음성) 생성합니다.
+따라서 학습 정보 파일에 음성 파일 위치만 필요합니다.
 
+![](/img/in-post/2021/2021-04-02/train_information_waveglow.png)
+<center><b>WaveGlow 학습 정보 파일 생성 예시</b></center>
+
+해당 파일 위치는 하이퍼파라미터의 인수로 들어가므로 편한 곳에 위치시키면 됩니다.
+
+##### Step5.3 WaveGlow 모델 학습하기
+WaveGlow는 학습에 필요한 하이퍼파라미터를 실행 명령어 인자로 받지 않고, `json` 형태의 파일로 받습니다.
+기본적인 학습정보(하이퍼파라미터 정보)는 `config.json` 파일에 저장되어 있으며, 해당파일을 변경하여 실험이 가능합니다.
+이 항목 중에서 `training_files`은 <u>학습 정보 파일의 위치</u>를 의미하므로 **Step5.2**에서 생성된 파일의 위치로 수정하여 
+WaveGlow가 음성파일을 인식할 수 있도록 합니다.
+
+- `Hyper-parameter` 종류
+  - `output_directory` : 학습된 모델의 Checkpoint를 저장할 폴더 위치
+  - `training_files`: "학습용 정보 파일" 위치
+  - `checkpoint_path`: Pre-trained WaveGlow 모델의 checkpoint 위치
+  - ...
+
+위 `config.json` 파일을 기반으로 WaveGlow 모델을 학습시키기 간단한 명령어는 아래와 같습니다.
+
+```bash
+python train.py -c config.json
+```
+- `Hyper-parameter` 종류
+  - `config` : 학습에 필요한 정보를 json 형태로 저장한 파일의 위치
+  
+## Tacotron2 & WaveGlow Inference
+Tacotron2와 WaveGlow 모델을 학습하면 각각 모델의 checkpoint가 생성됩니다.
+아래 코드는 이 checkpoint를 활용하여 음성을 합성하는 방법입니다.
+```python
+## 기본 라이브러리 Import
+import sys
+import numpy as np
+import torch
+import os
+import argparse
+
+## WaveGlow 프로젝트 위치 설정
+sys.path.append('waveglow/')
+## Tacontron2 프로젝트 위치 설정
+sys.path.append('tacotron2/')
+
+## 프로젝트 라이브러리 Import
+from hparams import defaults
+from model import Tacotron2
+from layers import TacotronSTFT, STFT
+from audio_processing import griffin_lim
+from tacotron2.train import load_model
+from text import text_to_sequence
+from scipy.io.wavfile import write
+import IPython.display as ipd
+import json
+import sys
+from waveglow.glow import WaveGlow
+from denoiser import Denoiser
+from tqdm.notebook import tqdm
+
+## dict->object 변환용
+class Struct:
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+        
+def load_checkpoint(checkpoint_path, model):
+    assert os.path.isfile(checkpoint_path)
+    checkpoint_dict = torch.load(checkpoint_path, map_location='cpu')
+    model_for_loading = checkpoint_dict['model']
+    model.load_state_dict(model_for_loading.state_dict())
+    return model
+        
+class Synthesizer:
+    def __init__(self, tacotron_check, waveglow_check):
+        hparams = Struct(**defaults)
+        hparams.n_mel_channels=80
+        hparams.sampling_rate = 22050
+        
+        self.hparams = hparams
+        
+        model = load_model(hparams)
+        model.load_state_dict(torch.load(tacotron_check)['state_dict'])
+        model.cuda().eval()#.half()
+        
+        self.tacotron = model
+        
+        with open('waveglow/config.json') as f:
+            data = f.read()
+        config = json.loads(data)
+        waveglow_config = config["waveglow_config"]
+        
+        waveglow = WaveGlow(**waveglow_config)
+        waveglow = load_checkpoint(waveglow_check, waveglow)
+        waveglow.cuda().eval()
+        
+        self.denoiser = Denoiser(waveglow)
+        self.waveglow = waveglow
+        
+        
+    def inference(self, text):
+        assert type(text)==str, "텍스트 하나만 지원합니다."
+        sequence = np.array(text_to_sequence(text, ['korean_cleaners']))[None, :]
+        sequence = torch.autograd.Variable(torch.from_numpy(sequence)).cuda().long()
+
+        mel_outputs, mel_outputs_postnet, _, alignments = self.tacotron.inference(sequence)
+        
+        
+        with torch.no_grad():
+            audio = self.waveglow.infer(mel_outputs_postnet, sigma=0.666)
+        audio = audio[0].data.cpu().numpy()
+        return audio, self.hparams.sampling_rate
+    
+    ## \n으로 구성된 여러개의 문장 inference 하는 코드
+    def inference_phrase(self, phrase, sep_length=4000):
+        texts = phrase.split('\n')
+        audios = []
+        for text in texts:
+            if text == '':
+                audios.append(np.array([0]*sep_length))
+                continue
+            audio, sampling_rate = self.inference(text)
+            audios.append(audio)
+            audios.append(np.array([0]*sep_length))
+        return np.hstack(audios[:-1]), sampling_rate
+            
+    
+    def denoise_inference(self, text, sigma=0.666):
+        assert type(text)==str, "텍스트 하나만 지원합니다."
+        sequence = np.array(text_to_sequence(text, ['korean_cleaners']))[None, :]
+        sequence = torch.autograd.Variable(torch.from_numpy(sequence)).cuda().long()
+
+        mel_outputs, mel_outputs_postnet, _, alignments = self.tacotron.inference(sequence)
+               
+        with torch.no_grad():
+            audio = self.waveglow.infer(mel_outputs_postnet, sigma=0.666)
+            
+        
+        audio_denoised = self.denoiser(audio, strength=0.01)[:, 0].cpu().numpy()
+        return audio_denoised.reshape(-1), self.hparams.sampling_rate
+
+## 체크포인트 설정
+tacotron2_checkpoint = 'C:/Users/dsbak/Desktop/gitRepo/tacotron2/base80/checkpoint_190000'
+waveglow_checkpoint = 'C:/Users/dsbak/Desktop/gitRepo/tacotron2/waveglow/base80/waveglow_374000'
+
+## 음성 합성 모듈 생성
+synthesizer = Synthesizer(tacotron2_checkpoint, waveglow_checkpoint)
+
+## 문장 생성
+sample_text = '샘플 음성을 생성할 수 있습니다.'
+audio, sampling_rate = synthesizer.inference(sample_text)
+
+## 구문 생성
+sample_phrase = """
+타코트론 모델은 음성 생성 길이가 제한되어 있습니다.
+즉 구문을 구성하려면 여러개의 문장을 생성한 후 합쳐야 합니다.
+"""
+audio, sampling_rate = synthesizer.inference_phrase(sample_phrase)
+``` 
+
+학습이 잘 되지 않은 모델(타코트론)은 문장을 여러번 반복하는 문제가 있습니다.
+따라서 이를 방지하고자 모델이 특정길이(약 11초) 이상의 음성을 생성하지 못하도록 제한하고 있습니다.
+즉 구문을 만들기 위해서는 여러개의 문장 각각 생성한 다음 이어 붙이거나 코드 수정이 필요합니다. 
+
+이 가이드라인을 통해 생성한 음성 샘플입니다.
+
+/img/in-post/2021/2021-04-02/jhee_sample.wav
+/img/in-post/2021/2021-04-02/kss_sample.wav
+/img/in-post/2021/2021-04-02/tak_sample.wav
+
+위 코드와 관련된 파일은 [Jupyter Notebook 링크](/img/in-post/2021/2021-04-02/inference.ipynb) 를 눌러 다운받으실 수 있습니다.
+
+> 자세히 들어보면 음성에 노이즈가 포함되어 있는 것을 확인할 수 있습니다.
+> 후처리 모듈을 추가하여 제거하는 방법이 필요한데 해당 포스팅에서는 관련 내용은 다루지 않습니다.
