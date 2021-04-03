@@ -102,7 +102,7 @@ Tacotron2를 이용하여 모델을 학습하기 위해 아래 작업이 필요�
 ## 타코트론2 다운로드
 git clone https://github.com/NVIDIA/tacotron2.git
 ```
-리소스에 도커 파일(`Dockerfile`)과 설치 항목(`requirements.txt`)을 포함하고 있으므로 이를 활용하여 환경을 구축합니다.
+리소스에 도커 파일(`Dockerfile`)과 설치 항목(`requirements.txt`)을 포함하고 있으므로 이를 활용하면 학습 환경을 구축할 수 있습니다.
 상세한 설치 카이드는 리소스 내 안내파일(`read.md`) 에서 제공하고 있습니다.
 
 원본 NVIDIA 코드는 한국어를 지원하지 않기 때문에 약간의 <u>코드 수정이 필요</u>합니다.
@@ -138,7 +138,7 @@ NVIDIA Tacotron2 코드를 forked 한 뒤 위 그림과 같은 방법으로 전�
 ## 타코트론2 다운로드(한국어 전처리 코드 추가 version)
 git clone https://github.com/JoungheeKim/tacotron2
 ```
-리소스에 도커 파일(`Dockerfile`)과 설치 항목(`requirements.txt`)을 포함하고 있으므로 이를 활용하여 환경을 구축합니다.
+리소스에 도커 파일(`Dockerfile`)과 설치 항목(`requirements.txt`)을 포함하고 있으므로 이를 활용하면 학습 환경을 구축할 수 있습니다.
 
 ##### Step4.2 학습 정보 파일 생성
 학습 정보 파일이란 학습에 필요한 정보(음성 파일 위치, 스크립트)를 타코트론2 모델에게 전달하기 위해 정리한 문서를 의미합니다.
@@ -196,7 +196,7 @@ WaveGlow를 이용하여 Vocoder 모델을 학습하기 위해 아래 작업이 
 ## WaveGlow 다운로드
 git clone https://github.com/NVIDIA/waveglow.git
 ```
-리소스에 도커 파일(`Dockerfile`)과 설치 항목(`requirements.txt`)을 포함하고 있으므로 이를 활용하여 환경을 구축합니다.
+리소스에 도커 파일(`Dockerfile`)과 설치 항목(`requirements.txt`)을 포함하고 있으므로 이를 활용하면 학습 환경을 구축할 수 있습니다.
 상세한 설치 카이드는 리소스 내 안내파일(`read.md`) 에서 제공하고 있습니다.
 
 
