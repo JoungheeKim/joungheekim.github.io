@@ -94,8 +94,8 @@ Tacotron2를 이용하여 모델을 학습하기 위해 아래 작업이 필요�
 ##### Step4.1 타코트론2 리소스 다운
 이 글에서는 NVIDIA에서 제공하는 타코트론2 모델을 활용하여 한국어를 학습하는 방법에 대해 다루고자 합니다.
 >그 이유는 NVIDIA에서 Tacotron2와 WavGlow를 결합하여 프로그램을 만드는 방법에 대해서 자세히 가이드를 제공하고 있으며, 데모 페이지에 업로드한 샘플 음성이 퍽 인상깊었기 때문입니다.
->또한 대부분의 깃허브에서 공유되는 Tacotron2모델은 Wavenet을 Vocoder로 활용하는 방법에 대해서 다루고 있는데, Wavenet 모델은 너무 무겁기(파라미터가 많음) 때문에 학습 및 추론하는데 오랜 시간이 필요합니다.
->WaveGlow는 Wavenet과 비교하면 매우 가벼운 모델이므로 활용성 측면에서 WaveGlow를 활용하고자 해당 Github 리소스를 선택하였습니다.  
+>또한 대부분의 깃허브에서 공유되는 Tacotron2모델은 Wavenet을 Vocoder로 활용하는 방법에 대해서 다루고 있는데, Wavenet 모델은 Auto-Regressive 형태의 모델이기 때문에 학습 및 추론하는데 오랜 시간이 필요합니다.
+>WaveGlow는 Wavenet과 비교하면 매우 빠르기 때문에 활용성 측면에서 WaveGlow를 활용하고자 해당 Github 리소스를 선택하였습니다.  
 
 원본 NVIDIA 타코트론2 코드를 [Git 관리 프로그램](https://git-scm.com/) 을 이용하여 다운 받는 방법은 아래와 같습니다. 
 ```bash
@@ -214,7 +214,7 @@ WaveGlow는 Mel-Spectrogram(멜 스펙토그램)을 통해서 Raw Audio(음성) 
 해당 파일 위치는 하이퍼파라미터의 인수로 들어가므로 편한 곳에 위치시키면 됩니다.
 
 ##### Step5.3 WaveGlow 모델 학습하기
-WaveGlow는 학습에 필요한 하이퍼파라미터를 실행 명령어 인자로 받지 않고, `json` 형태의 파일로 받습니다.
+WaveGlow는 학습에 필요한 하이퍼파라미터를 실행 명령어 인자로 받지 않고, **json 형태의 파일**로 받습니다.
 기본적인 학습정보(하이퍼파라미터 정보)는 `config.json` 파일에 저장되어 있으며, 해당파일을 변경하여 실험이 가능합니다.
 이 항목 중에서 `training_files`은 <u>학습 정보 파일의 위치</u>를 의미하므로 **Step5.2**에서 생성된 파일의 위치로 수정하여 
 WaveGlow가 음성파일을 인식할 수 있도록 합니다.
@@ -370,7 +370,9 @@ audio, sampling_rate = synthesizer.inference_phrase(sample_phrase)
 이 가이드라인을 통해 생성한 음성 샘플입니다.
 
 /img/in-post/2021/2021-04-02/jhee_sample.wav
+
 /img/in-post/2021/2021-04-02/kss_sample.wav
+
 /img/in-post/2021/2021-04-02/tak_sample.wav
 
 위 코드와 관련된 파일은 [Jupyter Notebook 링크](/img/in-post/2021/2021-04-02/inference.ipynb) 를 눌러 다운받으실 수 있습니다.
