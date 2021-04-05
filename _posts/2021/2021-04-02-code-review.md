@@ -215,7 +215,7 @@ WaveGlow는 Mel-Spectrogram(멜 스펙토그램)을 통해서 Raw Audio(음성) 
 
 ##### Step5.3 WaveGlow 모델 학습하기
 WaveGlow는 학습에 필요한 하이퍼파라미터를 실행 명령어 인자로 받지 않고, **json 형태의 파일**로 받습니다.
-기본적인 학습정보(하이퍼파라미터 정보)는 `config.json` 파일에 저장되어 있으며, 해당파일을 변경하여 실험이 가능합니다.
+기본적인 학습정보(하이퍼파라미터 정보)는 **config.json** 파일에 저장되어 있으며, 해당파일을 변경하여 실험이 가능합니다.
 이 항목 중에서 `training_files`은 <u>학습 정보 파일의 위치</u>를 의미하므로 **Step5.2**에서 생성된 파일의 위치로 수정하여 
 WaveGlow가 음성파일을 인식할 수 있도록 합니다.
 
@@ -225,7 +225,10 @@ WaveGlow가 음성파일을 인식할 수 있도록 합니다.
   - `checkpoint_path`: Pre-trained WaveGlow 모델의 checkpoint 위치
   - ...
 
-위 `config.json` 파일을 기반으로 WaveGlow 모델을 학습시키기 간단한 명령어는 아래와 같습니다.
+![](/img/in-post/2021/2021-04-02/train_json_example.png)
+<center><b>config.json 파일 예시</b></center>
+
+위 **config.json** 파일을 기반으로 WaveGlow 모델을 학습시키기 간단한 명령어는 아래와 같습니다.
 
 ```bash
 python train.py -c config.json
@@ -354,6 +357,8 @@ synthesizer = Synthesizer(tacotron2_checkpoint, waveglow_checkpoint)
 ## 문장 생성
 sample_text = '샘플 음성을 생성할 수 있습니다.'
 audio, sampling_rate = synthesizer.inference(sample_text)
+## 음성 저장하기
+sf.write('문장.wav', audio, sampling_rate)
 
 ## 구문 생성
 sample_phrase = """
@@ -361,6 +366,8 @@ sample_phrase = """
 즉 구문을 구성하려면 여러개의 문장을 생성한 후 합쳐야 합니다.
 """
 audio, sampling_rate = synthesizer.inference_phrase(sample_phrase)
+## 음성 저장하기
+sf.write('구문.wav', audio, sampling_rate)
 ``` 
 
 학습이 잘 되지 않은 모델(타코트론)은 문장을 여러번 반복하는 문제가 있습니다.
@@ -379,3 +386,46 @@ audio, sampling_rate = synthesizer.inference_phrase(sample_phrase)
 
 > 자세히 들어보면 음성에 노이즈가 포함되어 있는 것을 확인할 수 있습니다.
 > 후처리 모듈을 추가하여 제거하는 방법이 필요한데 해당 포스팅에서는 관련 내용은 다루지 않습니다.
+
+
+## 개인화 TTS 모델 생성 전략
+간단한 예제를 통해서 Tacotron2 모델과 WaveGlow를 활용하여 개인 TTS 시스템을 만드는 방법에 대해 말씀드렸습니다.
+하지만 여전히 <u>데이터가 충분하지 않은 경우</u> 모델이 수렴할 수 있을 정도로 학습시키는 것은 매우 어려운 일입니다.
+모델이 수렴한다는 것은 결국 음성과 텍스트 사이의 위치를 관계를 모델이 잘 파악할 수 있다는 것을 의미합니다. 
+
+![](/img/in-post/2021/2021-04-02/attention_map_align.png)
+<center><b>음성과 텍스트 사이의 정렬 예시</b></center>
+
+충분히 학습하지 못한 경우, 데이터가 충분하지 않은 경우, 데이터의 질이 좋지 못한 경우 등 다양한 사유로 인해 학습된 타코트론2 모델은 음성과 텍스트 사이의 관계를 잘 찾지 못합니다.
+이러한 문제점은 Inference 할 때 **모델이 동일한 문장을 반복**하는 음성을 생성하는 결과로 이어집니다.
+즉 음성의 품질이 대폭 하락하는 문제점을 야기시킵니다.
+
+이 현상을 타코트론2 모델 안에 있는 Attetnion Map을 보면서 해석을 해보면, 
+모델이 충분히 학습되지 못할 경우 입력인 텍스트와 출력인 음성 사이의 Attention 잘 만들어지 지지 않아서 발생한다고 볼 수 있습니다.
+
+![](/img/in-post/2021/2021-04-02/attention_map.png)
+<center><b>학습된 모델의 Attention Map 예시</b></center>
+
+이 문제를 해결하기 위하여 다양한 방법을 적용할 수 있습니다.
+1. 모델 내부 아키텍처를 변경(Attention과 관련된)
+2. Augmentation 방법론을 적용하여 데이터 양 확보
+3. Transfer Learning 방법론을 적용
+
+가장 쉬운 방법은 아무래도 Transfer Learining 방법론을 적용하는 것 입니다.
+즉 먼저 외부의 **정제된 데이터**를 많이 모아서 모델을 학습(pre-training)시키고, 그 다음 학습된 모델을 목표로 하는 데이터로 다시 학습(fine-tuning) 시키는 것입니다.
+
+많은 데이터를 이용하여 모델이 보편적인 발화라는 Task를 학습할 수 있도록 하여 모델 안의 Attetion이 제기능(initialization)을 갖추면,
+이후 그 Checkpoint(pretrained model)를 활용하여 적은 양의 데이터로도 안정적이게 학습할 수 있습니다.
+
+<b>어떤 정제된 데이터를 활용할 수 있을까?</b>
+KSS 데이터셋은 그 양이 많을 뿐더러 잡음이 없어서 가장 잘 정제되어 있는 데이터 중 하나입니다.
+따라서 먼저 KSS 데이터셋을 활용하여 모델을 pre-training하고, 그 다음 원하는 음성 데이터로 fine-tuning하는 방식으로 Transfer Learning을 적용할 수 있습니다.
+
+![](/img/in-post/2021/2021-04-02/transfer_learning.png)
+<center><b>Tacotron2 Transfer Learning 적용 예시</b></center>
+
+동일하게 WaveGlow도 KSS 데이터셋을 활용하여 모델을 pre-training하고, 그 다음 원하는 음성데이터로 fine-tuning하는 방식이 안정적으로 모델을 학습시킬 수 있습니다. 
+
+> KSS 데이터로 약 300000 Step 정도 pre-training하면 모델 안에 Attetnion 모듈이 음성과 텍스트 사이의 정렬 규칙을 잘 찾습니다.
+> 그 Checkpoint를 활용하여 원하는 데이터로 약 500000 ~ 800000 step정도 fine-tuning하면 썩 괜찮은 음성생성모듈을 개발 할 수 있습니다.
+> 위 파이프라인을 활용한다면 GPU 2080ti 한장으로 Tacotron2 모델을 학습하는데 약 1주일, WaveGlow 모델을 학습하는데 약 1주일 정도 소요됩니다.
