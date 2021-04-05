@@ -418,6 +418,7 @@ sf.write('구문.wav', audio, sampling_rate)
 이후 그 Checkpoint(pretrained model)를 활용하여 적은 양의 데이터로도 안정적이게 학습할 수 있습니다.
 
 <b>어떤 정제된 데이터를 활용할 수 있을까?</b>
+
 KSS 데이터셋은 그 양이 많을 뿐더러 잡음이 없어서 가장 잘 정제되어 있는 데이터 중 하나입니다.
 따라서 먼저 KSS 데이터셋을 활용하여 모델을 pre-training하고, 그 다음 원하는 음성 데이터로 fine-tuning하는 방식으로 Transfer Learning을 적용할 수 있습니다.
 
@@ -428,4 +429,4 @@ KSS 데이터셋은 그 양이 많을 뿐더러 잡음이 없어서 가장 잘 �
 
 > KSS 데이터로 약 300000 Step 정도 pre-training하면 모델 안에 Attetnion 모듈이 음성과 텍스트 사이의 정렬 규칙을 잘 찾습니다.
 > 그 Checkpoint를 활용하여 원하는 데이터로 약 500000 ~ 800000 step정도 fine-tuning하면 썩 괜찮은 음성생성모듈을 개발 할 수 있습니다.
-> 위 파이프라인을 활용한다면 GPU 2080ti 한장으로 Tacotron2 모델을 학습하는데 약 1주일, WaveGlow 모델을 학습하는데 약 1주일 정도 소요됩니다.
+> 위 파이프라인을 활용한다면 GPU 2080ti 한장으로 Tacotron2 모델을 학습하는데 약 3일~6일, WaveGlow 모델을 학습하는데 약 3일~6일 정도 소요됩니다.
